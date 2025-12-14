@@ -2233,6 +2233,10 @@
       iceIntensity = 0;
       iceMelting = false;
       meltProgress = 0;
+
+      // Reset canvas opacity (in case it was fading during melt)
+      iceCanvas.style.opacity = '';
+
       iceCanvas.classList.remove('active');
       iceGlow.classList.remove('active');
       iceCrackOverlay.classList.remove('active');
@@ -2241,8 +2245,16 @@
         cancelAnimationFrame(iceRAF);
         iceRAF = null;
       }
-      // Clear the ice
+
+      // Clear the ice pixels
       icePixels.fill(0);
+
+      // Render one last frame to clear the canvas visually
+      renderIce();
+
+      // Also clear the canvas context directly to be sure
+      iceCtx.clearRect(0, 0, ICE_WIDTH, ICE_HEIGHT);
+
       clearTextEffects();
     }
 
@@ -2265,11 +2277,12 @@
         meltProgress += 0.02;  // ~3 seconds to fully melt at 60fps
 
         // Gradually fade out the canvas
-        iceCanvas.style.opacity = Math.max(0, 1 - meltProgress * 0.5);
+        const fadeOpacity = Math.max(0, 1 - meltProgress * 0.7);
+        iceCanvas.style.opacity = fadeOpacity;
 
-        if (meltProgress >= 1 || !hasVisibleIce()) {
-          // Melting complete
-          iceCanvas.style.opacity = '';  // Reset opacity
+        // Check if melt is complete (time elapsed OR no visible ice OR fully faded)
+        if (meltProgress >= 1 || fadeOpacity <= 0.05 || !hasVisibleIce()) {
+          // Melting complete - force full cleanup
           forceStopAmbientIce();
           return;
         }
