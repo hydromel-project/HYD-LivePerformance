@@ -923,6 +923,160 @@
       100% { opacity: 1; }
     }
 
+    /* ============ ICE/FROST EFFECTS ============ */
+
+    /* Canvas ice simulation */
+    #iceCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.3s, height 0.5s ease-out;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #iceCanvas.active {
+      opacity: 1;
+    }
+
+    /* Ice intensity text effects */
+    .ice-text-effect {
+      transition: text-shadow 0.3s, color 0.3s, transform 0.1s;
+    }
+
+    .ice-text-effect.intensity-low {
+      text-shadow:
+        0 0 10px currentColor,
+        0 0 20px rgba(136, 200, 255, 0.3);
+    }
+
+    .ice-text-effect.intensity-medium {
+      text-shadow:
+        0 0 15px currentColor,
+        0 0 30px rgba(100, 180, 255, 0.5),
+        0 0 50px rgba(50, 150, 255, 0.3);
+      animation: iceTextPulse 0.8s ease-in-out infinite alternate;
+    }
+
+    .ice-text-effect.intensity-high {
+      color: #88ddff !important;
+      text-shadow:
+        0 0 10px #66ccff,
+        0 0 20px #44aaff,
+        0 0 40px #2288ff,
+        0 0 60px #0066ff,
+        0 0 80px rgba(0, 100, 255, 0.5);
+      animation: iceTextIntense 0.2s ease-in-out infinite alternate;
+    }
+
+    .ice-text-effect.intensity-max {
+      color: #ffffff !important;
+      text-shadow:
+        0 0 10px #eeffff,
+        0 0 20px #bbffff,
+        0 0 40px #88ddff,
+        0 0 60px #44aaff,
+        0 0 100px #0088ff,
+        0 0 150px rgba(0, 136, 255, 0.8);
+      animation: iceTextMax 0.15s ease-in-out infinite alternate;
+    }
+
+    @keyframes iceTextPulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(0.98); filter: brightness(1.1); }
+    }
+
+    @keyframes iceTextIntense {
+      0% { transform: scale(1) translateY(0); filter: brightness(1.1); }
+      100% { transform: scale(0.97) translateY(1px); filter: brightness(1.2); }
+    }
+
+    @keyframes iceTextMax {
+      0% { transform: scale(1) translateY(0); filter: brightness(1.2); }
+      50% { transform: scale(0.96) translateY(1px); filter: brightness(1.4); }
+      100% { transform: scale(0.98) translateY(0); filter: brightness(1.3); }
+    }
+
+    /* Frozen/shiver effect for text */
+    @keyframes iceShiver {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-1px); }
+      75% { transform: translateX(1px); }
+    }
+
+    .ice-text-effect.intensity-max {
+      animation: iceTextMax 0.15s ease-in-out infinite alternate, iceShiver 0.1s linear infinite;
+    }
+
+    /* Ice glow from top */
+    .ice-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: linear-gradient(to bottom,
+        rgba(100, 180, 255, 0.35) 0%,
+        rgba(60, 150, 255, 0.2) 30%,
+        rgba(30, 120, 255, 0.08) 60%,
+        transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      will-change: opacity;
+      contain: strict;
+    }
+
+    .ice-glow.active {
+      opacity: 1;
+      animation: iceGlowPulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes iceGlowPulse {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    /* Frost crystal particles */
+    .frost-particle {
+      position: absolute;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(136,221,255,0.6) 40%, transparent 70%);
+      border-radius: 50%;
+      animation: frostFall linear forwards;
+    }
+
+    @keyframes frostFall {
+      0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translateY(200px) rotate(180deg) scale(0.3); opacity: 0; }
+    }
+
+    /* Ice crack overlay effect */
+    .ice-crack-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.1) 0%, transparent 30%),
+        radial-gradient(ellipse at 80% 15%, rgba(200,230,255,0.1) 0%, transparent 25%),
+        radial-gradient(ellipse at 50% 5%, rgba(180,220,255,0.15) 0%, transparent 35%);
+      transition: opacity 0.5s;
+    }
+
+    .ice-crack-overlay.active {
+      opacity: 1;
+    }
+
     /* Heat shimmer effect above fire */
     .heat-shimmer {
       position: fixed;
@@ -1357,7 +1511,15 @@
   <div class="effect-overlay ice-effect" id="iceOverlay"></div>
   <div class="flash-overlay" id="flashOverlay"></div>
   <canvas id="fireCanvas"></canvas>
+  <canvas id="iceCanvas"></canvas>
+  <div class="ice-glow" id="iceGlow"></div>
+  <div class="ice-crack-overlay" id="iceCrackOverlay"></div>
   <div class="particles-container" id="particlesContainer"></div>
+
+  <!-- Audio elements for sound effects -->
+  <audio id="iceCrackSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
 
   <!-- Auto-reset countdown -->
   <div class="countdown-overlay" id="countdownOverlay">
@@ -1776,7 +1938,9 @@
         intensity > 0 ? 'intensity-low' : '';
 
       fireTextElements.forEach(el => {
-        el.classList.remove('intensity-low', 'intensity-medium', 'intensity-high', 'intensity-max');
+        // Remove ice classes first
+        el.classList.remove('ice-text-effect', 'intensity-low', 'intensity-medium', 'intensity-high', 'intensity-max');
+
         if (intensityClass) {
           el.classList.add('fire-text-effect', intensityClass);
         } else {
@@ -1814,9 +1978,6 @@
       }
       // Cool down the fire
       firePixels.fill(0);
-
-      // Clear text effects
-      updateFireTextEffects(0);
     }
 
     function fireLoop() {
@@ -1891,9 +2052,283 @@
       fireCtx.putImageData(fireImageData, 0, 0);
     }
 
+    // ============ ICE/FROST SIMULATION (60FPS Canvas) ============
+    const iceCanvas = document.getElementById('iceCanvas');
+    const iceCtx = iceCanvas.getContext('2d');
+    const iceGlow = document.getElementById('iceGlow');
+    const iceCrackOverlay = document.getElementById('iceCrackOverlay');
+    const iceCrackSound = document.getElementById('iceCrackSound');
+
+    // Ice simulation config
+    const ICE_WIDTH = 160;
+    const ICE_HEIGHT = 50;
+
+    // Ice color palette (transparent -> dark blue -> cyan -> white)
+    const ICE_PALETTE = [
+      [0, 0, 0, 0],           // 0: transparent
+      [10, 20, 40, 255],      // 1: very dark blue
+      [20, 40, 70, 255],      // 2: dark blue
+      [30, 60, 100, 255],     // 3
+      [40, 80, 130, 255],     // 4
+      [50, 100, 160, 255],    // 5
+      [60, 120, 180, 255],    // 6
+      [70, 140, 200, 255],    // 7
+      [80, 155, 210, 255],    // 8
+      [90, 170, 220, 255],    // 9
+      [100, 180, 230, 255],   // 10
+      [110, 190, 235, 255],   // 11
+      [120, 200, 240, 255],   // 12: cyan
+      [130, 210, 245, 255],   // 13
+      [140, 215, 248, 255],   // 14
+      [150, 220, 250, 255],   // 15
+      [160, 225, 252, 255],   // 16
+      [170, 230, 253, 255],   // 17
+      [180, 235, 254, 255],   // 18
+      [190, 240, 255, 255],   // 19: light cyan
+      [200, 242, 255, 255],   // 20
+      [210, 244, 255, 255],   // 21
+      [220, 246, 255, 255],   // 22
+      [230, 248, 255, 255],   // 23
+      [235, 250, 255, 255],   // 24
+      [240, 252, 255, 255],   // 25
+      [245, 253, 255, 255],   // 26
+      [250, 254, 255, 255],   // 27
+      [255, 255, 255, 255]    // 28: white (coldest/brightest)
+    ];
+
+    // Ice state
+    let icePixels = new Uint8Array(ICE_WIDTH * ICE_HEIGHT);
+    let iceImageData = null;
+    let iceRAF = null;
+    let iceIntensity = 0;
+    let iceRunning = false;
+    let lastIceCrackTime = 0;
+
+    // Initialize ice canvas
+    function initIceCanvas() {
+      iceCanvas.width = ICE_WIDTH;
+      iceCanvas.height = ICE_HEIGHT;
+      iceImageData = iceCtx.createImageData(ICE_WIDTH, ICE_HEIGHT);
+    }
+    initIceCanvas();
+
+    // Ice text effects - similar structure to fire but for cold
+    function updateIceTextEffects(intensity) {
+      const intensityClass =
+        intensity >= 0.85 ? 'intensity-max' :
+        intensity >= 0.6 ? 'intensity-high' :
+        intensity >= 0.3 ? 'intensity-medium' :
+        intensity > 0 ? 'intensity-low' : '';
+
+      fireTextElements.forEach(el => {
+        // Remove fire classes first
+        el.classList.remove('fire-text-effect', 'intensity-low', 'intensity-medium', 'intensity-high', 'intensity-max');
+
+        if (intensityClass) {
+          el.classList.add('ice-text-effect', intensityClass);
+        } else {
+          el.classList.remove('ice-text-effect');
+        }
+      });
+    }
+
+    function clearTextEffects() {
+      fireTextElements.forEach(el => {
+        el.classList.remove('fire-text-effect', 'ice-text-effect', 'intensity-low', 'intensity-medium', 'intensity-high', 'intensity-max');
+      });
+    }
+
+    // Play ice crack sound
+    function playIceCrackSound() {
+      const now = Date.now();
+      // Limit sound frequency
+      if (now - lastIceCrackTime < 2000) return;
+      lastIceCrackTime = now;
+
+      // Try to play sound if it has a valid source
+      if (iceCrackSound && iceCrackSound.src && !iceCrackSound.src.includes('AAAA')) {
+        iceCrackSound.currentTime = 0;
+        iceCrackSound.volume = 0.3 * iceIntensity;
+        iceCrackSound.play().catch(() => {}); // Ignore autoplay errors
+      }
+    }
+
+    function startAmbientIce(intensity) {
+      iceIntensity = intensity;
+      iceCanvas.classList.add('active');
+      iceGlow.classList.add('active');
+
+      // Scale canvas height based on intensity (150px to 350px)
+      const minHeight = 150;
+      const maxHeight = 350;
+      const height = minHeight + intensity * (maxHeight - minHeight);
+      iceCanvas.style.height = height + 'px';
+
+      // Show crack overlay at high intensity
+      if (intensity >= 0.6) {
+        iceCrackOverlay.classList.add('active');
+      } else {
+        iceCrackOverlay.classList.remove('active');
+      }
+
+      // Apply ice text effects
+      updateIceTextEffects(intensity);
+
+      // Occasional crack sound at high intensity
+      if (intensity >= 0.7 && Math.random() < 0.01) {
+        playIceCrackSound();
+      }
+
+      if (!iceRunning && settings.particles) {
+        iceRunning = true;
+        iceRAF = requestAnimationFrame(iceLoop);
+      }
+    }
+
+    function stopAmbientIce() {
+      iceIntensity = 0;
+      iceCanvas.classList.remove('active');
+      iceGlow.classList.remove('active');
+      iceCrackOverlay.classList.remove('active');
+      iceRunning = false;
+      if (iceRAF) {
+        cancelAnimationFrame(iceRAF);
+        iceRAF = null;
+      }
+      // Clear the ice
+      icePixels.fill(0);
+
+      // Clear text effects
+      clearTextEffects();
+    }
+
+    function iceLoop() {
+      if (!iceRunning) return;
+
+      updateIce();
+      renderIce();
+
+      iceRAF = requestAnimationFrame(iceLoop);
+    }
+
+    function updateIce() {
+      const maxColor = ICE_PALETTE.length - 1;
+
+      // Intensity affects frost amount, spread rate
+      const frostBase = 0.3 + iceIntensity * 0.7;
+      const frost = Math.floor(maxColor * frostBase);
+      const spreadRate = 2.5 + iceIntensity * 1.5;  // 2.5 to 4.0
+      const crystallizeChance = 0.2 + iceIntensity * 0.3;  // 0.2 to 0.5
+
+      // Update TOP row (frost source) - ice grows from top
+      for (let x = 0; x < ICE_WIDTH; x++) {
+        // Crystalline pattern - some columns freeze more than others
+        const columnFactor = (Math.sin(x * 0.3) + 1) * 0.3 + 0.4;  // 0.4 to 1.0
+        const frostAmount = Math.floor(frost * columnFactor);
+        icePixels[x] = Math.floor(Math.random() * frostAmount * 0.4) + Math.floor(frostAmount * 0.6);
+      }
+
+      // Propagate ice DOWNWARD (opposite of fire)
+      for (let y = ICE_HEIGHT - 1; y > 0; y--) {
+        for (let x = 0; x < ICE_WIDTH; x++) {
+          const srcIdx = (y - 1) * ICE_WIDTH + x;
+          const pixel = icePixels[srcIdx];
+
+          if (pixel === 0) {
+            // Small chance to spontaneously crystallize if neighbor has ice
+            const leftIdx = srcIdx - 1;
+            const rightIdx = srcIdx + 1;
+            const hasNeighbor = (x > 0 && icePixels[leftIdx] > 5) || (x < ICE_WIDTH - 1 && icePixels[rightIdx] > 5);
+
+            if (hasNeighbor && Math.random() < crystallizeChance * 0.1) {
+              icePixels[y * ICE_WIDTH + x] = Math.floor(Math.random() * 10) + 5;
+            } else {
+              icePixels[y * ICE_WIDTH + x] = 0;
+            }
+          } else {
+            // Ice decay/melt (slower than fire)
+            const decay = Math.floor(Math.random() * spreadRate);
+
+            // Branching crystalline spread
+            let drift = 0;
+            if (Math.random() < crystallizeChance) {
+              drift = Math.floor(Math.random() * 3) - 1;  // -1, 0, or 1
+            }
+            const dstX = Math.min(ICE_WIDTH - 1, Math.max(0, x + drift));
+            const dstIdx = y * ICE_WIDTH + dstX;
+
+            // Ice accumulates rather than just replacing
+            const newValue = Math.max(0, pixel - decay);
+            icePixels[dstIdx] = Math.max(icePixels[dstIdx], newValue);
+          }
+        }
+      }
+
+      // Add occasional sparkle/glint effect
+      if (Math.random() < iceIntensity * 0.02) {
+        const sparkleX = Math.floor(Math.random() * ICE_WIDTH);
+        const sparkleY = Math.floor(Math.random() * ICE_HEIGHT * 0.7);
+        if (icePixels[sparkleY * ICE_WIDTH + sparkleX] > 10) {
+          icePixels[sparkleY * ICE_WIDTH + sparkleX] = maxColor;  // Bright sparkle
+        }
+      }
+    }
+
+    function renderIce() {
+      const data = iceImageData.data;
+
+      for (let y = 0; y < ICE_HEIGHT; y++) {
+        for (let x = 0; x < ICE_WIDTH; x++) {
+          const iceIdx = y * ICE_WIDTH + x;
+          const colorIdx = Math.min(icePixels[iceIdx], ICE_PALETTE.length - 1);
+          const color = ICE_PALETTE[colorIdx] || ICE_PALETTE[0];
+
+          const pixelIdx = iceIdx * 4;
+          data[pixelIdx] = color[0];
+          data[pixelIdx + 1] = color[1];
+          data[pixelIdx + 2] = color[2];
+          data[pixelIdx + 3] = color[3];
+        }
+      }
+
+      iceCtx.putImageData(iceImageData, 0, 0);
+    }
+
+    // Spawn frost particles (falling snowflakes/ice crystals)
+    function spawnFrostParticles(count = 10) {
+      if (!settings.particles) return;
+
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'frost-particle';
+
+        const size = 4 + Math.random() * 8;
+        const duration = 2 + Math.random() * 2;
+        const startX = Math.random() * 100;
+
+        p.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          left: ${startX}%;
+          top: 0;
+          animation-duration: ${duration}s;
+          animation-delay: ${Math.random() * 0.5}s;
+        `;
+
+        particlesContainer.appendChild(p);
+
+        // Remove after animation
+        setTimeout(() => p.remove(), (duration + 0.5) * 1000);
+      }
+    }
+
     function updateAmbientEffects(playrate) {
+      // Fire zone: playrate >= fire threshold
       if (playrate >= settings.fireThreshold) {
-        // Calculate intensity proportional to playrate
+        // Stop ice if it was running
+        stopAmbientIce();
+
+        // Calculate fire intensity proportional to playrate
         // Fire threshold (e.g. 1.3x) = intensity 0.1 (small flames)
         // 2.0x = intensity ~0.4 (medium flames)
         // 3.0x = intensity ~0.7 (large flames)
@@ -1906,8 +2341,34 @@
         const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
 
         startAmbientFire(intensity);
-      } else {
+      }
+      // Ice zone: playrate <= ice threshold
+      else if (playrate <= settings.iceThreshold) {
+        // Stop fire if it was running
         stopAmbientFire();
+
+        // Calculate ice intensity proportional to how slow
+        // Ice threshold (e.g. 0.8x) = intensity 0.1 (light frost)
+        // 0.6x = intensity ~0.5 (medium ice)
+        // 0.5x = intensity 1.0 (maximum freeze)
+        const maxRate = settings.iceThreshold;
+        const minRate = 0.25;  // Min playrate supported
+
+        // Non-linear scaling - ice grows faster at lower speeds
+        const normalized = (maxRate - playrate) / (maxRate - minRate);
+        const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
+
+        startAmbientIce(intensity);
+
+        // Spawn frost particles occasionally at high intensity
+        if (intensity >= 0.5 && Math.random() < 0.02) {
+          spawnFrostParticles(Math.floor(intensity * 5));
+        }
+      }
+      // Normal zone: no effects
+      else {
+        stopAmbientFire();
+        stopAmbientIce();
       }
     }
 
