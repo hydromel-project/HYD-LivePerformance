@@ -1,12 +1,32 @@
 --[[
- * ReaScript Name: HYD Live Performance Server
- * Description: Unified server for live performance - combines NowPlaying, Teleprompter, and Playlist functionality
- * Author: hydromel-project
- * Version: 1.0
- * Features:
- *   - NowPlaying: Streams current song info (title, artist, album, year, cover art) from SONGS track
- *   - Teleprompter: Streams lyrics blocks from LYRICS track for teleprompter display
- *   - Playlist: Manages song queue, project tabs, and web interface for playlist system
+@description HYD Live Performance Server
+@version 1.0.0
+@author hydromel-project
+@about
+  # HYD Live Performance Server
+
+  Unified server for live streaming performances in REAPER.
+
+  ## Features
+  - **NowPlaying**: Streams current song info (title, artist, album, year, cover art) from SONGS track
+  - **Teleprompter**: Streams lyrics blocks from LYRICS track for teleprompter display
+  - **Playlist**: Manages song queue, project tabs, and web interface for playlist system
+
+  ## Requirements
+  - REAPER 6.0+
+  - js_ReaScriptAPI extension
+  - ffmpeg in PATH (optional, for cover art)
+
+  ## Setup
+  1. Create tracks named LYRICS and/or SONGS
+  2. Enable REAPER web server (Preferences > Control/OSC/Web)
+  3. Run this script
+  4. Open web interfaces in browser
+@provides
+  [webinterface] ../www/Teleprompter.html
+  [webinterface] ../www/NowPlaying.html
+  [webinterface] ../www/Playlist.html
+@link https://github.com/hydromel-project/HYD-LivePerformance
 --]]
 
 -- ============================================================================

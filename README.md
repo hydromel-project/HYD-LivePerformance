@@ -35,7 +35,28 @@ A comprehensive live performance toolkit for REAPER that provides real-time web 
 - [js_ReaScriptAPI extension](https://forum.cockos.com/showthread.php?t=212174) (for folder dialogs)
 - [ffmpeg](https://ffmpeg.org/) in PATH (optional, for cover art extraction)
 
-### Setup
+### Option 1: ReaPack (Recommended)
+
+1. **Install ReaPack** if you haven't: https://reapack.com/
+
+2. **Add this repository to ReaPack**:
+   - Extensions > ReaPack > Import repositories...
+   - Paste this URL:
+   ```
+   https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/index.xml
+   ```
+
+3. **Install the scripts**:
+   - Extensions > ReaPack > Browse packages
+   - Search for "HYD"
+   - Right-click > Install
+
+4. **Enable REAPER's web interface**:
+   - Preferences > Control/OSC/Web
+   - Add > Web browser interface
+   - Set port (default: 9010)
+
+### Option 2: Manual Installation
 
 1. **Copy Lua scripts** to your REAPER Scripts folder:
    ```

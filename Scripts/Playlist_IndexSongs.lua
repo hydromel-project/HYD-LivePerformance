@@ -1,8 +1,20 @@
 --[[
- * ReaScript Name: Playlist Index Songs
- * Description: Scans songs folder for .RPP files and generates a searchable JSON index
- * Author: hydromel-project
- * Version: 1.0
+@description HYD Playlist Index Songs
+@version 1.0.0
+@author hydromel-project
+@about
+  # HYD Playlist Index Songs
+
+  Scans a folder for .RPP files and generates a searchable JSON index for the Playlist system.
+
+  ## Usage
+  1. Run this script
+  2. Select folder containing your song .RPP files (named "Artist - Title.rpp")
+  3. Index is generated at reaper_www_root/songs_index.json
+
+  ## Requirements
+  - js_ReaScriptAPI extension (for folder dialog)
+@link https://github.com/hydromel-project/HYD-LivePerformance
 --]]
 
 -- CONFIGURATION
