@@ -126,6 +126,7 @@ class TwitchIntegration extends EventEmitter {
     const rewardsConfig = config.get('rewards');
     const rewardId = event.rewardId;
     const username = event.userName;
+    const userId = event.userId;
 
     // Find which action this reward corresponds to
     let action = null;
@@ -141,10 +142,21 @@ class TwitchIntegration extends EventEmitter {
       return;
     }
 
+    // Fetch user's avatar
+    let avatarUrl = null;
+    try {
+      const user = await this.apiClient.users.getUserById(userId);
+      if (user) {
+        avatarUrl = user.profilePictureUrl;
+      }
+    } catch (err) {
+      console.warn('Could not fetch user avatar:', err.message);
+    }
+
     console.log(`🎯 ${username} redeemed: ${action}`);
 
-    // Process the action
-    const result = gameEngine.processAction(action, username, { source: 'channelPoints' });
+    // Process the action with avatar
+    const result = gameEngine.processAction(action, username, { source: 'channelPoints', avatarUrl });
 
     // Send chat message
     if (config.get('game.announcements.enabled') && result.message) {

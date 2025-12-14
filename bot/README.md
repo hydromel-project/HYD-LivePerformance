@@ -43,24 +43,88 @@ Go to http://localhost:9030 in your browser
 
 ### Twitch Setup
 
-1. Go to https://dev.twitch.tv/console
-2. Click **Register Your Application**
-3. Fill in:
-   - **Name**: HYD Playrate Bot (or anything)
-   - **OAuth Redirect URLs**: `http://localhost:9030/api/twitch/callback`
-   - **Category**: Chat Bot
-4. Click **Create**
-5. Copy the **Client ID** and **Client Secret**
-6. In the config panel, paste these values and your channel name
-7. Click **Connect to Twitch**
-8. Authorize in the popup window
+You need to create an "Application" in Twitch's Developer Console. This gives you credentials that let the bot control channel points on your behalf.
 
-### Streamlabs Setup
+#### Step 1: Open Twitch Developer Console
+
+1. Go to https://dev.twitch.tv/console
+2. Log in with your Twitch account (the account you stream from)
+3. Click **Applications** in the left sidebar (if not already there)
+
+#### Step 2: Register a New Application
+
+1. Click the **+ Register Your Application** button
+2. Fill in the form:
+
+| Field | What to enter |
+|-------|---------------|
+| **Name** | `HYD Playrate Bot` (or any name you want - must be unique on Twitch) |
+| **OAuth Redirect URLs** | `http://localhost:9030/api/twitch/callback` |
+| **Category** | Select **Chat Bot** from dropdown |
+| **Client Type** | Select **Confidential** |
+
+3. Complete the CAPTCHA if shown
+4. Click **Create**
+
+> **OAuth Redirect URL must be EXACTLY:**
+> ```
+> http://localhost:9030/api/twitch/callback
+> ```
+> - Use `http://` (not `https://`)
+> - Include port `:9030`
+> - No trailing slash
+> - If you changed the bot's port, use that number instead of 9030
+
+#### Step 3: Get Your Client ID and Secret
+
+After creating the app, you'll see your application's page:
+
+1. **Client ID** - Displayed on the page, copy this
+2. **Client Secret** - Click **New Secret** button to generate one
+   - ⚠️ **Copy the secret immediately!** It's only shown once
+   - If you lose it, you'll need to generate a new one
+
+Your credentials will look something like:
+```
+Client ID:     a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5
+Client Secret: p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0
+```
+
+#### Step 4: Connect in Config Panel
+
+1. Start the bot: `npm start`
+2. Open http://localhost:9030 in your browser
+3. In the **Twitch Setup** section, enter:
+   - **Client ID** - Paste from Step 3
+   - **Client Secret** - Paste from Step 3
+   - **Channel Name** - Your Twitch username (e.g., `hydromelproject`)
+4. Click **Save**
+5. Click **Connect to Twitch**
+6. A popup opens - click **Authorize** to grant permissions
+7. You should see "Twitch Connected!" - close the popup
+
+The bot now has permission to:
+- Create/manage channel point rewards
+- Read when viewers redeem rewards
+- Send chat messages
+
+### Streamlabs Setup (for donations)
 
 1. Go to your Streamlabs Dashboard
 2. Navigate to **Settings** → **API Settings** → **API Tokens**
 3. Copy your **Socket API Token**
 4. Paste it in the config panel
+
+### StreamElements Setup (for donations)
+
+1. Go to your StreamElements Dashboard: https://streamelements.com/dashboard
+2. Click your profile icon → **Account Settings**
+3. Go to **Channels** tab
+4. Click **Show secrets**
+5. Copy the **JWT Token**
+6. Paste it in the config panel
+
+> **Note:** You only need to configure ONE donation platform (Streamlabs OR StreamElements), whichever you use for accepting tips.
 
 ## How It Works
 
@@ -138,12 +202,24 @@ bot/
 - Check OSC is configured in REAPER preferences
 - Verify port numbers match
 
-### "Twitch not connecting"
+### "Twitch not connecting" or "Invalid redirect URI"
 
-- Check Client ID and Secret are correct
-- Make sure redirect URL in Twitch dev console is exactly:
-  `http://localhost:9030/api/twitch/callback`
-- Try disconnecting and reconnecting
+This is usually a redirect URL mismatch:
+
+1. Go to https://dev.twitch.tv/console and click on your app
+2. Check **OAuth Redirect URLs** section
+3. The URL must be **exactly**: `http://localhost:9030/api/twitch/callback`
+
+Common mistakes:
+- Using `https://` instead of `http://`
+- Forgetting the port number `:9030`
+- Having a trailing slash at the end
+- Typo in `/api/twitch/callback`
+
+Other fixes:
+- Regenerate your Client Secret and update it in the config panel
+- Clear your browser cookies for twitch.tv
+- Try a different browser for the auth popup
 
 ### Channel point rewards not appearing
 

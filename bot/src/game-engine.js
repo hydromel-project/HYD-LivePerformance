@@ -100,7 +100,7 @@ class GameEngine extends EventEmitter {
       this.lastActionTime = Date.now();
       this.addToHistory(action, username, result.newRate, options.source);
       this.scheduleAutoReset();
-      this.emit('actionProcessed', { action, username, ...result, source: options.source });
+      this.emit('actionProcessed', { action, username, ...result, source: options.source, avatarUrl: options.avatarUrl });
     }
 
     return result;
@@ -115,11 +115,17 @@ class GameEngine extends EventEmitter {
       };
     }
 
-    const newRate = reaper.adjustPlayrate(increment);
+    // Apply proportional scaling based on current BPM
+    const scaledIncrement = reaper.getScaledIncrement(increment);
+    const newRate = reaper.adjustPlayrate(scaledIncrement);
+
     return {
       success: true,
       action: 'speedUp',
       newRate: newRate,
+      baseIncrement: increment,
+      scaledIncrement: scaledIncrement,
+      bpm: reaper.getBpm(),
       message: this.formatMessage('speedUp', { user: username, rate: newRate.toFixed(2) })
     };
   }
@@ -133,11 +139,17 @@ class GameEngine extends EventEmitter {
       };
     }
 
-    const newRate = reaper.adjustPlayrate(-increment);
+    // Apply proportional scaling based on current BPM
+    const scaledIncrement = reaper.getScaledIncrement(increment);
+    const newRate = reaper.adjustPlayrate(-scaledIncrement);
+
     return {
       success: true,
       action: 'slowDown',
       newRate: newRate,
+      baseIncrement: increment,
+      scaledIncrement: scaledIncrement,
+      bpm: reaper.getBpm(),
       message: this.formatMessage('slowDown', { user: username, rate: newRate.toFixed(2) })
     };
   }
@@ -227,15 +239,22 @@ class GameEngine extends EventEmitter {
    * Get current game state
    */
   getState() {
+    const scalingConfig = config.get('game.proportionalScaling') || {};
+
     return {
       enabled: this.isEnabled(),
       currentPlayrate: reaper.getPlayrate(),
+      currentBpm: reaper.getBpm(),
       onCooldown: this.isOnCooldown(),
       cooldownRemaining: this.getCooldownRemaining(),
       canSpeedUp: reaper.canSpeedUp(),
       canSlowDown: reaper.canSlowDown(),
       minPlayrate: config.get('game.minPlayrate'),
       maxPlayrate: config.get('game.maxPlayrate'),
+      proportionalScaling: {
+        enabled: scalingConfig.enabled ?? false,
+        referenceBpm: scalingConfig.referenceBpm || 120
+      },
       history: this.actionHistory.slice(0, 10)
     };
   }

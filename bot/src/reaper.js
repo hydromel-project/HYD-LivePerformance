@@ -7,6 +7,7 @@ class ReaperOSC extends EventEmitter {
     super();
     this.udpPort = null;
     this.currentPlayrate = 1.0;
+    this.currentBpm = 120;
     this.connected = false;
   }
 
@@ -65,6 +66,14 @@ class ReaperOSC extends EventEmitter {
       }
     }
 
+    // Handle tempo/BPM feedback
+    if (address === '/tempo' || address === '/master/tempo' || address === '/bpm') {
+      if (args && args.length > 0) {
+        this.currentBpm = args[0].value;
+        this.emit('bpmChanged', this.currentBpm);
+      }
+    }
+
     // Handle transport state
     if (address === '/play') {
       this.emit('transportChanged', { playing: args[0]?.value === 1 });
@@ -87,13 +96,19 @@ class ReaperOSC extends EventEmitter {
     rate = Math.max(gameConfig.minPlayrate, Math.min(gameConfig.maxPlayrate, rate));
     rate = Math.round(rate * 100) / 100; // Round to 2 decimal places
 
-    // REAPER expects playrate as a normalized value for the slider (0-1)
-    // But we can also use the action approach
-    // The /playrate address expects the actual rate value
+    // REAPER OSC expects a normalized value (0-1) for /playrate
+    // REAPER's playrate range is 0.25x to 4x (linear scale)
+    // 0.0 = 0.25x, 0.2 = 1.0x, 1.0 = 4.0x
+    const minRate = 0.25;
+    const maxRate = 4.0;
+    const normalized = (rate - minRate) / (maxRate - minRate);
+    const clampedNormalized = Math.max(0, Math.min(1, normalized));
 
-    this.send('/playrate', [{ type: 'f', value: rate }]);
+    this.send('/playrate', [{ type: 'f', value: clampedNormalized }]);
     this.currentPlayrate = rate;
     this.emit('playrateChanged', rate);
+
+    console.log(`📡 Set playrate: ${rate}x (normalized: ${clampedNormalized.toFixed(3)})`);
 
     return rate;
   }
@@ -131,6 +146,45 @@ class ReaperOSC extends EventEmitter {
    */
   getPlayrate() {
     return this.currentPlayrate;
+  }
+
+  /**
+   * Get current BPM
+   */
+  getBpm() {
+    return this.currentBpm;
+  }
+
+  /**
+   * Set BPM (from external source like GameHUD)
+   */
+  setBpm(bpm) {
+    if (bpm > 0) {
+      this.currentBpm = bpm;
+      this.emit('bpmChanged', bpm);
+    }
+  }
+
+  /**
+   * Calculate scaled increment based on current BPM
+   * Keeps the effective BPM change consistent regardless of tempo
+   */
+  getScaledIncrement(baseIncrement) {
+    const scalingConfig = config.get('game.proportionalScaling');
+
+    if (!scalingConfig || !scalingConfig.enabled) {
+      return baseIncrement;
+    }
+
+    const referenceBpm = scalingConfig.referenceBpm || 120;
+    const currentBpm = this.currentBpm || 120;
+
+    // Scale: at higher BPM, use smaller increment
+    // Formula: actualIncrement = baseIncrement * (referenceBpm / currentBpm)
+    const scaledIncrement = baseIncrement * (referenceBpm / currentBpm);
+
+    // Round to 3 decimal places
+    return Math.round(scaledIncrement * 1000) / 1000;
   }
 
   /**

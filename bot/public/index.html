@@ -501,6 +501,10 @@
           <span class="dot"></span>
           <span>Streamlabs</span>
         </div>
+        <div class="badge" id="streamelementsStatus">
+          <span class="dot"></span>
+          <span>StreamElements</span>
+        </div>
       </div>
     </header>
 
@@ -587,9 +591,33 @@
           </button>
         </div>
 
-        <div class="divider"></div>
+      </div>
 
-        <h3 style="font-size:14px;margin-bottom:15px;">Donation Actions</h3>
+      <!-- StreamElements Setup -->
+      <div class="card">
+        <h2><span class="icon">🟢</span> StreamElements Setup</h2>
+
+        <div class="form-group">
+          <label>JWT Token</label>
+          <input type="password" id="streamelementsToken" placeholder="From StreamElements Dashboard">
+          <p class="help-text">
+            Find this in StreamElements Dashboard → Account Settings → Channels → Show secrets → JWT Token
+          </p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="saveStreamElementsConfig()">
+            Save & Connect
+          </button>
+        </div>
+      </div>
+
+      <!-- Donation Actions -->
+      <div class="card">
+        <h2><span class="icon">💰</span> Donation Actions</h2>
+        <p class="help-text" style="margin-bottom:15px;">
+          Configure what happens when viewers donate via Streamlabs or StreamElements.
+        </p>
         <div id="donationThresholds"></div>
         <button class="btn btn-secondary btn-block" onclick="addDonationThreshold()">
           + Add Threshold
@@ -758,6 +786,28 @@
 
         <div class="divider"></div>
 
+        <h3 style="font-size:14px;margin-bottom:10px;">Proportional Scaling</h3>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">
+          Keeps the BPM change consistent regardless of tempo. A +0.1x at 120 BPM feels the same as at 210 BPM.
+        </p>
+        <label class="checkbox-group" style="margin-bottom:10px;">
+          <input type="checkbox" id="proportionalScalingEnabled" checked>
+          <span>Enable proportional scaling</span>
+        </label>
+        <div class="form-group">
+          <label>Reference BPM (increment is as-configured at this BPM)</label>
+          <input type="number" id="proportionalReferenceBpm" value="120">
+        </div>
+        <div style="background:var(--bg-input);border-radius:6px;padding:12px;margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Current scaling:</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span>BPM: <strong id="currentBpmDisplay">120</strong></span>
+            <span>Actual increment: <strong id="scaledIncrementDisplay">0.100x</strong></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
         <h3 style="font-size:14px;margin-bottom:10px;">Global Cooldown</h3>
         <label class="checkbox-group" style="margin-bottom:10px;">
           <input type="checkbox" id="globalCooldownEnabled" checked>
@@ -791,6 +841,51 @@
         </button>
       </div>
 
+      <!-- Test Panel -->
+      <div class="card">
+        <h2><span class="icon">🧪</span> Test Effects</h2>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:15px;">
+          Test how effects appear in the GameHUD overlay. Make sure GameHUD is open and connected.
+        </p>
+
+        <h3 style="font-size:13px;margin-bottom:10px;color:var(--text);">Simulate Actions</h3>
+        <div class="test-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+          <button class="quick-action speed-up" onclick="testEffect('speedUp')">🔥 Speed Up</button>
+          <button class="quick-action slow-down" onclick="testEffect('slowDown')">🧊 Slow Down</button>
+          <button class="quick-action chaos" onclick="testEffect('chaos')">🎲 Chaos</button>
+          <button class="quick-action reset" onclick="testEffect('reset')">✨ Reset</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:13px;margin-bottom:10px;color:var(--text);">Test Countdown</h3>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">
+          Simulate the auto-reset countdown timer.
+        </p>
+        <div class="form-row" style="margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Countdown seconds</label>
+            <input type="number" id="testCountdownSeconds" value="15" min="5" max="120">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="testCountdown()">Start Countdown</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-block" onclick="cancelTestCountdown()">Cancel Countdown</button>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:13px;margin-bottom:10px;color:var(--text);">Test Individual Effects</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="btn btn-secondary" onclick="testVisualEffect('shake')">Screen Shake</button>
+          <button class="btn btn-secondary" onclick="testVisualEffect('flash')">Flash</button>
+          <button class="btn btn-secondary" onclick="testVisualEffect('fireParticles')">Fire Particles</button>
+          <button class="btn btn-secondary" onclick="testVisualEffect('iceParticles')">Ice Particles</button>
+          <button class="btn btn-secondary" onclick="testVisualEffect('ambientFire')">Ambient Fire</button>
+          <button class="btn btn-secondary" onclick="testVisualEffect('stopAmbient')">Stop Ambient</button>
+        </div>
+      </div>
+
       <!-- History -->
       <div class="card">
         <h2><span class="icon">📜</span> Recent Activity</h2>
@@ -808,6 +903,7 @@
   <script>
     let ws;
     let config = {};
+    let currentBpm = 120;
 
     // Connect to WebSocket
     function connectWS() {
@@ -861,6 +957,13 @@
           config = msg.data;
           updateUI();
           break;
+
+        case 'bpmChanged':
+          if (msg.data.bpm) {
+            currentBpm = msg.data.bpm;
+            updateScaledIncrementDisplay();
+          }
+          break;
       }
     }
 
@@ -872,6 +975,9 @@
 
       // Streamlabs
       document.getElementById('streamlabsToken').value = config.streamlabs?.socketToken || '';
+
+      // StreamElements
+      document.getElementById('streamelementsToken').value = config.streamelements?.jwtToken || '';
 
       // REAPER
       document.getElementById('reaperSendPort').value = config.reaper?.sendPort || 8000;
@@ -891,6 +997,11 @@
       document.getElementById('autoResetEnabled').checked = config.game?.autoReset?.enabled || false;
       document.getElementById('autoResetDelay').value = config.game?.autoReset?.delaySeconds || 60;
       document.getElementById('autoResetValue').value = config.game?.autoReset?.resetTo || 1.0;
+
+      // Proportional scaling
+      document.getElementById('proportionalScalingEnabled').checked = config.game?.proportionalScaling?.enabled ?? true;
+      document.getElementById('proportionalReferenceBpm').value = config.game?.proportionalScaling?.referenceBpm || 120;
+      updateScaledIncrementDisplay();
 
       // Rewards
       const rewards = config.rewards || {};
@@ -925,6 +1036,13 @@
       document.getElementById('reaperStatus').classList.toggle('connected', state.reaper?.connected);
       document.getElementById('twitchStatus').classList.toggle('connected', state.twitch?.connected);
       document.getElementById('streamlabsStatus').classList.toggle('connected', state.streamlabs?.connected);
+      document.getElementById('streamelementsStatus').classList.toggle('connected', state.streamelements?.connected);
+
+      // Update BPM from game state
+      if (state.game?.currentBpm) {
+        currentBpm = state.game.currentBpm;
+        updateScaledIncrementDisplay();
+      }
     }
 
     function updateGameToggle(enabled) {
@@ -937,6 +1055,21 @@
       } else {
         text.textContent = 'ACTIVATE';
         status.textContent = 'Enable to create channel point rewards and start accepting viewer interactions.';
+      }
+    }
+
+    function updateScaledIncrementDisplay() {
+      const enabled = document.getElementById('proportionalScalingEnabled')?.checked ?? true;
+      const referenceBpm = parseInt(document.getElementById('proportionalReferenceBpm')?.value) || 120;
+      const baseIncrement = parseFloat(document.getElementById('rewardSpeedUpIncrement')?.value) || 0.1;
+
+      document.getElementById('currentBpmDisplay').textContent = currentBpm;
+
+      if (enabled && referenceBpm > 0 && currentBpm > 0) {
+        const scaledIncrement = baseIncrement * (referenceBpm / currentBpm);
+        document.getElementById('scaledIncrementDisplay').textContent = scaledIncrement.toFixed(3) + 'x';
+      } else {
+        document.getElementById('scaledIncrementDisplay').textContent = baseIncrement.toFixed(3) + 'x';
       }
     }
 
@@ -967,6 +1100,11 @@
         body: JSON.stringify({ rate })
       });
     });
+
+    // Update scaled increment display when settings change
+    document.getElementById('proportionalScalingEnabled').addEventListener('change', updateScaledIncrementDisplay);
+    document.getElementById('proportionalReferenceBpm').addEventListener('input', updateScaledIncrementDisplay);
+    document.getElementById('rewardSpeedUpIncrement').addEventListener('input', updateScaledIncrementDisplay);
 
     async function triggerAction(action) {
       const response = await fetch('/api/action', {
@@ -1008,7 +1146,17 @@
         }
       };
       await updateConfig(data);
-      showToast('Streamlabs config saved', 'success');
+      showToast('Streamlabs config saved. Restart the bot to connect.', 'success');
+    }
+
+    async function saveStreamElementsConfig() {
+      const data = {
+        streamelements: {
+          jwtToken: document.getElementById('streamelementsToken').value
+        }
+      };
+      await updateConfig(data);
+      showToast('StreamElements config saved. Restart the bot to connect.', 'success');
     }
 
     async function saveReaperConfig() {
@@ -1060,6 +1208,10 @@
         game: {
           minPlayrate: parseFloat(document.getElementById('gameMinPlayrate').value),
           maxPlayrate: parseFloat(document.getElementById('gameMaxPlayrate').value),
+          proportionalScaling: {
+            enabled: document.getElementById('proportionalScalingEnabled').checked,
+            referenceBpm: parseInt(document.getElementById('proportionalReferenceBpm').value)
+          },
           globalCooldown: {
             enabled: document.getElementById('globalCooldownEnabled').checked,
             seconds: parseInt(document.getElementById('globalCooldownSeconds').value)
@@ -1128,6 +1280,56 @@
       setTimeout(() => {
         toast.classList.remove('show');
       }, 3000);
+    }
+
+    // ============ TEST FUNCTIONS ============
+
+    async function testEffect(action) {
+      // Send test action via WebSocket - this will be broadcast to GameHUD
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'testAction',
+          action: action,
+          username: 'TEST_USER'
+        }));
+        showToast(`Testing ${action} effect`, 'success');
+      } else {
+        showToast('WebSocket not connected', 'error');
+      }
+    }
+
+    function testCountdown() {
+      const seconds = parseInt(document.getElementById('testCountdownSeconds').value) || 15;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'testCountdown',
+          seconds: seconds
+        }));
+        showToast(`Starting ${seconds}s countdown test`, 'success');
+      } else {
+        showToast('WebSocket not connected', 'error');
+      }
+    }
+
+    function cancelTestCountdown() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'testCancelCountdown'
+        }));
+        showToast('Countdown cancelled', 'success');
+      }
+    }
+
+    function testVisualEffect(effect) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'testVisualEffect',
+          effect: effect
+        }));
+        showToast(`Testing ${effect}`, 'success');
+      } else {
+        showToast('WebSocket not connected', 'error');
+      }
     }
 
     // Load initial state

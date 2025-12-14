@@ -30,12 +30,23 @@ const defaultConfig = {
     socketToken: ''
   },
 
+  // StreamElements settings
+  streamelements: {
+    jwtToken: ''
+  },
+
   // Game settings
   game: {
     enabled: false,
     minPlayrate: 0.5,
-    maxPlayrate: 2.5,
+    maxPlayrate: 4.0,
     defaultPlayrate: 1.0,
+
+    // Proportional scaling - keeps BPM change consistent regardless of tempo
+    proportionalScaling: {
+      enabled: true,
+      referenceBpm: 120  // At this BPM, increment is as configured
+    },
 
     // Auto-reset settings
     autoReset: {

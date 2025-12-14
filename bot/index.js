@@ -10,12 +10,13 @@ const server = require('./src/server');
 const reaper = require('./src/reaper');
 const twitch = require('./src/twitch');
 const streamlabs = require('./src/streamlabs');
+const streamelements = require('./src/streamelements');
 const gameEngine = require('./src/game-engine');
 
 console.log('');
 console.log('╔════════════════════════════════════════╗');
 console.log('║     HYD Playrate Bot v1.0.0            ║');
-console.log('║     Twitch + Streamlabs + REAPER       ║');
+console.log('║  Twitch + Streamlabs + StreamElements  ║');
 console.log('╚════════════════════════════════════════╝');
 console.log('');
 
@@ -34,15 +35,19 @@ async function start() {
   // Connect to Streamlabs (if configured)
   streamlabs.connect();
 
+  // Connect to StreamElements (if configured)
+  streamelements.connect();
+
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   // Check what's configured
   const twitchConfigured = config.get('twitch.clientId') && config.get('twitch.accessToken');
   const streamlabsConfigured = !!config.get('streamlabs.socketToken');
+  const streamelementsConfigured = !!config.get('streamelements.jwtToken');
   const reaperConfigured = config.get('reaper.sendPort');
 
-  if (!twitchConfigured && !streamlabsConfigured) {
+  if (!twitchConfigured && !streamlabsConfigured && !streamelementsConfigured) {
     console.log('');
     console.log('⚠️  No integrations configured yet!');
     console.log('');
@@ -80,6 +85,7 @@ process.on('SIGINT', async () => {
 
   await twitch.disconnect();
   streamlabs.disconnect();
+  streamelements.disconnect();
   reaper.disconnect();
   server.stop();
 

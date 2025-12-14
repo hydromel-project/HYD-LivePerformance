@@ -6,6 +6,7 @@ const gameEngine = require('./game-engine');
 const reaper = require('./reaper');
 const twitch = require('./twitch');
 const streamlabs = require('./streamlabs');
+const streamelements = require('./streamelements');
 
 class WebServer {
   constructor() {
@@ -64,6 +65,7 @@ class WebServer {
         game: gameEngine.getState(),
         twitch: twitch.getStatus(),
         streamlabs: streamlabs.getStatus(),
+        streamelements: streamelements.getStatus(),
         reaper: {
           connected: reaper.connected,
           playrate: reaper.getPlayrate()
@@ -237,6 +239,71 @@ class WebServer {
       case 'setPlayrate':
         const newRate = reaper.setPlayrate(msg.rate);
         this.broadcast({ type: 'playrateChanged', data: { rate: newRate } });
+        break;
+
+      case 'updateBpm':
+        // GameHUD can send BPM updates
+        if (msg.bpm > 0) {
+          reaper.setBpm(msg.bpm);
+          this.broadcast({ type: 'bpmChanged', data: { bpm: msg.bpm } });
+        }
+        break;
+
+      // ============ TEST COMMANDS ============
+
+      case 'testAction':
+        // Test action - actually changes playrate in REAPER
+        const currentRate = reaper.getPlayrate();
+        const gameConfig = config.get('game');
+        const minRate = gameConfig.minPlayrate || 0.5;
+        const maxRate = gameConfig.maxPlayrate || 4.0;
+        const testPlayrate = {
+          speedUp: Math.min(maxRate, currentRate + 0.15),
+          slowDown: Math.max(minRate, currentRate - 0.15),
+          chaos: minRate + Math.random() * (maxRate - minRate),
+          reset: gameConfig.defaultPlayrate || 1.0
+        }[msg.action] || 1.0;
+
+        // Actually set the playrate in REAPER
+        reaper.setPlayrate(testPlayrate);
+
+        // Sample Twitch avatars for testing
+        const testAvatars = [
+          'https://static-cdn.jtvnw.net/jtv_user_pictures/8a6381c7-d0c0-4576-b179-38bd5ce1d6af-profile_image-300x300.png',
+          'https://static-cdn.jtvnw.net/jtv_user_pictures/dallas-profile_image-1a2c906ee2c35f12-300x300.png',
+          'https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-profile_image-300x300.png'
+        ];
+
+        this.broadcast({
+          type: 'actionProcessed',
+          data: {
+            action: msg.action,
+            username: msg.username || 'TEST_USER',
+            newRate: testPlayrate,
+            source: 'test',
+            avatarUrl: testAvatars[Math.floor(Math.random() * testAvatars.length)]
+          }
+        });
+        break;
+
+      case 'testCountdown':
+        // Start a test countdown
+        this.broadcast({
+          type: 'testCountdown',
+          data: { seconds: msg.seconds || 15 }
+        });
+        break;
+
+      case 'testCancelCountdown':
+        this.broadcast({ type: 'testCancelCountdown' });
+        break;
+
+      case 'testVisualEffect':
+        // Pass through visual effect test to GameHUD
+        this.broadcast({
+          type: 'testVisualEffect',
+          data: { effect: msg.effect }
+        });
         break;
     }
   }
