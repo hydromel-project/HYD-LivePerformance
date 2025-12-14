@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HYD Live Performance Setup Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #00d4ff;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 40px;
+    }
+
+    .step {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border-left: 4px solid #00d4ff;
+    }
+
+    .step.done {
+      border-left-color: #00ff88;
+      opacity: 0.7;
+    }
+
+    .step-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: #00d4ff;
+      color: #1a1a2e;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32px;
+      font-weight: bold;
+      margin-right: 12px;
+    }
+
+    .step.done .step-number {
+      background: #00ff88;
+    }
+
+    .step h2 {
+      display: inline;
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    .step p {
+      margin-top: 12px;
+      margin-left: 44px;
+      color: #bbb;
+    }
+
+    .step ol {
+      margin-top: 12px;
+      margin-left: 64px;
+      color: #bbb;
+    }
+
+    .step li {
+      margin-bottom: 8px;
+    }
+
+    .step code {
+      background: rgba(0,212,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #00d4ff;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    .highlight {
+      background: rgba(0,255,136,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #00ff88;
+    }
+
+    .urls {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+
+    .urls h3 {
+      color: #00d4ff;
+      margin-bottom: 15px;
+    }
+
+    .url-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .url-item a {
+      color: #00d4ff;
+      text-decoration: none;
+      font-family: monospace;
+    }
+
+    .url-item a:hover {
+      text-decoration: underline;
+    }
+
+    .url-label {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      min-width: 100px;
+    }
+
+    .note {
+      background: rgba(255,200,0,0.1);
+      border: 1px solid rgba(255,200,0,0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 30px;
+      color: #ffc800;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .checkmark {
+      color: #00ff88;
+      margin-left: 10px;
+    }
+
+    .screenshot {
+      background: #0a0a15;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0 15px 44px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: #666;
+    }
+
+    footer a {
+      color: #00d4ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>HYD Live Performance</h1>
+    <p class="subtitle">Setup Guide</p>
+
+    <div class="step done">
+      <span class="step-number">1</span>
+      <h2>Install via ReaPack</h2>
+      <span class="checkmark">✓ Done</span>
+      <p>Scripts and web interfaces have been installed.</p>
+    </div>
+
+    <div class="step done">
+      <span class="step-number">2</span>
+      <h2>Run Setup Script</h2>
+      <span class="checkmark">✓ Done</span>
+      <p>Toolbar button has been added.</p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <h2>Configure Web Server</h2>
+      <p>Add a web browser interface in REAPER:</p>
+      <ol>
+        <li>Open <code>Preferences</code> (Ctrl+P)</li>
+        <li>Navigate to <code>Control/OSC/Web</code></li>
+        <li>Click <span class="highlight">Add</span></li>
+        <li>Select <code>Web browser interface</code></li>
+        <li>Set port to <code>9020</code></li>
+        <li>Leave other settings as default</li>
+        <li>Click <span class="highlight">OK</span>, then <span class="highlight">Apply</span></li>
+      </ol>
+      <div class="screenshot">
+        Preferences → Control/OSC/Web → Add → Web browser interface → Port: 9020
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">4</span>
+      <h2>Set Up Your Project</h2>
+      <p>Create the required tracks in your REAPER project:</p>
+      <ol>
+        <li>Create a track named <code>LYRICS</code> for teleprompter text</li>
+        <li>Create a track named <code>SONGS</code> for audio with metadata</li>
+        <li>Add empty items to LYRICS track, put lyrics in Item Notes</li>
+        <li>Create regions for each song section</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <span class="step-number">5</span>
+      <h2>Start the Server</h2>
+      <p>Click the <code>HYD Live Performance Server</code> button in your toolbar, or run it from Actions.</p>
+    </div>
+
+    <div class="urls">
+      <h3>Web Interface URLs</h3>
+      <div class="url-item">
+        <span class="url-label">Teleprompter</span>
+        <a href="http://localhost:9020/Teleprompter.html" target="_blank">http://localhost:9020/Teleprompter.html</a>
+      </div>
+      <div class="url-item">
+        <span class="url-label">Now Playing</span>
+        <a href="http://localhost:9020/NowPlaying.html" target="_blank">http://localhost:9020/NowPlaying.html</a>
+      </div>
+      <div class="url-item">
+        <span class="url-label">Playlist</span>
+        <a href="http://localhost:9020/Playlist.html" target="_blank">http://localhost:9020/Playlist.html</a>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Note: Links won't work until...</strong>
+      You've completed Step 3 (web server config) and Step 5 (start server script).
+    </div>
+
+    <footer>
+      <a href="https://github.com/hydromel-project/HYD-LivePerformance" target="_blank">GitHub</a>
+      &nbsp;•&nbsp;
+      hydromel-project
+    </footer>
+  </div>
+</body>
+</html>

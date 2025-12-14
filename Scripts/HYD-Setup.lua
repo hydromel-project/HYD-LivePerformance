@@ -1,13 +1,13 @@
 --[[
 @description HYD Live Performance Setup
-@version 1.0.2
+@version 1.0.3
 @author hydromel-project
 @about
   # HYD Live Performance Setup
 
   One-time setup script that:
   - Adds the Live Performance Server to the main toolbar (with text icon)
-  - Provides instructions for web server setup
+  - Opens setup guide in browser with instructions
 
   Run this once after installing via ReaPack.
 @link https://github.com/hydromel-project/HYD-LivePerformance
@@ -19,6 +19,28 @@ local WEB_PORT = 9020
 -- Get paths
 local resource_path = reaper.GetResourcePath()
 local menu_path = resource_path .. "/reaper-menu.ini"
+local www_root = resource_path .. "/reaper_www_root"
+local setup_guide_path = www_root .. "/HYD-Setup.html"
+
+-- Open URL in default browser
+local function OpenInBrowser(url)
+  -- Try SWS extension first
+  if reaper.CF_ShellExecute then
+    reaper.CF_ShellExecute(url)
+    return true
+  end
+
+  -- Fallback to OS-specific commands
+  local os_name = reaper.GetOS()
+  if os_name:match("Win") then
+    os.execute('start "" "' .. url .. '"')
+  elseif os_name:match("OSX") then
+    os.execute('open "' .. url .. '"')
+  else
+    os.execute('xdg-open "' .. url .. '"')
+  end
+  return true
+end
 
 -- Read file contents
 local function ReadFile(path)
@@ -174,17 +196,8 @@ local function AddToToolbar()
   end
 end
 
--- Open web server preferences
-local function OpenWebPreferences()
-  -- Action 40016 opens Preferences, but we need Control/OSC/Web
-  -- Use action 40293 for Control/OSC/Web preferences
-  reaper.Main_OnCommand(40293, 0)
-end
-
 -- Main setup function
 local function RunSetup()
-  local messages = {}
-
   -- Check if setup was already run
   local setup_done = reaper.GetExtState("HYD_LivePerformance", "setup_complete")
   if setup_done == "1" then
@@ -203,44 +216,21 @@ local function RunSetup()
   reaper.ShowConsoleMsg("Adding to main toolbar with text icon...\n")
   local toolbar_ok, toolbar_msg = AddToToolbar()
   reaper.ShowConsoleMsg("  " .. (toolbar_ok and "[OK] " or "[FAIL] ") .. toolbar_msg .. "\n\n")
-  table.insert(messages, (toolbar_ok and "[OK] " or "[FAIL] ") .. toolbar_msg)
 
   -- Mark setup as complete
   reaper.SetExtState("HYD_LivePerformance", "setup_complete", "1", true)
 
-  -- Summary
+  reaper.ShowConsoleMsg("Opening setup guide in browser...\n")
   reaper.ShowConsoleMsg(string.rep("=", 50) .. "\n")
 
-  local summary = "Setup Results:\n\n"
-  for i, msg in ipairs(messages) do
-    summary = summary .. i .. ". " .. msg .. "\n"
-  end
+  -- Open setup guide in browser
+  OpenInBrowser(setup_guide_path)
 
-  summary = summary .. "\n" .. string.rep("-", 40) .. "\n"
-  summary = summary .. "WEB SERVER SETUP (Manual Step):\n\n"
-  summary = summary .. "1. Go to: Preferences > Control/OSC/Web\n"
-  summary = summary .. "2. Click 'Add'\n"
-  summary = summary .. "3. Select 'Web browser interface'\n"
-  summary = summary .. "4. Set port to: " .. WEB_PORT .. "\n"
-  summary = summary .. "5. Click OK, then Apply\n"
-
-  summary = summary .. "\n" .. string.rep("-", 40) .. "\n"
-  summary = summary .. "After web server setup, URLs will be:\n"
-  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/Teleprompter.html\n"
-  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/NowPlaying.html\n"
-  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/Playlist.html\n"
-
-  reaper.ShowConsoleMsg(summary .. "\n")
-
-  local result = reaper.MB(
-    summary .. "\n\nOpen Control/OSC/Web preferences now?",
+  reaper.MB(
+    "Toolbar button added!\n\nSetup guide opened in your browser.\nFollow the instructions to complete setup.",
     script_name,
-    4  -- Yes/No
+    0
   )
-
-  if result == 6 then  -- Yes
-    OpenWebPreferences()
-  end
 end
 
 -- Run setup

@@ -17,11 +17,13 @@ Features:
       </version>
     </reapack>
     <reapack name="HYD-Setup.lua" type="script">
-      <version name="1.0.2">
-        <changelog><![CDATA[v1.0.2: Improved setup experience
+      <version name="1.0.3">
+        <changelog><![CDATA[v1.0.3: Browser-based setup guide
+- Opens interactive setup guide in browser
+- Visual step-by-step instructions with clickable links
+
+v1.0.2: Improved setup experience
 - Added double-width text icon (text_wide) for toolbar button
-- Web server setup now opens Preferences dialog with instructions
-- Removed automatic web config (REAPER overwrites on exit)
 
 v1.0.1: Fixed configuration format
 - Fixed toolbar command using proper _RS hash format
@@ -29,6 +31,7 @@ v1.0.1: Fixed configuration format
 v1.0.0: Initial release
 - Adds Live Performance Server to main toolbar]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-Setup.lua</source>
+        <source file="../www/HYD-Setup.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/HYD-Setup.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Playlist_IndexSongs.lua" type="script">
