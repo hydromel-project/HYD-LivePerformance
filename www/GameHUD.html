@@ -1056,6 +1056,30 @@
       100% { transform: translateY(200px) rotate(180deg) scale(0.3); opacity: 0; }
     }
 
+    /* Water droplet for melting effect */
+    @keyframes waterDrip {
+      0% {
+        transform: translateY(0) scaleY(1);
+        opacity: 0.8;
+      }
+      20% {
+        transform: translateY(50px) scaleY(1.2);
+        opacity: 0.9;
+      }
+      80% {
+        transform: translateY(300px) scaleY(1.5);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(400px) scaleY(0.5);
+        opacity: 0;
+      }
+    }
+
+    .water-droplet {
+      filter: blur(0.5px);
+    }
+
     /* Ice crack overlay effect */
     .ice-crack-overlay {
       position: fixed;
@@ -2102,6 +2126,8 @@
     let iceRAF = null;
     let iceIntensity = 0;
     let iceRunning = false;
+    let iceMelting = false;  // Gradual melt transition
+    let meltProgress = 0;    // 0 to 1, how melted the ice is
     let lastIceCrackTime = 0;
 
     // Initialize ice canvas
@@ -2155,6 +2181,8 @@
 
     function startAmbientIce(intensity) {
       iceIntensity = intensity;
+      iceMelting = false;  // Cancel any melting in progress
+      meltProgress = 0;
       iceCanvas.classList.add('active');
       iceGlow.classList.add('active');
 
@@ -2186,7 +2214,25 @@
     }
 
     function stopAmbientIce() {
+      // If there's ice to melt, start melting instead of stopping immediately
+      if (iceRunning && !iceMelting && hasVisibleIce()) {
+        iceMelting = true;
+        meltProgress = 0;
+        iceGlow.classList.remove('active');
+        iceCrackOverlay.classList.remove('active');
+        clearTextEffects();
+        // Keep iceRunning true so the melt animation continues
+        return;
+      }
+
+      // Force stop (no ice to melt, or already melted)
+      forceStopAmbientIce();
+    }
+
+    function forceStopAmbientIce() {
       iceIntensity = 0;
+      iceMelting = false;
+      meltProgress = 0;
       iceCanvas.classList.remove('active');
       iceGlow.classList.remove('active');
       iceCrackOverlay.classList.remove('active');
@@ -2197,9 +2243,15 @@
       }
       // Clear the ice
       icePixels.fill(0);
-
-      // Clear text effects
       clearTextEffects();
+    }
+
+    // Check if there's any visible ice on the canvas
+    function hasVisibleIce() {
+      for (let i = 0; i < icePixels.length; i++) {
+        if (icePixels[i] > 3) return true;
+      }
+      return false;
     }
 
     function iceLoop() {
@@ -2208,12 +2260,82 @@
       updateIce();
       renderIce();
 
+      // Check if melting is complete
+      if (iceMelting) {
+        meltProgress += 0.02;  // ~3 seconds to fully melt at 60fps
+
+        // Gradually fade out the canvas
+        iceCanvas.style.opacity = Math.max(0, 1 - meltProgress * 0.5);
+
+        if (meltProgress >= 1 || !hasVisibleIce()) {
+          // Melting complete
+          iceCanvas.style.opacity = '';  // Reset opacity
+          forceStopAmbientIce();
+          return;
+        }
+      }
+
       iceRAF = requestAnimationFrame(iceLoop);
     }
 
     function updateIce() {
       const maxColor = ICE_PALETTE.length - 1;
 
+      // When melting, use different parameters
+      if (iceMelting) {
+        // MELTING MODE: No new frost, faster decay, dripping effect
+
+        // Don't generate new frost at top - clear top row gradually
+        for (let x = 0; x < ICE_WIDTH; x++) {
+          if (icePixels[x] > 0) {
+            icePixels[x] = Math.max(0, icePixels[x] - Math.floor(Math.random() * 3) - 1);
+          }
+        }
+
+        // Melt/drip downward with faster decay
+        const meltDecay = 4 + meltProgress * 4;  // 4 to 8 - gets faster as it warms
+
+        for (let y = ICE_HEIGHT - 1; y > 0; y--) {
+          for (let x = 0; x < ICE_WIDTH; x++) {
+            const srcIdx = (y - 1) * ICE_WIDTH + x;
+            const pixel = icePixels[srcIdx];
+            const dstIdx = y * ICE_WIDTH + x;
+
+            if (pixel > 0) {
+              // Faster decay during melting
+              const decay = Math.floor(Math.random() * meltDecay);
+
+              // Drip effect: water runs straight down, occasionally spreads
+              let drift = 0;
+              if (Math.random() < 0.15) {  // 15% chance to spread sideways (water pooling)
+                drift = Math.floor(Math.random() * 3) - 1;
+              }
+              const dstX = Math.min(ICE_WIDTH - 1, Math.max(0, x + drift));
+              const finalDstIdx = y * ICE_WIDTH + dstX;
+
+              // Water drips down - transfer more value downward
+              const newValue = Math.max(0, pixel - decay);
+              if (newValue > icePixels[finalDstIdx]) {
+                icePixels[finalDstIdx] = newValue;
+              }
+            }
+
+            // Current pixel also decays (melts in place)
+            if (icePixels[dstIdx] > 0) {
+              icePixels[dstIdx] = Math.max(0, icePixels[dstIdx] - Math.floor(Math.random() * 2));
+            }
+          }
+        }
+
+        // Spawn water droplet particles during melt
+        if (Math.random() < 0.1 && settings.particles) {
+          spawnWaterDroplet();
+        }
+
+        return;
+      }
+
+      // NORMAL FREEZING MODE
       // Intensity affects frost amount, spread rate
       const frostBase = 0.3 + iceIntensity * 0.7;
       const frost = Math.floor(maxColor * frostBase);
@@ -2274,6 +2396,30 @@
       }
     }
 
+    // Spawn a water droplet particle (for melting effect)
+    function spawnWaterDroplet() {
+      const p = document.createElement('div');
+      p.className = 'water-droplet';
+
+      const startX = Math.random() * 100;
+      const duration = 1 + Math.random() * 1.5;
+
+      p.style.cssText = `
+        position: absolute;
+        width: 3px;
+        height: 6px;
+        background: linear-gradient(to bottom, rgba(150, 200, 255, 0.8), rgba(100, 180, 255, 0.4));
+        border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+        left: ${startX}%;
+        top: 0;
+        pointer-events: none;
+        animation: waterDrip ${duration}s ease-in forwards;
+      `;
+
+      particlesContainer.appendChild(p);
+      setTimeout(() => p.remove(), duration * 1000);
+    }
+
     function renderIce() {
       const data = iceImageData.data;
 
@@ -2325,8 +2471,8 @@
     function updateAmbientEffects(playrate) {
       // Fire zone: playrate >= fire threshold
       if (playrate >= settings.fireThreshold) {
-        // Stop ice if it was running
-        stopAmbientIce();
+        // Force stop ice immediately (fire evaporates it instantly)
+        forceStopAmbientIce();
 
         // Calculate fire intensity proportional to playrate
         // Fire threshold (e.g. 1.3x) = intensity 0.1 (small flames)
