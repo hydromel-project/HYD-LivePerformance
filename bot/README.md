@@ -4,27 +4,27 @@ Let your Twitch viewers mess with your REAPER playrate using channel points and 
 
 ## Quick Start (Easy Way)
 
-### 1. Install Node.js
+### Option A: PowerShell Installer (Recommended)
 
-Download and install from https://nodejs.org (LTS version recommended)
+Double-click **`Install.cmd`** - this will:
+- Check if Node.js is installed
+- Offer to install Node.js automatically via winget (requests admin if needed)
+- Install npm dependencies
+- Create a desktop shortcut "HYD Playrate Bot"
 
-### 2. Run the Installer
+### Option B: Basic Installer
 
-Double-click **`install.bat`** in this folder.
-
-This will:
-- Create a desktop shortcut called "HYD Playrate Bot"
+If you already have Node.js installed, double-click **`install.bat`** - this will:
+- Create a desktop shortcut
 - Offer to launch and set up the bot immediately
 
-### 3. Use the Desktop Shortcut
+### Using the Bot
 
-The shortcut handles everything:
+The desktop shortcut handles everything:
 - **First run**: Automatically installs dependencies
 - **After that**: Launches the bot directly
 
-### 4. Open Config Panel
-
-Go to http://localhost:9030 in your browser
+Config panel: http://localhost:9030
 
 ---
 
