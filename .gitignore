@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Configuration with credentials
+config.json
+*.config.json
+.env
+.env.*
+!.env.example
+
+# Tokens and secrets
+*.token
+*.secret
+*_token.json
+*_secret.json
+tokens.json
+secrets.json
+credentials.json
+auth.json
+
+# API keys
+*.key
+!*.public.key
+
+# OAuth
+oauth*.json
+twitch_auth.json
+streamlabs_auth.json
+streamelements_auth.json
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+*.bak

@@ -1,2 +1,21 @@
+# Dependencies
 node_modules/
+
+# Config with credentials (Twitch, Streamlabs, StreamElements tokens)
 config.json
+*.config.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Token files
+*.token
+tokens.json
+auth.json
+twitch_auth.json
+
+# Logs
+*.log
+npm-debug.log*
