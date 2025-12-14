@@ -1,6 +1,6 @@
 --[[
 @description HYD Live Performance Server
-@version 1.0.0
+@version 1.0.1
 @author hydromel-project
 @about
   # HYD Live Performance Server
@@ -845,8 +845,57 @@ end
 -- ============================================================================
 -- INITIALIZATION
 -- ============================================================================
+
+-- Create a track with given name
+local function CreateTrack(name)
+  reaper.InsertTrackAtIndex(reaper.CountTracks(0), true)
+  local track = reaper.GetTrack(0, reaper.CountTracks(0) - 1)
+  reaper.GetSetMediaTrackInfo_String(track, "P_NAME", name, true)
+  return track
+end
+
+-- Scaffold missing tracks
+local function ScaffoldSession()
+  local lyrics_track = FindTrackByName("LYRICS")
+  local songs_track = FindTrackByName("SONGS")
+
+  if lyrics_track and songs_track then
+    return true  -- All tracks exist
+  end
+
+  -- Build message about what's missing
+  local missing = {}
+  if not lyrics_track then table.insert(missing, "LYRICS") end
+  if not songs_track then table.insert(missing, "SONGS") end
+
+  local msg = "Missing tracks: " .. table.concat(missing, ", ") .. "\n\n"
+  msg = msg .. "Create them now?"
+
+  local result = reaper.MB(msg, "HYD Live Performance", 4)  -- Yes/No
+
+  if result == 6 then  -- Yes
+    reaper.Undo_BeginBlock()
+
+    if not lyrics_track then
+      CreateTrack("LYRICS")
+    end
+    if not songs_track then
+      CreateTrack("SONGS")
+    end
+
+    reaper.Undo_EndBlock("Create HYD Live Performance tracks", -1)
+    reaper.TrackList_AdjustWindows(false)
+    return true
+  end
+
+  return true  -- Continue anyway even if user said no
+end
+
 local function Init()
   math.randomseed(os.time())
+
+  -- Check for required tracks and offer to scaffold
+  ScaffoldSession()
 
   -- Initialize modules
   NowPlaying.songs_track = FindTrackByName("SONGS")

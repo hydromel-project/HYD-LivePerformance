@@ -2,10 +2,11 @@
 <index version="1" name="HYD Live Performance">
   <category name="Live Performance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script">
-      <version name="1.0.0">
-        <changelog><![CDATA[Initial release
+      <version name="1.0.1">
+        <changelog><![CDATA[v1.0.1: Session scaffolding
+- Asks to create missing LYRICS/SONGS tracks on startup
 
-Features:
+v1.0.0: Initial release
 - Teleprompter with lyrics display, beat indicator, BPM
 - NowPlaying with cover art extraction
 - Playlist queue management
