@@ -207,7 +207,7 @@
     }
     .top-info.hidden { display: none; }
 
-    .bpm {
+    .bpm, .playrate {
       font-size: 1.2rem;
       font-weight: bold;
       color: var(--secondary-color);
@@ -215,6 +215,8 @@
       padding: 8px 12px;
       border-radius: 6px;
     }
+
+    .playrate.changed { color: var(--accent-color); }
 
     .time-signature {
       font-size: 1.5rem;
@@ -403,6 +405,13 @@
 
     <div class="settings-group">
       <label class="checkbox-label">
+        <input type="checkbox" id="setShowPlayrate" checked>
+        Show Playrate
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
         <input type="checkbox" id="setShowProgress" checked>
         Show Progress Bar
       </label>
@@ -475,6 +484,7 @@
   </div>
 
   <div class="top-info" id="topInfo">
+    <div class="playrate" id="playrateDisplay">1.00x</div>
     <div class="bpm" id="bpmDisplay">120 BPM</div>
     <div class="time-signature" id="timeSig">4/4</div>
     <div class="metronome" id="metronome"></div>
@@ -507,6 +517,7 @@
       transparent: false,
       showBpm: true,
       showBeat: true,
+      showPlayrate: true,
       showProgress: true,
       animation: 'slide-up',
       duration: 0.4,
@@ -529,6 +540,7 @@
         transparent: urlParams.has('transparent') ? urlParams.get('transparent') === 'true' : (stored.transparent ?? defaults.transparent),
         showBpm: urlParams.has('bpm') ? urlParams.get('bpm') !== 'false' : (stored.showBpm ?? defaults.showBpm),
         showBeat: urlParams.has('beat') ? urlParams.get('beat') !== 'false' : (stored.showBeat ?? defaults.showBeat),
+        showPlayrate: urlParams.has('playrate') ? urlParams.get('playrate') !== 'false' : (stored.showPlayrate ?? defaults.showPlayrate),
         showProgress: urlParams.has('progress') ? urlParams.get('progress') !== 'false' : (stored.showProgress ?? defaults.showProgress),
         animation: urlParams.get('anim') || stored.animation || defaults.animation,
         duration: parseFloat(urlParams.get('dur')) || stored.duration || defaults.duration,
@@ -550,6 +562,7 @@
     const topInfo = document.getElementById('topInfo');
     const bottomBar = document.getElementById('bottomBar');
     const bpmDisplay = document.getElementById('bpmDisplay');
+    const playrateDisplay = document.getElementById('playrateDisplay');
     const timeSigEl = document.getElementById('timeSig');
     const metronomeEl = document.getElementById('metronome');
     const currentEl = document.getElementById('current');
@@ -565,6 +578,7 @@
       transparent: document.getElementById('setTransparent'),
       showBpm: document.getElementById('setShowBpm'),
       showBeat: document.getElementById('setShowBeat'),
+      showPlayrate: document.getElementById('setShowPlayrate'),
       showProgress: document.getElementById('setShowProgress'),
       animation: document.getElementById('setAnimation'),
       duration: document.getElementById('setDuration'),
@@ -597,6 +611,9 @@
       if (!settings.showBpm) bpmDisplay.style.display = 'none';
       else bpmDisplay.style.display = '';
 
+      if (!settings.showPlayrate) playrateDisplay.style.display = 'none';
+      else playrateDisplay.style.display = '';
+
       if (!settings.showBeat) metronomeEl.style.display = 'none';
       else metronomeEl.style.display = '';
 
@@ -612,6 +629,7 @@
       inputs.transparent.checked = settings.transparent;
       inputs.showBpm.checked = settings.showBpm;
       inputs.showBeat.checked = settings.showBeat;
+      inputs.showPlayrate.checked = settings.showPlayrate;
       inputs.showProgress.checked = settings.showProgress;
       inputs.animation.value = settings.animation;
       inputs.duration.value = settings.duration;
@@ -632,6 +650,7 @@
       settings.transparent = inputs.transparent.checked;
       settings.showBpm = inputs.showBpm.checked;
       settings.showBeat = inputs.showBeat.checked;
+      settings.showPlayrate = inputs.showPlayrate.checked;
       settings.showProgress = inputs.showProgress.checked;
       settings.animation = inputs.animation.value;
       settings.duration = parseFloat(inputs.duration.value);
@@ -651,6 +670,7 @@
       p.set('transparent', settings.transparent);
       p.set('bpm', settings.showBpm);
       p.set('beat', settings.showBeat);
+      p.set('playrate', settings.showPlayrate);
       p.set('progress', settings.showProgress);
       p.set('anim', settings.animation);
       p.set('dur', settings.duration);
@@ -723,7 +743,7 @@
 
     // State
     let currentText = '', lastCurrentText = '', next1Text = '', next2Text = '';
-    let timeSig = '4/4', bpm = 120, currentBeat = 1;
+    let timeSig = '4/4', bpm = 120, currentBeat = 1, playrate = 1;
     let regionStart = 0, regionEnd = 0, regionName = '', playpos = 0;
     let lastTimeSig = '', lastBeat = 0;
     let isAnimating = false;
@@ -745,6 +765,7 @@
             timeSig = d.ts || '4/4';
             bpm = d.bpm || 120;
             currentBeat = d.b || 1;
+            playrate = d.pr || 1;
             regionStart = d.rs || 0;
             regionEnd = d.re || 0;
             regionName = d.rn || '';
@@ -757,6 +778,8 @@
     function updateDisplay() {
       timeSigEl.textContent = timeSig;
       bpmDisplay.textContent = Math.round(bpm) + ' BPM';
+      playrateDisplay.textContent = playrate.toFixed(2) + 'x';
+      playrateDisplay.classList.toggle('changed', Math.abs(playrate - 1) > 0.001);
 
       if (timeSig !== lastTimeSig) {
         generateMetronome(parseInt(timeSig.split('/')[0]) || 4);

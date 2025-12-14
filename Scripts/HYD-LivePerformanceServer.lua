@@ -384,6 +384,7 @@ function Teleprompter:Update(cur_pos, region_start, region_end, region_name)
 
   local timesig_num, timesig_denom, tempo = reaper.TimeMap_GetTimeSigAtTime(0, cur_pos)
   local beat_in_measure = reaper.TimeMap2_timeToBeats(0, cur_pos)
+  local playrate = reaper.Master_GetPlayRate(0)
 
   local current_text, current_end = "", 0
   local next1_text, next1_start, next1_end = "", 0, 0
@@ -407,12 +408,12 @@ function Teleprompter:Update(cur_pos, region_start, region_end, region_name)
   end
 
   local json = string.format(
-    '{"cur":"%s","n1":"%s","n2":"%s","pp":%.3f,"ce":%.3f,"n1s":%.3f,"n1e":%.3f,"n2s":%.3f,"ts":"%d/%d","b":%d,"bp":%.3f,"rs":%.3f,"re":%.3f,"rn":"%s","bpm":%.1f}',
+    '{"cur":"%s","n1":"%s","n2":"%s","pp":%.3f,"ce":%.3f,"n1s":%.3f,"n1e":%.3f,"n2s":%.3f,"ts":"%d/%d","b":%d,"bp":%.3f,"rs":%.3f,"re":%.3f,"rn":"%s","bpm":%.1f,"pr":%.3f}',
     JsonEscape(current_text), JsonEscape(next1_text), JsonEscape(next2_text),
     cur_pos, current_end, next1_start, next1_end, next2_start,
     timesig_num, timesig_denom,
     math.floor(beat_in_measure) + 1, beat_in_measure % 1,
-    region_start, region_end, JsonEscape(region_name), tempo
+    region_start, region_end, JsonEscape(region_name), tempo, playrate
   )
   reaper.SetProjExtState(0, self.EXT_NAME, "data", json)
 end
