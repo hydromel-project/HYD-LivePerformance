@@ -1,232 +1,220 @@
 # HYD Live Performance Suite for REAPER
 
-A comprehensive live performance toolkit for REAPER that provides real-time web interfaces for teleprompter lyrics, now playing displays, and playlist/queue management. Perfect for streamers, live performers, and content creators.
+Display lyrics, song info, and manage playlists for your live streams and performances.
 
-## Features
+---
 
-### Teleprompter
-- Real-time lyrics display from REAPER's LYRICS track
-- Streamer mode with full controls (current + next lyrics, beat indicator, progress bar)
-- Public mode with rolling lyrics animation (for audience display)
-- BPM and time signature display
-- Visual metronome/beat indicator
-- Song progress bar based on regions
+## What's Included
 
-### Now Playing
-- Displays current song info (title, artist, album, year)
-- Automatic cover art extraction from MP3/FLAC files
-- Multiple layouts: horizontal, vertical, background blur
-- Smooth fade in/out animations
-- Auto-hide when not playing
+**Teleprompter** - Shows lyrics on screen as you perform
+**Now Playing** - Displays current song title, artist, and cover art
+**Playlist** - Queue up songs and switch between them easily
 
-### Playlist Manager
-- Browse and search 1000+ song sessions
-- Queue management with drag-to-reorder
-- Load songs as background tabs (non-interrupting)
-- Play/Stop controls per song
-- Save/Load playlists
-- Control panel for phone/moderators
-- Viewer display for OBS
+All three work in your web browser and can be added to OBS.
+
+---
 
 ## Installation
 
-### Prerequisites
-- REAPER 6.0+ with ReaScript support
-- [js_ReaScriptAPI extension](https://forum.cockos.com/showthread.php?t=212174) (for folder dialogs)
-- [ffmpeg](https://ffmpeg.org/) in PATH (optional, for cover art extraction)
+### Step 1: Install ReaPack
 
-### Option 1: ReaPack (Recommended)
+If you don't have ReaPack yet:
+1. Download from https://reapack.com
+2. Follow their installation instructions
+3. Restart REAPER
 
-1. **Install ReaPack** if you haven't: https://reapack.com/
+### Step 2: Add This Package
 
-2. **Add this repository to ReaPack**:
-   - Extensions > ReaPack > Import repositories...
-   - Paste this URL:
+1. In REAPER, go to **Extensions > ReaPack > Import repositories**
+2. Paste this link:
    ```
    https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/index.xml
    ```
+3. Click OK
 
-3. **Install the scripts**:
-   - Extensions > ReaPack > Browse packages
-   - Search for "HYD"
-   - Right-click > Install all packages
+### Step 3: Install the Scripts
 
-4. **Run the Setup script** (one-time):
-   - Actions > Show action list
-   - Search for "HYD Setup"
-   - Run it
+1. Go to **Extensions > ReaPack > Browse packages**
+2. Search for **HYD**
+3. Right-click on each result and select **Install**
+4. Click **Apply** when done
 
-   This will automatically:
-   - Configure REAPER web server on port 9020
-   - Add the Live Performance Server to your main toolbar
+### Step 4: Run Setup
 
-5. **Restart REAPER** for changes to take effect
+1. Go to **Actions > Show action list** (or press `?`)
+2. Search for **HYD Setup**
+3. Double-click to run it
+4. A setup guide will open in your browser - follow the steps there
 
-### Option 2: Manual Installation
+---
 
-1. **Copy Lua scripts** to your REAPER Scripts folder:
-   ```
-   %APPDATA%\REAPER\Scripts\
-   ```
-   - `HYD-LivePerformanceServer.lua` - Main server script
-   - `Playlist_IndexSongs.lua` - Song library indexer
+## Setting Up Your Project
 
-2. **Copy HTML files** to REAPER's web root:
-   ```
-   %APPDATA%\REAPER\reaper_www_root\
-   ```
-   - `Teleprompter.html`
-   - `NowPlaying.html`
-   - `Playlist.html`
+The system looks for two special tracks in your REAPER project:
 
-3. **Enable REAPER's web interface**:
-   - Preferences > Control/OSC/Web
-   - Add > Web browser interface
-   - Set port (default: 9010)
-   - Enable "Allow 'localhost' access"
+### LYRICS Track (for Teleprompter)
 
-4. **Add scripts to REAPER Actions**:
-   - Actions > Show action list
-   - New action > Load ReaScript
-   - Select each .lua file
+1. Create a new track and name it exactly: **LYRICS**
+2. Add empty items where you want lyrics to appear
+3. For each item, right-click and select **Item notes**
+4. Type your lyrics in the notes box
 
-## Usage
-
-### Quick Start
-
-1. **Create required tracks** in your REAPER project:
-   - `LYRICS` - Empty items with lyrics in item notes
-   - `SONGS` - Audio items (MP3/FLAC) for Now Playing info
-
-2. **Create regions** for each song section
-
-3. **Run the server script**:
-   - Actions > HYD-LivePerformanceServer
-
-4. **Open web interfaces** in browser:
-   - Teleprompter: `http://localhost:9010/Teleprompter.html`
-   - Now Playing: `http://localhost:9010/NowPlaying.html`
-   - Playlist: `http://localhost:9010/Playlist.html`
-
-### Setting Up for OBS
-
-1. Open the web interface in your browser
-2. Click **Settings** button (top-left)
-3. Configure your display options
-4. Click **Copy URL** to get the OBS-ready URL
-5. In OBS: Add > Browser Source > Paste URL
-
-The generated URL includes `hideSettings=true` which hides all controls.
-
-### Teleprompter Track Setup
-
-Create a track named `LYRICS` with empty items:
-- Each item represents a lyrics block
-- Put lyrics text in the item's **Notes** (right-click > Item notes)
-- Use line breaks for multi-line lyrics
-- Position items on the timeline where lyrics should appear
-
-### Now Playing Track Setup
-
-Create a track named `SONGS` with your audio files:
-- Use MP3/FLAC files with ID3 tags for metadata
-- Cover art is extracted automatically via ffmpeg
-- Position items to match your song regions
-
-### Playlist Setup (for multiple song sessions)
-
-1. **Organize songs**: Save each song as separate `.RPP` files named `Artist - Title.rpp`
-
-2. **Run the indexer**: Actions > Playlist_IndexSongs
-   - Select your songs folder when prompted
-   - This creates `songs_index.json` in web root
-
-3. **Use the playlist interface**:
-   - Search/browse songs
-   - Click to add to queue
-   - Songs load as background tabs
-   - Click song title to switch tabs
-   - Use play/stop buttons to control playback
-
-## URL Parameters
-
-### Teleprompter.html
-
-| Parameter | Values | Description |
-|-----------|--------|-------------|
-| `mode` | `streamer`, `public` | Display mode |
-| `theme` | `dark`, `light` | Color theme |
-| `transparent` | `true`, `false` | Transparent background for OBS |
-| `bpm` | `true`, `false` | Show BPM display |
-| `beat` | `true`, `false` | Show beat indicator |
-| `progress` | `true`, `false` | Show progress bar |
-| `hideSettings` | `true` | Hide settings panel |
-
-### NowPlaying.html
-
-| Parameter | Values | Description |
-|-----------|--------|-------------|
-| `layout` | `horizontal`, `vertical`, `background` | Layout style |
-| `theme` | `dark`, `light` | Color theme |
-| `transparent` | `true`, `false` | Transparent background |
-| `album` | `true`, `false` | Show album name |
-| `year` | `true`, `false` | Show year |
-| `cover` | `true`, `false` | Show cover art |
-| `fade` | `0-30` | Seconds before end to start fading |
-| `hideSettings` | `true` | Hide settings panel |
-
-### Playlist.html
-
-| Parameter | Values | Description |
-|-----------|--------|-------------|
-| `mode` | `control`, `viewer` | Interface mode |
-
-## Project Structure
-
+Example:
 ```
-REAPER/
-├── Scripts/
-│   ├── HYD-LivePerformanceServer.lua   # Main server (combined)
-│   ├── Playlist_IndexSongs.lua         # Song library indexer
-│   └── Playlists/                      # Saved playlists
-│       └── *.txt
-└── reaper_www_root/
-    ├── Teleprompter.html               # Lyrics display
-    ├── NowPlaying.html                 # Song info display
-    ├── Playlist.html                   # Queue management
-    └── songs_index.json                # Generated song index
+Verse 1 lyrics here
+Second line of verse
 ```
+
+### SONGS Track (for Now Playing)
+
+1. Create a new track and name it exactly: **SONGS**
+2. Drag your audio file (MP3, FLAC, etc.) onto this track
+3. The song's title, artist, and cover art are read automatically from the file
+
+**Tip:** If you start the server and these tracks are missing, it will offer to create them for you.
+
+---
+
+## Using the Web Interfaces
+
+### Starting the Server
+
+1. Click the **HYD Live Performance Server** button in your toolbar
+   (or go to Actions and search for it)
+2. The server runs in the background while you work
+
+### Opening the Displays
+
+With the server running, open these in your web browser:
+
+- **Teleprompter:** http://localhost:9020/Teleprompter.html
+- **Now Playing:** http://localhost:9020/NowPlaying.html
+- **Playlist:** http://localhost:9020/Playlist.html
+
+### Customizing the Look
+
+Each interface has a settings panel:
+
+1. Click the **gear icon** in the corner
+2. Adjust colors, fonts, animations, and layout
+3. Click **Save** - your settings are remembered
+
+### Adding to OBS
+
+1. Open the interface in your browser
+2. Click the gear icon to open settings
+3. Customize how you want it to look
+4. Click **Copy URL for OBS** at the bottom of settings
+5. In OBS: **Add Source > Browser**
+6. Paste the URL you copied
+7. Set the width and height to match your scene
+
+The copied URL includes all your settings and hides the gear icon automatically.
+
+---
+
+## Teleprompter Modes
+
+**Streamer Mode** (default)
+- Shows current lyrics in large text
+- Shows upcoming lyrics below
+- Beat indicator pulses with the music
+- Progress bar shows position in song
+
+**Public Mode**
+- Rolling lyrics that scroll automatically
+- Good for audience displays
+
+Switch between modes in the settings panel.
+
+---
+
+## Now Playing Options
+
+**Layouts:**
+- Horizontal - Cover art on left, text on right
+- Vertical - Cover art on top, text below
+- Background - Blurred cover art fills the screen
+- Minimal - Text only, no cover art
+
+**Animations:**
+- Fade, slide, or scale when song changes
+- Slow pan effect on cover art (Ken Burns style)
+- Auto-hide when nothing is playing
+
+---
+
+## Playlist (For Multiple Songs)
+
+If you have many songs saved as separate REAPER projects:
+
+### Organizing Your Songs
+
+Save each song as its own .RPP file with this naming format:
+```
+Artist - Song Title.rpp
+```
+
+Put them all in one folder.
+
+### Building the Song Index
+
+1. Go to **Actions > Show action list**
+2. Search for **Playlist Index Songs**
+3. Run it and select your songs folder
+4. Wait for it to scan all your files
+
+### Using the Playlist
+
+Open http://localhost:9020/Playlist.html
+
+- **Search** - Type to filter songs
+- **Add to Queue** - Click a song to add it
+- **Reorder** - Drag songs up or down in the queue
+- **Play** - Click a song in the queue to switch to it
+- **Save Playlist** - Keep your queue for next time
+
+---
 
 ## Troubleshooting
 
-### Web interface not loading
-- Check REAPER web server is enabled (Preferences > Control/OSC/Web)
-- Verify port number matches URL
-- Check firewall settings
+### "Page not found" or interface won't load
 
-### No data showing
-- Ensure HYD-LivePerformanceServer.lua is running
-- Check track names are exactly `LYRICS` and `SONGS` (case-insensitive)
-- Verify items exist on the tracks
+The web server might not be configured:
+1. Go to **Preferences** (Ctrl+P)
+2. Click **Control/OSC/Web** on the left
+3. Click **Add**
+4. Select **Web browser interface**
+5. Set port to **9020**
+6. Click OK, then Apply
+7. Restart REAPER
+
+### No lyrics or song info showing
+
+- Make sure the server is running (check your toolbar)
+- Make sure your tracks are named exactly **LYRICS** and **SONGS**
+- Make sure you have items on those tracks
+- Press play in REAPER - some displays only update while playing
 
 ### Cover art not appearing
-- Install ffmpeg and ensure it's in PATH
-- Check audio files have embedded cover art
-- Look for `np_cover_*.jpg` in reaper_www_root
 
-### Playlist songs not loading
-- Run Playlist_IndexSongs first to generate index
-- Check songs folder path is set correctly
-- Verify `.RPP` files follow `Artist - Title.rpp` naming
+The system uses ffmpeg to extract cover art from audio files:
+1. Download ffmpeg from https://ffmpeg.org/download.html
+2. Install it so you can run `ffmpeg` from command prompt
+3. Restart REAPER and the server
 
-## License
+If you don't want to install ffmpeg, cover art simply won't show.
 
-MIT License - Free for personal and commercial use.
+### Settings not saving
 
-## Author
+Make sure you click the **Save** button in the settings panel. Settings are stored in your browser, so they stay even if you close and reopen the page.
 
-hydromel-project
+---
 
-## Acknowledgments
+## Need Help?
 
-Built with REAPER's ReaScript API and web interface capabilities.
+Visit the GitHub page: https://github.com/hydromel-project/HYD-LivePerformance
+
+---
+
+*Made by hydromel-project*

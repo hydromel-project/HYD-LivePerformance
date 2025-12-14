@@ -8,38 +8,15 @@
     :root {
       --bg-color: #1a1a1a;
       --text-color: #ffffff;
-      --current-color: #00ff88;
-      --next-color: #888888;
-      --countdown-bg: #333333;
-      --countdown-fill: #00ff88;
-      --progress-bg: #333333;
-      --progress-fill: #00ff88;
-      --beat-color: #00ff88;
+      --accent-color: #00ff88;
+      --secondary-color: #888888;
+      --ui-bg: #333333;
+      --font-size: 1;
+      --transition-duration: 0.4s;
     }
 
-    .light-mode {
-      --bg-color: #f5f5f5;
-      --text-color: #1a1a1a;
-      --current-color: #007744;
-      --next-color: #666666;
-      --countdown-bg: #dddddd;
-      --countdown-fill: #007744;
-      --progress-bg: #dddddd;
-      --progress-fill: #007744;
-      --beat-color: #007744;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
 
     body {
       background-color: var(--bg-color);
@@ -50,98 +27,98 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* Public mode uses current-color for all text, not white */
-    body.public-mode {
-      color: var(--current-color);
-    }
+    body.transparent-bg { background-color: transparent !important; }
 
-    /* Transparent background for OBS - uses #RRGGBBAA format where 00 alpha = transparent in OBS */
-    body.transparent-bg {
-      background-color: #1a1a1a00 !important;
-    }
-
-    body.transparent-bg.light-mode {
-      background-color: #f5f5f500 !important;
-    }
-
-    .controls {
+    /* Settings Toggle */
+    .settings-toggle {
       position: fixed;
       top: 10px;
-      right: 10px;
-      z-index: 100;
-      display: flex;
-      gap: 10px;
-    }
-
-    .controls button {
-      background: var(--countdown-bg);
+      left: 10px;
+      z-index: 201;
+      background: var(--ui-bg);
       color: var(--text-color);
       border: none;
       padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-      transition: all 0.3s;
     }
-
-    .controls button:hover {
-      opacity: 0.8;
-    }
-
-    .controls.hidden {
-      display: none;
-    }
+    .settings-toggle:hover { opacity: 0.8; }
+    .settings-toggle.hidden { display: none; }
 
     /* Settings Panel */
     .settings-panel {
       position: fixed;
       top: 0;
       left: 0;
-      width: 320px;
+      width: 340px;
       height: 100%;
-      background: var(--countdown-bg);
+      background: var(--ui-bg);
       z-index: 200;
       padding: 20px;
       overflow-y: auto;
       transform: translateX(-100%);
       transition: transform 0.3s ease;
-      box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
     }
-
-    .settings-panel.open {
-      transform: translateX(0);
-    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-panel.hidden { display: none; }
 
     .settings-panel h2 {
       margin-bottom: 20px;
-      color: var(--current-color);
-      font-size: 1.2rem;
+      color: var(--accent-color);
+      font-size: 1.1rem;
+    }
+
+    .settings-panel h3 {
+      margin: 20px 0 10px;
+      color: var(--secondary-color);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--secondary-color);
+      padding-bottom: 5px;
     }
 
     .settings-group {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     .settings-group label {
       display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--next-color);
+      margin-bottom: 5px;
+      font-size: 0.85rem;
+      color: var(--secondary-color);
     }
 
     .settings-group select,
-    .settings-group input[type="number"] {
+    .settings-group input[type="number"],
+    .settings-group input[type="text"],
+    .settings-group input[type="color"] {
       width: 100%;
       padding: 8px;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       background: var(--bg-color);
       color: var(--text-color);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
-    .settings-group input[type="checkbox"] {
-      margin-right: 8px;
+    .settings-group input[type="color"] {
+      height: 40px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .settings-group input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .range-value {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--secondary-color);
     }
 
     .checkbox-label {
@@ -149,7 +126,17 @@
       align-items: center;
       cursor: pointer;
       color: var(--text-color);
+      font-size: 0.9rem;
     }
+
+    .checkbox-label input { margin-right: 8px; }
+
+    .settings-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .settings-row .settings-group { flex: 1; }
 
     .url-output {
       margin-top: 20px;
@@ -158,22 +145,15 @@
       border-radius: 8px;
     }
 
-    .url-output label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--next-color);
-    }
-
     .url-output input {
       width: 100%;
       padding: 8px;
-      border: none;
-      border-radius: 5px;
-      background: var(--countdown-bg);
-      color: var(--text-color);
-      font-size: 0.85rem;
       margin-bottom: 10px;
+      border: none;
+      border-radius: 4px;
+      background: var(--ui-bg);
+      color: var(--text-color);
+      font-size: 0.8rem;
     }
 
     .url-output button {
@@ -181,123 +161,96 @@
       padding: 10px;
       border: none;
       border-radius: 5px;
-      background: var(--current-color);
+      background: var(--accent-color);
       color: var(--bg-color);
       font-weight: bold;
       cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .url-output button:hover {
-      opacity: 0.8;
     }
 
     .url-output .copied {
       text-align: center;
-      color: var(--current-color);
+      color: var(--accent-color);
       font-size: 0.85rem;
       margin-top: 8px;
       opacity: 0;
       transition: opacity 0.3s;
     }
+    .url-output .copied.show { opacity: 1; }
 
-    .url-output .copied.show {
-      opacity: 1;
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    .settings-toggle {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 201;
-      background: var(--countdown-bg);
-      color: var(--text-color);
+    .btn-row button {
+      flex: 1;
+      padding: 8px;
       border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s;
+      font-size: 0.85rem;
     }
 
-    .settings-toggle:hover {
-      opacity: 0.8;
-    }
+    .btn-save { background: var(--accent-color); color: var(--bg-color); }
+    .btn-reset { background: var(--secondary-color); color: var(--bg-color); }
 
-    .settings-toggle.hidden {
-      display: none;
-    }
-
-    .settings-panel.hidden {
-      display: none;
-    }
-
-    /* Top info bar with time signature and metronome */
+    /* Top info bar */
     .top-info {
       position: fixed;
       top: 10px;
-      left: 10px;
+      right: 10px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 10px;
       z-index: 100;
     }
+    .top-info.hidden { display: none; }
 
     .bpm {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: bold;
-      color: var(--next-color);
-      background: var(--countdown-bg);
-      padding: 10px 15px;
-      border-radius: 8px;
+      color: var(--secondary-color);
+      background: var(--ui-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
     }
 
     .time-signature {
-      font-size: 2rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      color: var(--current-color);
-      background: var(--countdown-bg);
-      padding: 10px 20px;
-      border-radius: 8px;
+      color: var(--accent-color);
+      background: var(--ui-bg);
+      padding: 8px 15px;
+      border-radius: 6px;
     }
 
     .metronome {
       display: flex;
-      gap: 8px;
-      align-items: center;
-      background: var(--countdown-bg);
-      padding: 10px 15px;
-      border-radius: 8px;
+      gap: 6px;
+      background: var(--ui-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
     }
 
     .beat-indicator {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      background: var(--progress-bg);
-      transition: transform 0.05s ease-out, background-color 0.05s ease-out, box-shadow 0.05s ease-out;
+      background: var(--bg-color);
+      transition: transform 0.05s, background-color 0.05s, box-shadow 0.05s;
     }
 
     .beat-indicator.active {
-      background: var(--beat-color);
+      background: var(--accent-color);
       transform: scale(1.3);
-      box-shadow: 0 0 15px var(--beat-color);
+      box-shadow: 0 0 10px var(--accent-color);
     }
 
-    .beat-indicator.downbeat {
-      width: 24px;
-      height: 24px;
-    }
+    .beat-indicator.downbeat { width: 20px; height: 20px; }
+    .beat-indicator.downbeat.active { background: #ff6600; box-shadow: 0 0 15px #ff6600; }
 
-    .beat-indicator.downbeat.active {
-      background: #ff6600;
-      box-shadow: 0 0 20px #ff6600;
-    }
-
-    .top-info.hidden {
-      display: none;
-    }
-
+    /* Main container */
     .container {
       flex: 1;
       display: flex;
@@ -305,65 +258,58 @@
       justify-content: center;
       align-items: center;
       padding: 40px;
-      gap: 30px;
+      gap: 20px;
     }
 
     .lyrics-block {
       width: 100%;
       text-align: center;
-      transition: all 0.3s ease;
     }
 
     .current {
-      font-size: clamp(2rem, 8vw, 6rem);
+      font-size: calc(clamp(2rem, 8vw, 6rem) * var(--font-size));
       font-weight: bold;
-      color: var(--current-color);
+      color: var(--accent-color);
       line-height: 1.2;
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
     }
 
     .next {
-      font-size: clamp(1.2rem, 4vw, 3rem);
-      color: var(--next-color);
+      font-size: calc(clamp(1.2rem, 4vw, 3rem) * var(--font-size));
+      color: var(--secondary-color);
       line-height: 1.3;
       opacity: 0.7;
     }
 
     .next.next2 {
-      font-size: clamp(1rem, 3vw, 2rem);
+      font-size: calc(clamp(1rem, 3vw, 2rem) * var(--font-size));
       opacity: 0.4;
     }
 
-    /* Bottom bar with progress bars */
+    .empty { opacity: 0.3; font-style: italic; }
+
+    /* Bottom progress bar */
     .bottom-bar {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
       width: 80%;
       max-width: 600px;
     }
-
-    .progress-section {
-      width: 100%;
-    }
+    .bottom-bar.hidden { display: none; }
 
     .progress-bar {
       width: 100%;
-      height: 8px;
-      background: var(--progress-bg);
-      border-radius: 4px;
+      height: 10px;
+      background: var(--ui-bg);
+      border-radius: 5px;
       overflow: hidden;
     }
 
     .progress-bar-fill {
       height: 100%;
-      background: var(--progress-fill);
-      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent-color), #00ccff);
+      border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
     }
@@ -371,142 +317,60 @@
     .progress-label {
       text-align: center;
       font-size: 0.9rem;
-      color: var(--next-color);
-      margin-top: 5px;
+      color: var(--secondary-color);
+      margin-top: 8px;
     }
 
-    /* Song progress bar */
-    .song-progress .progress-bar {
-      height: 12px;
-    }
+    /* Animation classes */
+    .anim-fade .lyrics-text { transition: opacity var(--transition-duration) ease; }
+    .anim-fade .lyrics-text.out { opacity: 0; }
+    .anim-fade .lyrics-text.in { opacity: 1; }
 
-    .song-progress .progress-bar-fill {
-      background: linear-gradient(90deg, var(--progress-fill), #00ccff);
-    }
+    .anim-slide-up .lyrics-text { transition: transform var(--transition-duration) ease, opacity var(--transition-duration) ease; }
+    .anim-slide-up .lyrics-text.out { transform: translateY(-50px); opacity: 0; }
+    .anim-slide-up .lyrics-text.in { transform: translateY(0); opacity: 1; }
 
-    .song-progress .progress-label {
-      font-size: 1rem;
-      color: var(--text-color);
-    }
+    .anim-slide-down .lyrics-text { transition: transform var(--transition-duration) ease, opacity var(--transition-duration) ease; }
+    .anim-slide-down .lyrics-text.out { transform: translateY(50px); opacity: 0; }
+    .anim-slide-down .lyrics-text.in { transform: translateY(0); opacity: 1; }
 
-    .empty {
-      opacity: 0.3;
-      font-style: italic;
-    }
+    .anim-scale .lyrics-text { transition: transform var(--transition-duration) ease, opacity var(--transition-duration) ease; }
+    .anim-scale .lyrics-text.out { transform: scale(0.8); opacity: 0; }
+    .anim-scale .lyrics-text.in { transform: scale(1); opacity: 1; }
 
-    /* Public mode styles */
-    .public-mode .next,
-    .public-mode .bottom-bar {
+    .anim-none .lyrics-text { transition: none; }
+
+    /* Public mode rolling lyrics */
+    .public-mode .container { justify-content: center; }
+    .public-mode .next, .public-mode .bottom-bar { display: none; }
+
+    .rolling-container {
       display: none;
-    }
-
-    /* Public mode top info - simplified */
-    .public-mode .top-info {
-      top: 20px;
-      left: 20px;
-    }
-
-    .public-mode .top-info .metronome {
-      display: none;
-    }
-
-    .public-mode .top-info .bpm {
-      background: #33333380;
-      color: var(--next-color);
-      font-size: 1.2rem;
-      padding: 8px 12px;
-    }
-
-    .public-mode .top-info .time-signature {
-      background: #33333380;
-      color: var(--current-color);
-      font-size: 1.5rem;
-      padding: 8px 16px;
-    }
-
-    .public-mode.light-mode .top-info .bpm {
-      background: #dddddd80;
-    }
-
-    .public-mode.light-mode .top-info .time-signature {
-      background: #dddddd80;
-    }
-
-    .public-mode .container {
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .public-mode .current.empty {
-      opacity: 0;
-    }
-
-    /* Rolling lyrics container for public mode */
-    .public-mode .rolling-container {
-      position: relative;
       width: 100%;
       height: 100%;
-      display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
     }
 
-    .public-mode .lyrics-wrapper {
-      position: relative;
-      width: 100%;
-      text-align: center;
-    }
+    .public-mode .rolling-container { display: flex; }
+    .public-mode #streamerContainer { display: none !important; }
 
-    .public-mode .lyrics-text {
-      font-size: clamp(2rem, 8vw, 6rem);
+    .lyrics-text {
+      font-size: calc(clamp(2rem, 8vw, 6rem) * var(--font-size));
       font-weight: bold;
-      color: var(--current-color);
+      color: var(--accent-color);
       line-height: 1.2;
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-      transition: transform 0.4s ease-out, opacity 0.4s ease-out;
-    }
-
-    .public-mode .lyrics-text.scroll-out {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-
-    .public-mode .lyrics-text.scroll-in {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-
-    .public-mode .lyrics-text.visible {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .public-mode .lyrics-text.hidden {
-      opacity: 0;
-      transform: translateY(0);
-    }
-
-    /* Fullscreen adjustments */
-    :fullscreen .controls {
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    :fullscreen .controls:hover {
-      opacity: 1;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <!-- Settings Toggle Button -->
   <button class="settings-toggle" id="settingsToggle">Settings</button>
 
-  <!-- Settings Panel -->
   <div class="settings-panel" id="settingsPanel">
-    <h2>OBS Display Settings</h2>
+    <h2>Teleprompter Settings</h2>
 
+    <h3>Display</h3>
     <div class="settings-group">
       <label>Mode</label>
       <select id="setMode">
@@ -516,32 +380,25 @@
     </div>
 
     <div class="settings-group">
-      <label>Theme</label>
-      <select id="setTheme">
-        <option value="dark">Dark</option>
-        <option value="light">Light</option>
-      </select>
-    </div>
-
-    <div class="settings-group">
       <label class="checkbox-label">
-        <input type="checkbox" id="setTransparent" checked>
-        Transparent background (for OBS)
+        <input type="checkbox" id="setTransparent">
+        Transparent background
       </label>
     </div>
 
-    <div class="settings-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="setShowBpm" checked>
-        Show BPM
-      </label>
-    </div>
-
-    <div class="settings-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="setShowBeat" checked>
-        Show Beat Indicator
-      </label>
+    <div class="settings-row">
+      <div class="settings-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setShowBpm" checked>
+          Show BPM
+        </label>
+      </div>
+      <div class="settings-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setShowBeat" checked>
+          Show Beat
+        </label>
+      </div>
     </div>
 
     <div class="settings-group">
@@ -551,420 +408,436 @@
       </label>
     </div>
 
+    <h3>Animation</h3>
+    <div class="settings-group">
+      <label>Transition Type</label>
+      <select id="setAnimation">
+        <option value="slide-up">Slide Up</option>
+        <option value="slide-down">Slide Down</option>
+        <option value="fade">Fade</option>
+        <option value="scale">Scale</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label>Duration: <span id="durationValue">0.4</span>s</label>
+      <input type="range" id="setDuration" min="0.1" max="1.5" step="0.1" value="0.4">
+    </div>
+
+    <h3>Colors</h3>
+    <div class="settings-row">
+      <div class="settings-group">
+        <label>Background</label>
+        <input type="color" id="setBgColor" value="#1a1a1a">
+      </div>
+      <div class="settings-group">
+        <label>Accent</label>
+        <input type="color" id="setAccentColor" value="#00ff88">
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-group">
+        <label>Text</label>
+        <input type="color" id="setTextColor" value="#ffffff">
+      </div>
+      <div class="settings-group">
+        <label>Secondary</label>
+        <input type="color" id="setSecondaryColor" value="#888888">
+      </div>
+    </div>
+
+    <h3>Typography</h3>
+    <div class="settings-group">
+      <label>Font Size: <span id="fontSizeValue">100</span>%</label>
+      <input type="range" id="setFontSize" min="50" max="200" step="10" value="100">
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setAutoScale" checked>
+        Auto-scale to fit
+      </label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-save" id="saveSettings">Save</button>
+      <button class="btn-reset" id="resetSettings">Reset</button>
+    </div>
+
     <div class="url-output">
-      <label>OBS Browser URL:</label>
+      <label style="color: var(--secondary-color); font-size: 0.85rem;">OBS URL:</label>
       <input type="text" id="generatedUrl" readonly>
       <button id="copyUrl">Copy URL</button>
-      <div class="copied" id="copiedMsg">Copied to clipboard!</div>
+      <div class="copied" id="copiedMsg">Copied!</div>
     </div>
-  </div>
-
-  <div class="controls">
-    <button id="themeToggle">Light Mode</button>
-    <button id="fullscreenToggle">Fullscreen</button>
   </div>
 
   <div class="top-info" id="topInfo">
     <div class="bpm" id="bpmDisplay">120 BPM</div>
     <div class="time-signature" id="timeSig">4/4</div>
-    <div class="metronome" id="metronome">
-      <!-- Beat indicators will be generated dynamically -->
-    </div>
+    <div class="metronome" id="metronome"></div>
   </div>
 
-  <!-- Streamer mode container -->
   <div class="container" id="streamerContainer">
-    <div class="lyrics-block current" id="current"></div>
+    <div class="lyrics-block current lyrics-text in" id="current"></div>
     <div class="lyrics-block next" id="next1"></div>
     <div class="lyrics-block next next2" id="next2"></div>
   </div>
 
-  <!-- Public mode container (rolling lyrics) -->
-  <div class="container" id="publicContainer" style="display: none;">
-    <div class="rolling-container">
-      <div class="lyrics-wrapper">
-        <div class="lyrics-text visible" id="rollingText"></div>
-      </div>
-    </div>
+  <div class="rolling-container" id="publicContainer">
+    <div class="lyrics-text in" id="rollingText"></div>
   </div>
 
-  <div class="bottom-bar">
-    <!-- Song progress (based on region) -->
-    <div class="progress-section song-progress">
-      <div class="progress-bar">
-        <div class="progress-bar-fill" id="songProgressFill"></div>
-      </div>
-      <div class="progress-label" id="songProgressLabel">--</div>
+  <div class="bottom-bar" id="bottomBar">
+    <div class="progress-bar">
+      <div class="progress-bar-fill" id="songProgressFill"></div>
     </div>
-
+    <div class="progress-label" id="songProgressLabel">--</div>
   </div>
 
   <script src="main.js"></script>
   <script>
-    // Parse URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode') || 'streamer';
-    const theme = urlParams.get('theme') || 'dark';
-    const transparent = urlParams.get('transparent') !== 'false';
-    const hideSettings = urlParams.get('hideSettings') === 'true';
-    const showBpm = urlParams.get('bpm') !== 'false';
-    const showBeat = urlParams.get('beat') !== 'false';
-    const showProgress = urlParams.get('progress') !== 'false';
+    const STORAGE_KEY = 'hyd_teleprompter_settings';
 
-    // Apply mode
-    const isPublicMode = mode === 'public';
-    if (isPublicMode) {
-      document.body.classList.add('public-mode');
-      document.querySelector('.controls').classList.add('hidden');
-      document.getElementById('streamerContainer').style.display = 'none';
-      document.getElementById('publicContainer').style.display = 'flex';
-      if (transparent) {
-        document.body.classList.add('transparent-bg');
-      }
+    // Default settings
+    const defaults = {
+      mode: 'streamer',
+      transparent: false,
+      showBpm: true,
+      showBeat: true,
+      showProgress: true,
+      animation: 'slide-up',
+      duration: 0.4,
+      bgColor: '#1a1a1a',
+      accentColor: '#00ff88',
+      textColor: '#ffffff',
+      secondaryColor: '#888888',
+      fontSize: 100,
+      autoScale: true
+    };
+
+    // Load settings from localStorage or URL params
+    function loadSettings() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+      // URL params override stored settings
+      return {
+        mode: urlParams.get('mode') || stored.mode || defaults.mode,
+        transparent: urlParams.has('transparent') ? urlParams.get('transparent') === 'true' : (stored.transparent ?? defaults.transparent),
+        showBpm: urlParams.has('bpm') ? urlParams.get('bpm') !== 'false' : (stored.showBpm ?? defaults.showBpm),
+        showBeat: urlParams.has('beat') ? urlParams.get('beat') !== 'false' : (stored.showBeat ?? defaults.showBeat),
+        showProgress: urlParams.has('progress') ? urlParams.get('progress') !== 'false' : (stored.showProgress ?? defaults.showProgress),
+        animation: urlParams.get('anim') || stored.animation || defaults.animation,
+        duration: parseFloat(urlParams.get('dur')) || stored.duration || defaults.duration,
+        bgColor: urlParams.get('bg') || stored.bgColor || defaults.bgColor,
+        accentColor: urlParams.get('accent') || stored.accentColor || defaults.accentColor,
+        textColor: urlParams.get('text') || stored.textColor || defaults.textColor,
+        secondaryColor: urlParams.get('secondary') || stored.secondaryColor || defaults.secondaryColor,
+        fontSize: parseInt(urlParams.get('size')) || stored.fontSize || defaults.fontSize,
+        autoScale: urlParams.has('autoscale') ? urlParams.get('autoscale') !== 'false' : (stored.autoScale ?? defaults.autoScale),
+        hideSettings: urlParams.get('hideSettings') === 'true'
+      };
     }
 
-    // Apply theme
-    if (theme === 'light') {
-      document.body.classList.add('light-mode');
-      document.getElementById('themeToggle').textContent = 'Dark Mode';
-    }
-
-    // Hide settings panel/toggle if hideSettings is true
-    if (hideSettings) {
-      document.getElementById('settingsToggle').classList.add('hidden');
-      document.getElementById('settingsPanel').classList.add('hidden');
-      document.querySelector('.controls').classList.add('hidden');
-    }
-
-    // Hide BPM if disabled
-    if (!showBpm) {
-      document.getElementById('bpmDisplay').style.display = 'none';
-    }
-
-    // Hide beat indicator if disabled
-    if (!showBeat) {
-      document.getElementById('metronome').style.display = 'none';
-    }
-
-    // Hide progress bar if disabled
-    if (!showProgress) {
-      document.querySelector('.bottom-bar').style.display = 'none';
-    }
-
-    // Settings Panel Logic
-    const settingsPanel = document.getElementById('settingsPanel');
-    const settingsToggle = document.getElementById('settingsToggle');
-    const setMode = document.getElementById('setMode');
-    const setTheme = document.getElementById('setTheme');
-    const setTransparent = document.getElementById('setTransparent');
-    const setShowBpm = document.getElementById('setShowBpm');
-    const setShowBeat = document.getElementById('setShowBeat');
-    const setShowProgress = document.getElementById('setShowProgress');
-    const generatedUrl = document.getElementById('generatedUrl');
-    const copyUrlBtn = document.getElementById('copyUrl');
-    const copiedMsg = document.getElementById('copiedMsg');
-
-    // Set initial values from current URL params
-    setMode.value = mode;
-    setTheme.value = theme;
-    setTransparent.checked = transparent;
-    setShowBpm.checked = showBpm;
-    setShowBeat.checked = showBeat;
-    setShowProgress.checked = showProgress;
-
-    function generateUrl() {
-      const base = window.location.origin + window.location.pathname;
-      const params = new URLSearchParams();
-
-      params.set('mode', setMode.value);
-      params.set('theme', setTheme.value);
-      params.set('transparent', setTransparent.checked ? 'true' : 'false');
-      params.set('bpm', setShowBpm.checked ? 'true' : 'false');
-      params.set('beat', setShowBeat.checked ? 'true' : 'false');
-      params.set('progress', setShowProgress.checked ? 'true' : 'false');
-      params.set('hideSettings', 'true');
-
-      generatedUrl.value = base + '?' + params.toString();
-    }
-
-    // Generate URL on any change
-    [setMode, setTheme, setTransparent, setShowBpm, setShowBeat, setShowProgress].forEach(el => {
-      el.addEventListener('change', generateUrl);
-    });
-
-    // Initial URL generation
-    generateUrl();
-
-    // Toggle settings panel
-    settingsToggle.addEventListener('click', () => {
-      settingsPanel.classList.toggle('open');
-    });
-
-    // Copy URL button
-    copyUrlBtn.addEventListener('click', () => {
-      generatedUrl.select();
-      navigator.clipboard.writeText(generatedUrl.value).then(() => {
-        copiedMsg.classList.add('show');
-        setTimeout(() => copiedMsg.classList.remove('show'), 2000);
-      });
-    });
-
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', function() {
-      document.body.classList.toggle('light-mode');
-      this.textContent = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
-    });
-
-    // Fullscreen toggle
-    document.getElementById('fullscreenToggle').addEventListener('click', function() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-        this.textContent = 'Exit Fullscreen';
-      } else {
-        document.exitFullscreen();
-        this.textContent = 'Fullscreen';
-      }
-    });
+    let settings = loadSettings();
 
     // Elements
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsToggle = document.getElementById('settingsToggle');
+    const topInfo = document.getElementById('topInfo');
+    const bottomBar = document.getElementById('bottomBar');
+    const bpmDisplay = document.getElementById('bpmDisplay');
+    const timeSigEl = document.getElementById('timeSig');
+    const metronomeEl = document.getElementById('metronome');
     const currentEl = document.getElementById('current');
     const next1El = document.getElementById('next1');
     const next2El = document.getElementById('next2');
-    const timeSigEl = document.getElementById('timeSig');
-    const bpmEl = document.getElementById('bpmDisplay');
-    const metronomeEl = document.getElementById('metronome');
+    const rollingTextEl = document.getElementById('rollingText');
     const songProgressFill = document.getElementById('songProgressFill');
     const songProgressLabel = document.getElementById('songProgressLabel');
-    const rollingTextEl = document.getElementById('rollingText');
 
-    // State
-    let currentText = '';
-    let lastCurrentText = '';
-    let next1Text = '';
-    let next2Text = '';
-    let timeSig = '4/4';
-    let bpm = 120;
-    let currentBeat = 1;
-    let beatPos = 0;
-    let playpos = 0;
-    let currentEnd = 0;
-    let next1Start = 0;
-    let next1End = 0;
-    let next2Start = 0;
-    let regionStart = 0;
-    let regionEnd = 0;
-    let regionName = '';
-    let isAnimating = false;
-    let lastTimeSig = '';
-    let lastBeat = 0;
+    // Settings inputs
+    const inputs = {
+      mode: document.getElementById('setMode'),
+      transparent: document.getElementById('setTransparent'),
+      showBpm: document.getElementById('setShowBpm'),
+      showBeat: document.getElementById('setShowBeat'),
+      showProgress: document.getElementById('setShowProgress'),
+      animation: document.getElementById('setAnimation'),
+      duration: document.getElementById('setDuration'),
+      bgColor: document.getElementById('setBgColor'),
+      accentColor: document.getElementById('setAccentColor'),
+      textColor: document.getElementById('setTextColor'),
+      secondaryColor: document.getElementById('setSecondaryColor'),
+      fontSize: document.getElementById('setFontSize'),
+      autoScale: document.getElementById('setAutoScale')
+    };
 
-    // Generate metronome beat indicators
-    function generateMetronome(beatsPerMeasure) {
+    // Apply settings to UI
+    function applySettings() {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-color', settings.bgColor);
+      root.style.setProperty('--accent-color', settings.accentColor);
+      root.style.setProperty('--text-color', settings.textColor);
+      root.style.setProperty('--secondary-color', settings.secondaryColor);
+      root.style.setProperty('--font-size', settings.fontSize / 100);
+      root.style.setProperty('--transition-duration', settings.duration + 's');
+
+      document.body.classList.toggle('transparent-bg', settings.transparent);
+      document.body.classList.toggle('public-mode', settings.mode === 'public');
+
+      // Animation class
+      document.body.className = document.body.className.replace(/anim-\w+/g, '');
+      document.body.classList.add('anim-' + settings.animation);
+
+      // Visibility
+      if (!settings.showBpm) bpmDisplay.style.display = 'none';
+      else bpmDisplay.style.display = '';
+
+      if (!settings.showBeat) metronomeEl.style.display = 'none';
+      else metronomeEl.style.display = '';
+
+      bottomBar.classList.toggle('hidden', !settings.showProgress);
+
+      if (settings.hideSettings) {
+        settingsToggle.classList.add('hidden');
+        settingsPanel.classList.add('hidden');
+      }
+
+      // Update input values
+      inputs.mode.value = settings.mode;
+      inputs.transparent.checked = settings.transparent;
+      inputs.showBpm.checked = settings.showBpm;
+      inputs.showBeat.checked = settings.showBeat;
+      inputs.showProgress.checked = settings.showProgress;
+      inputs.animation.value = settings.animation;
+      inputs.duration.value = settings.duration;
+      inputs.bgColor.value = settings.bgColor;
+      inputs.accentColor.value = settings.accentColor;
+      inputs.textColor.value = settings.textColor;
+      inputs.secondaryColor.value = settings.secondaryColor;
+      inputs.fontSize.value = settings.fontSize;
+      inputs.autoScale.checked = settings.autoScale;
+
+      document.getElementById('durationValue').textContent = settings.duration;
+      document.getElementById('fontSizeValue').textContent = settings.fontSize;
+    }
+
+    // Read settings from inputs
+    function readSettings() {
+      settings.mode = inputs.mode.value;
+      settings.transparent = inputs.transparent.checked;
+      settings.showBpm = inputs.showBpm.checked;
+      settings.showBeat = inputs.showBeat.checked;
+      settings.showProgress = inputs.showProgress.checked;
+      settings.animation = inputs.animation.value;
+      settings.duration = parseFloat(inputs.duration.value);
+      settings.bgColor = inputs.bgColor.value;
+      settings.accentColor = inputs.accentColor.value;
+      settings.textColor = inputs.textColor.value;
+      settings.secondaryColor = inputs.secondaryColor.value;
+      settings.fontSize = parseInt(inputs.fontSize.value);
+      settings.autoScale = inputs.autoScale.checked;
+    }
+
+    // Generate URL
+    function generateUrl() {
+      const base = window.location.origin + window.location.pathname;
+      const p = new URLSearchParams();
+      p.set('mode', settings.mode);
+      p.set('transparent', settings.transparent);
+      p.set('bpm', settings.showBpm);
+      p.set('beat', settings.showBeat);
+      p.set('progress', settings.showProgress);
+      p.set('anim', settings.animation);
+      p.set('dur', settings.duration);
+      p.set('bg', settings.bgColor);
+      p.set('accent', settings.accentColor);
+      p.set('text', settings.textColor);
+      p.set('secondary', settings.secondaryColor);
+      p.set('size', settings.fontSize);
+      p.set('autoscale', settings.autoScale);
+      p.set('hideSettings', 'true');
+      document.getElementById('generatedUrl').value = base + '?' + p.toString();
+    }
+
+    // Event listeners
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('change', () => {
+        readSettings();
+        applySettings();
+        generateUrl();
+      });
+      input.addEventListener('input', () => {
+        readSettings();
+        applySettings();
+        generateUrl();
+      });
+    });
+
+    settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      readSettings();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      alert('Settings saved!');
+    });
+
+    document.getElementById('resetSettings').addEventListener('click', () => {
+      if (confirm('Reset all settings to defaults?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        settings = { ...defaults };
+        applySettings();
+        generateUrl();
+      }
+    });
+
+    document.getElementById('copyUrl').addEventListener('click', () => {
+      const url = document.getElementById('generatedUrl');
+      url.select();
+      navigator.clipboard.writeText(url.value).then(() => {
+        const msg = document.getElementById('copiedMsg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      });
+    });
+
+    // Initialize
+    applySettings();
+    generateUrl();
+
+    // Metronome
+    function generateMetronome(beats) {
       metronomeEl.innerHTML = '';
-      for (let i = 1; i <= beatsPerMeasure; i++) {
+      for (let i = 1; i <= beats; i++) {
         const dot = document.createElement('div');
         dot.className = 'beat-indicator' + (i === 1 ? ' downbeat' : '');
         dot.id = 'beat-' + i;
         metronomeEl.appendChild(dot);
       }
     }
-
-    // Initialize with 4/4
     generateMetronome(4);
 
-    // Start REAPER web interface communication
+    // State
+    let currentText = '', lastCurrentText = '', next1Text = '', next2Text = '';
+    let timeSig = '4/4', bpm = 120, currentBeat = 1;
+    let regionStart = 0, regionEnd = 0, regionName = '', playpos = 0;
+    let lastTimeSig = '', lastBeat = 0;
+    let isAnimating = false;
+
+    // REAPER communication
     wwr_start();
-    wwr_req_recur(
-      "GET/PROJEXTSTATE/Teleprompter/data;TRANSPORT",
-      16
-    );
+    wwr_req_recur("GET/PROJEXTSTATE/Teleprompter/data;TRANSPORT", 16);
 
     function wwr_onreply(results) {
-      const lines = results.split("\n");
-
-      for (const line of lines) {
+      for (const line of results.split("\n")) {
         const tok = line.split("\t");
-
         if (tok.length > 3 && tok[1] === "Teleprompter" && tok[2] === "data") {
-          const jsonStr = tok[3] || '';
-          if (jsonStr) {
-            try {
-              const d = JSON.parse(jsonStr);
-              currentText = d.cur || '';
-              next1Text = d.n1 || '';
-              next2Text = d.n2 || '';
-              playpos = d.pp || 0;
-              currentEnd = d.ce || 0;
-              next1Start = d.n1s || 0;
-              next1End = d.n1e || 0;
-              next2Start = d.n2s || 0;
-              timeSig = d.ts || '4/4';
-              bpm = d.bpm || 120;
-              currentBeat = d.b || 1;
-              beatPos = d.bp || 0;
-              regionStart = d.rs || 0;
-              regionEnd = d.re || 0;
-              regionName = d.rn || '';
-            } catch (e) {
-              // JSON parse error, ignore
-            }
-          }
+          try {
+            const d = JSON.parse(tok[3] || '{}');
+            currentText = d.cur || '';
+            next1Text = d.n1 || '';
+            next2Text = d.n2 || '';
+            playpos = d.pp || 0;
+            timeSig = d.ts || '4/4';
+            bpm = d.bpm || 120;
+            currentBeat = d.b || 1;
+            regionStart = d.rs || 0;
+            regionEnd = d.re || 0;
+            regionName = d.rn || '';
+          } catch (e) {}
         }
       }
-
       updateDisplay();
-      updateMetronome();
-      updateSongProgress();
     }
 
     function updateDisplay() {
-      // Update time signature and BPM display
       timeSigEl.textContent = timeSig;
-      bpmEl.textContent = Math.round(bpm) + ' BPM';
+      bpmDisplay.textContent = Math.round(bpm) + ' BPM';
 
-      // Regenerate metronome if time signature changed
       if (timeSig !== lastTimeSig) {
-        const parts = timeSig.split('/');
-        const beatsPerMeasure = parseInt(parts[0]) || 4;
-        generateMetronome(beatsPerMeasure);
+        generateMetronome(parseInt(timeSig.split('/')[0]) || 4);
         lastTimeSig = timeSig;
       }
 
-      if (isPublicMode) {
+      // Metronome pulse
+      if (currentBeat !== lastBeat) {
+        const indicators = metronomeEl.querySelectorAll('.beat-indicator');
+        indicators.forEach(i => i.classList.remove('active'));
+        const curr = indicators[currentBeat - 1];
+        if (curr) {
+          curr.classList.add('active');
+          setTimeout(() => curr.classList.remove('active'), 150);
+        }
+        lastBeat = currentBeat;
+      }
+
+      if (settings.mode === 'public') {
         updatePublicDisplay();
       } else {
         updateStreamerDisplay();
       }
-    }
 
-    function updateMetronome() {
-      const indicators = metronomeEl.querySelectorAll('.beat-indicator');
-
-      // Detect beat change and trigger pulse
-      if (currentBeat !== lastBeat) {
-        // Remove active from all
-        indicators.forEach(ind => ind.classList.remove('active'));
-
-        // Add active to current beat
-        const currentIndicator = indicators[currentBeat - 1];
-        if (currentIndicator) {
-          currentIndicator.classList.add('active');
-          // Remove active after pulse duration
-          setTimeout(() => {
-            currentIndicator.classList.remove('active');
-          }, 150);
-        }
-
-        lastBeat = currentBeat;
-      }
+      updateProgress();
     }
 
     function updateStreamerDisplay() {
-      // Update current lyrics
-      if (currentText && currentText !== '') {
-        currentEl.innerHTML = currentText;
-        currentEl.classList.remove('empty');
-      } else {
-        currentEl.innerHTML = '...';
-        currentEl.classList.add('empty');
+      // Animate current text change
+      if (currentText !== lastCurrentText && !isAnimating) {
+        isAnimating = true;
+        currentEl.classList.remove('in');
+        currentEl.classList.add('out');
+
+        setTimeout(() => {
+          currentEl.innerHTML = currentText || '...';
+          currentEl.classList.toggle('empty', !currentText);
+          currentEl.classList.remove('out');
+          currentEl.classList.add('in');
+          isAnimating = false;
+        }, settings.duration * 1000);
+
+        lastCurrentText = currentText;
       }
 
-      // Update next lyrics
-      if (next1Text && next1Text !== '') {
-        next1El.innerHTML = next1Text;
-        next1El.classList.remove('empty');
-      } else {
-        next1El.innerHTML = '...';
-        next1El.classList.add('empty');
-      }
-
-      if (next2Text && next2Text !== '') {
-        next2El.innerHTML = next2Text;
-        next2El.classList.remove('empty');
-      } else {
-        next2El.innerHTML = '...';
-        next2El.classList.add('empty');
-      }
+      next1El.innerHTML = next1Text || '...';
+      next1El.classList.toggle('empty', !next1Text);
+      next2El.innerHTML = next2Text || '...';
+      next2El.classList.toggle('empty', !next2Text);
     }
 
     function updatePublicDisplay() {
-      // Check if text has changed
       if (currentText !== lastCurrentText && !isAnimating) {
         isAnimating = true;
+        rollingTextEl.classList.remove('in');
+        rollingTextEl.classList.add('out');
 
-        // If there was previous text, scroll it out
-        if (lastCurrentText !== '') {
-          rollingTextEl.classList.remove('visible');
-          rollingTextEl.classList.add('scroll-out');
-
-          setTimeout(() => {
-            // Update text and prepare for scroll in
-            if (currentText && currentText !== '') {
-              rollingTextEl.innerHTML = currentText;
-              rollingTextEl.classList.remove('scroll-out');
-              rollingTextEl.classList.add('scroll-in');
-
-              // Force reflow
-              rollingTextEl.offsetHeight;
-
-              // Scroll in
-              setTimeout(() => {
-                rollingTextEl.classList.remove('scroll-in');
-                rollingTextEl.classList.add('visible');
-                isAnimating = false;
-              }, 50);
-            } else {
-              // No current text - just hide
-              rollingTextEl.innerHTML = '';
-              rollingTextEl.classList.remove('scroll-out');
-              rollingTextEl.classList.add('hidden');
-              isAnimating = false;
-            }
-          }, 400);
-        } else {
-          // No previous text - just scroll in new text
-          if (currentText && currentText !== '') {
-            rollingTextEl.innerHTML = currentText;
-            rollingTextEl.classList.remove('hidden', 'scroll-out');
-            rollingTextEl.classList.add('scroll-in');
-
-            // Force reflow
-            rollingTextEl.offsetHeight;
-
-            setTimeout(() => {
-              rollingTextEl.classList.remove('scroll-in');
-              rollingTextEl.classList.add('visible');
-              isAnimating = false;
-            }, 50);
-          } else {
-            rollingTextEl.classList.add('hidden');
-            isAnimating = false;
-          }
-        }
+        setTimeout(() => {
+          rollingTextEl.innerHTML = currentText || '';
+          rollingTextEl.classList.remove('out');
+          rollingTextEl.classList.add('in');
+          isAnimating = false;
+        }, settings.duration * 1000);
 
         lastCurrentText = currentText;
       }
     }
 
-
-    function updateSongProgress() {
-      if (regionEnd > regionStart && regionEnd > 0) {
-        const duration = regionEnd - regionStart;
-        const elapsed = playpos - regionStart;
-        const progress = Math.max(0, Math.min(100, (elapsed / duration) * 100));
-
+    function updateProgress() {
+      if (regionEnd > regionStart) {
+        const progress = Math.max(0, Math.min(100, ((playpos - regionStart) / (regionEnd - regionStart)) * 100));
         songProgressFill.style.width = progress + '%';
 
-        // Format time remaining
         const remaining = Math.max(0, regionEnd - playpos);
         const mins = Math.floor(remaining / 60);
         const secs = Math.floor(remaining % 60);
         const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
-
-        songProgressLabel.textContent = regionName ? `${regionName} - ${timeStr} remaining` : `${timeStr} remaining`;
+        songProgressLabel.textContent = regionName ? `${regionName} - ${timeStr}` : timeStr;
       } else {
         songProgressFill.style.width = '0%';
-        songProgressLabel.textContent = 'No region';
+        songProgressLabel.textContent = '--';
       }
     }
   </script>

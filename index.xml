@@ -2,8 +2,14 @@
 <index version="1" name="HYD Live Performance">
   <category name="Live Performance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.1">
-        <changelog><![CDATA[v1.0.1: Session scaffolding
+      <version name="1.0.2">
+        <changelog><![CDATA[v1.0.2: Enhanced web interfaces
+- Teleprompter: Full settings panel with animation controls, colors, font size
+- NowPlaying: Settings panel with layout options, slow pan animation for cover art
+- All settings persist via localStorage
+- URL generator for OBS browser sources
+
+v1.0.1: Session scaffolding
 - Asks to create missing LYRICS/SONGS tracks on startup
 
 v1.0.0: Initial release

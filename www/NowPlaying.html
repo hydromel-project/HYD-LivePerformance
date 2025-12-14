@@ -11,27 +11,12 @@
       --accent-color: #00ff88;
       --secondary-color: #888888;
       --card-bg: #252525;
+      --font-size: 1;
+      --transition-duration: 0.5s;
     }
 
-    .light-mode {
-      --bg-color: #f5f5f5;
-      --text-color: #1a1a1a;
-      --accent-color: #007744;
-      --secondary-color: #666666;
-      --card-bg: #ffffff;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
 
     body {
       background-color: var(--bg-color);
@@ -43,156 +28,9 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* Transparent background for OBS */
-    body.transparent-bg {
-      background-color: #1a1a1a00 !important;
-    }
+    body.transparent-bg { background-color: transparent !important; }
 
-    body.transparent-bg.light-mode {
-      background-color: #f5f5f500 !important;
-    }
-
-    .controls {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 100;
-      display: flex;
-      gap: 10px;
-    }
-
-    .controls button {
-      background: var(--card-bg);
-      color: var(--text-color);
-      border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s;
-    }
-
-    .controls button:hover {
-      opacity: 0.8;
-    }
-
-    .controls.hidden {
-      display: none;
-    }
-
-    /* Settings Panel */
-    .settings-panel {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 320px;
-      height: 100%;
-      background: var(--card-bg);
-      z-index: 200;
-      padding: 20px;
-      overflow-y: auto;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-    }
-
-    .settings-panel.open {
-      transform: translateX(0);
-    }
-
-    .settings-panel h2 {
-      margin-bottom: 20px;
-      color: var(--accent-color);
-      font-size: 1.2rem;
-    }
-
-    .settings-group {
-      margin-bottom: 20px;
-    }
-
-    .settings-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--secondary-color);
-    }
-
-    .settings-group select,
-    .settings-group input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: none;
-      border-radius: 5px;
-      background: var(--bg-color);
-      color: var(--text-color);
-      font-size: 1rem;
-    }
-
-    .settings-group input[type="checkbox"] {
-      margin-right: 8px;
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      color: var(--text-color);
-    }
-
-    .url-output {
-      margin-top: 20px;
-      padding: 15px;
-      background: var(--bg-color);
-      border-radius: 8px;
-    }
-
-    .url-output label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--secondary-color);
-    }
-
-    .url-output input {
-      width: 100%;
-      padding: 8px;
-      border: none;
-      border-radius: 5px;
-      background: var(--card-bg);
-      color: var(--text-color);
-      font-size: 0.85rem;
-      margin-bottom: 10px;
-    }
-
-    .url-output button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background: var(--accent-color);
-      color: var(--bg-color);
-      font-weight: bold;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .url-output button:hover {
-      opacity: 0.8;
-    }
-
-    .url-output .copied {
-      text-align: center;
-      color: var(--accent-color);
-      font-size: 0.85rem;
-      margin-top: 8px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .url-output .copied.show {
-      opacity: 1;
-    }
-
+    /* Settings Toggle */
     .settings-toggle {
       position: fixed;
       top: 10px;
@@ -205,51 +43,194 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-      transition: all 0.3s;
+    }
+    .settings-toggle:hover { opacity: 0.8; }
+    .settings-toggle.hidden { display: none; }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 340px;
+      height: 100%;
+      background: var(--card-bg);
+      z-index: 200;
+      padding: 20px;
+      overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-panel.hidden { display: none; }
+
+    .settings-panel h2 {
+      margin-bottom: 20px;
+      color: var(--accent-color);
+      font-size: 1.1rem;
     }
 
-    .settings-toggle:hover {
-      opacity: 0.8;
+    .settings-panel h3 {
+      margin: 20px 0 10px;
+      color: var(--secondary-color);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--secondary-color);
+      padding-bottom: 5px;
     }
 
-    .settings-toggle.hidden {
-      display: none;
+    .settings-group {
+      margin-bottom: 15px;
     }
 
-    .settings-panel.hidden {
-      display: none;
+    .settings-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.85rem;
+      color: var(--secondary-color);
     }
 
-    /* Container - hidden by default */
+    .settings-group select,
+    .settings-group input[type="number"],
+    .settings-group input[type="color"] {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+
+    .settings-group input[type="color"] {
+      height: 40px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .settings-group input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+
+    .checkbox-label input { margin-right: 8px; }
+
+    .settings-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .settings-row .settings-group { flex: 1; }
+
+    .url-output {
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--bg-color);
+      border-radius: 8px;
+    }
+
+    .url-output input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 0.8rem;
+    }
+
+    .url-output button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: var(--accent-color);
+      color: var(--bg-color);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .url-output .copied {
+      text-align: center;
+      color: var(--accent-color);
+      font-size: 0.85rem;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .url-output .copied.show { opacity: 1; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-row button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-save { background: var(--accent-color); color: var(--bg-color); }
+    .btn-reset { background: var(--secondary-color); color: var(--bg-color); }
+
+    /* Background art */
+    .bg-art {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity var(--transition-duration) ease;
+    }
+    .bg-art.visible { opacity: 1; }
+
+    .bg-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(30px) brightness(0.4);
+      transform: scale(1.1);
+    }
+
+    /* Now Playing container */
     .now-playing {
       display: flex;
       padding: 20px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 1s ease-out; /* Default: 1s fade out */
+      transition: opacity var(--transition-duration) ease;
+      position: relative;
+      z-index: 1;
     }
-
-    .now-playing.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transition: opacity 2s ease-in;
-    }
-
-    .now-playing.fading-out {
-      opacity: 0;
-      transition: opacity 1s ease-out;
-    }
+    .now-playing.visible { opacity: 1; pointer-events: auto; }
 
     /* Album Art */
     .album-art {
       background: var(--card-bg);
       border-radius: 12px;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       flex-shrink: 0;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
     }
 
     .album-art img {
@@ -261,6 +242,24 @@
     .album-art .no-art {
       color: var(--secondary-color);
       font-size: 3rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Slow scroll/pan animation on album art */
+    .album-art.scroll-anim img {
+      animation: slowPan 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes slowPan {
+      0% { transform: scale(1.1) translate(0, 0); }
+      25% { transform: scale(1.15) translate(-2%, -2%); }
+      50% { transform: scale(1.1) translate(2%, 0); }
+      75% { transform: scale(1.12) translate(0, 2%); }
+      100% { transform: scale(1.1) translate(-1%, -1%); }
     }
 
     /* Song Info */
@@ -271,7 +270,7 @@
     }
 
     .song-title {
-      font-size: 2rem;
+      font-size: calc(2rem * var(--font-size));
       font-weight: bold;
       color: var(--accent-color);
       margin-bottom: 8px;
@@ -279,25 +278,46 @@
     }
 
     .song-artist {
-      font-size: 1.4rem;
+      font-size: calc(1.4rem * var(--font-size));
       color: var(--text-color);
       margin-bottom: 4px;
     }
 
     .song-album {
-      font-size: 1.1rem;
+      font-size: calc(1.1rem * var(--font-size));
       color: var(--secondary-color);
     }
 
     .song-year {
-      font-size: 1rem;
+      font-size: calc(1rem * var(--font-size));
       color: var(--secondary-color);
       margin-top: 8px;
     }
 
-    /* =========================
-       LAYOUT: HORIZONTAL
-       ========================= */
+    /* Animation classes */
+    .anim-fade .now-playing { transition: opacity var(--transition-duration) ease; }
+
+    .anim-slide-up .now-playing {
+      transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
+      transform: translateY(30px);
+    }
+    .anim-slide-up .now-playing.visible { transform: translateY(0); }
+
+    .anim-slide-left .now-playing {
+      transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
+      transform: translateX(-30px);
+    }
+    .anim-slide-left .now-playing.visible { transform: translateX(0); }
+
+    .anim-scale .now-playing {
+      transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
+      transform: scale(0.9);
+    }
+    .anim-scale .now-playing.visible { transform: scale(1); }
+
+    .anim-none .now-playing { transition: none; }
+
+    /* Layout: Horizontal */
     .layout-horizontal .now-playing {
       flex-direction: row;
       gap: 30px;
@@ -305,18 +325,10 @@
       width: 90%;
     }
 
-    .layout-horizontal .album-art {
-      width: 200px;
-      height: 200px;
-    }
+    .layout-horizontal .album-art { width: 200px; height: 200px; }
+    .layout-horizontal .song-info { text-align: left; }
 
-    .layout-horizontal .song-info {
-      text-align: left;
-    }
-
-    /* =========================
-       LAYOUT: VERTICAL
-       ========================= */
+    /* Layout: Vertical */
     .layout-vertical .now-playing {
       flex-direction: column;
       align-items: center;
@@ -325,60 +337,11 @@
       width: 90%;
     }
 
-    .layout-vertical .album-art {
-      width: 250px;
-      height: 250px;
-    }
+    .layout-vertical .album-art { width: 250px; height: 250px; }
+    .layout-vertical .song-info { text-align: center; }
 
-    .layout-vertical .song-info {
-      text-align: center;
-    }
-
-
-    /* =========================
-       LAYOUT: BACKGROUND
-       ========================= */
-    .layout-background {
-      position: relative;
-    }
-
-    .layout-background .bg-art {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 1s ease-out;
-    }
-
-    .layout-background .bg-art.visible {
-      opacity: 1;
-      transition: opacity 2s ease-in;
-    }
-
-    .layout-background .bg-art.fading-out {
-      opacity: 0;
-      transition: opacity 1s ease-out;
-    }
-
-    .layout-background .bg-art img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: blur(30px) brightness(0.4);
-      transform: scale(1.1);
-    }
-
-    .layout-background .bg-art.light-blur img {
-      filter: blur(30px) brightness(0.8);
-    }
-
+    /* Layout: Background */
     .layout-background .now-playing {
-      position: relative;
-      z-index: 1;
       flex-direction: row;
       gap: 30px;
       max-width: 700px;
@@ -388,83 +351,58 @@
       padding: 30px;
     }
 
-    .layout-background.light-mode .now-playing {
-      background: rgba(255, 255, 255, 0.7);
+    .layout-background .album-art { width: 180px; height: 180px; }
+    .layout-background .song-info { text-align: left; }
+    .layout-background .song-title { text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
+
+    /* Layout: Minimal */
+    .layout-minimal .now-playing {
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
     }
 
-    .layout-background .album-art {
-      width: 180px;
-      height: 180px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    .layout-background .song-info {
-      text-align: left;
-    }
-
-    .layout-background .song-title {
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      .layout-horizontal .now-playing,
-      .layout-background .now-playing {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .layout-horizontal .song-info,
-      .layout-background .song-info {
-        text-align: center;
-      }
-    }
+    .layout-minimal .album-art { display: none; }
+    .layout-minimal .song-info { text-align: center; }
   </style>
 </head>
 <body>
-  <!-- Settings Toggle Button -->
   <button class="settings-toggle" id="settingsToggle">Settings</button>
 
-  <!-- Settings Panel -->
   <div class="settings-panel" id="settingsPanel">
-    <h2>OBS Display Settings</h2>
+    <h2>Now Playing Settings</h2>
 
+    <h3>Layout</h3>
     <div class="settings-group">
-      <label>Layout</label>
+      <label>Style</label>
       <select id="setLayout">
         <option value="horizontal">Horizontal</option>
         <option value="vertical">Vertical</option>
         <option value="background">Background Blur</option>
-      </select>
-    </div>
-
-    <div class="settings-group">
-      <label>Theme</label>
-      <select id="setTheme">
-        <option value="dark">Dark</option>
-        <option value="light">Light</option>
+        <option value="minimal">Minimal (no art)</option>
       </select>
     </div>
 
     <div class="settings-group">
       <label class="checkbox-label">
         <input type="checkbox" id="setTransparent">
-        Transparent background (for OBS)
+        Transparent background
       </label>
     </div>
 
-    <div class="settings-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="setShowAlbum" checked>
-        Show Album
-      </label>
-    </div>
-
-    <div class="settings-group">
-      <label class="checkbox-label">
-        <input type="checkbox" id="setShowYear" checked>
-        Show Year
-      </label>
+    <div class="settings-row">
+      <div class="settings-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setShowAlbum" checked>
+          Show Album
+        </label>
+      </div>
+      <div class="settings-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="setShowYear" checked>
+          Show Year
+        </label>
+      </div>
     </div>
 
     <div class="settings-group">
@@ -474,29 +412,81 @@
       </label>
     </div>
 
+    <h3>Animation</h3>
     <div class="settings-group">
-      <label>Fade Before End (seconds)</label>
-      <input type="number" id="setFade" value="5" min="0" max="30" step="1">
+      <label>Transition Type</label>
+      <select id="setAnimation">
+        <option value="fade">Fade</option>
+        <option value="slide-up">Slide Up</option>
+        <option value="slide-left">Slide Left</option>
+        <option value="scale">Scale</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label>Duration: <span id="durationValue">0.5</span>s</label>
+      <input type="range" id="setDuration" min="0.2" max="2" step="0.1" value="0.5">
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setScrollAnim">
+        Slow pan animation on cover
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label>Fade Before End: <span id="fadeValue">5</span>s</label>
+      <input type="range" id="setFade" min="0" max="30" step="1" value="5">
+    </div>
+
+    <h3>Colors</h3>
+    <div class="settings-row">
+      <div class="settings-group">
+        <label>Background</label>
+        <input type="color" id="setBgColor" value="#1a1a1a">
+      </div>
+      <div class="settings-group">
+        <label>Accent</label>
+        <input type="color" id="setAccentColor" value="#00ff88">
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-group">
+        <label>Text</label>
+        <input type="color" id="setTextColor" value="#ffffff">
+      </div>
+      <div class="settings-group">
+        <label>Secondary</label>
+        <input type="color" id="setSecondaryColor" value="#888888">
+      </div>
+    </div>
+
+    <h3>Typography</h3>
+    <div class="settings-group">
+      <label>Font Size: <span id="fontSizeValue">100</span>%</label>
+      <input type="range" id="setFontSize" min="50" max="200" step="10" value="100">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-save" id="saveSettings">Save</button>
+      <button class="btn-reset" id="resetSettings">Reset</button>
     </div>
 
     <div class="url-output">
-      <label>OBS Browser URL:</label>
+      <label style="color: var(--secondary-color); font-size: 0.85rem;">OBS URL:</label>
       <input type="text" id="generatedUrl" readonly>
       <button id="copyUrl">Copy URL</button>
-      <div class="copied" id="copiedMsg">Copied to clipboard!</div>
+      <div class="copied" id="copiedMsg">Copied!</div>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="themeToggle">Light Mode</button>
-  </div>
-
-  <!-- Background art (only for background layout) -->
   <div class="bg-art" id="bgArt">
     <img id="bgArtImg" src="" alt="">
   </div>
 
-  <!-- Now Playing container -->
   <div class="now-playing" id="nowPlaying">
     <div class="album-art" id="albumArt">
       <img id="albumArtImg" src="" alt="Album Art" style="display: none;">
@@ -512,129 +502,53 @@
 
   <script src="main.js"></script>
   <script>
-    // Parse URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const layout = urlParams.get('layout') || 'horizontal';
-    const theme = urlParams.get('theme') || 'dark';
-    const transparent = urlParams.get('transparent') === 'true';
-    const hideSettings = urlParams.get('hideSettings') === 'true';
-    const showAlbum = urlParams.get('album') !== 'false';
-    const showYear = urlParams.get('year') !== 'false';
-    const showCover = urlParams.get('cover') !== 'false';
-    const fadeTime = parseFloat(urlParams.get('fade') || '5');
+    const STORAGE_KEY = 'hyd_nowplaying_settings';
 
-    // Apply layout
-    document.body.classList.add('layout-' + layout);
+    const defaults = {
+      layout: 'horizontal',
+      transparent: false,
+      showAlbum: true,
+      showYear: true,
+      showCover: true,
+      animation: 'fade',
+      duration: 0.5,
+      scrollAnim: false,
+      fade: 5,
+      bgColor: '#1a1a1a',
+      accentColor: '#00ff88',
+      textColor: '#ffffff',
+      secondaryColor: '#888888',
+      fontSize: 100
+    };
 
-    // Apply theme
-    if (theme === 'light') {
-      document.body.classList.add('light-mode');
-      document.getElementById('themeToggle').textContent = 'Dark Mode';
-      if (layout === 'background') {
-        document.getElementById('bgArt').classList.add('light-blur');
-      }
+    function loadSettings() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+      return {
+        layout: urlParams.get('layout') || stored.layout || defaults.layout,
+        transparent: urlParams.has('transparent') ? urlParams.get('transparent') === 'true' : (stored.transparent ?? defaults.transparent),
+        showAlbum: urlParams.has('album') ? urlParams.get('album') !== 'false' : (stored.showAlbum ?? defaults.showAlbum),
+        showYear: urlParams.has('year') ? urlParams.get('year') !== 'false' : (stored.showYear ?? defaults.showYear),
+        showCover: urlParams.has('cover') ? urlParams.get('cover') !== 'false' : (stored.showCover ?? defaults.showCover),
+        animation: urlParams.get('anim') || stored.animation || defaults.animation,
+        duration: parseFloat(urlParams.get('dur')) || stored.duration || defaults.duration,
+        scrollAnim: urlParams.has('scroll') ? urlParams.get('scroll') === 'true' : (stored.scrollAnim ?? defaults.scrollAnim),
+        fade: parseInt(urlParams.get('fade')) ?? stored.fade ?? defaults.fade,
+        bgColor: urlParams.get('bg') || stored.bgColor || defaults.bgColor,
+        accentColor: urlParams.get('accent') || stored.accentColor || defaults.accentColor,
+        textColor: urlParams.get('text') || stored.textColor || defaults.textColor,
+        secondaryColor: urlParams.get('secondary') || stored.secondaryColor || defaults.secondaryColor,
+        fontSize: parseInt(urlParams.get('size')) || stored.fontSize || defaults.fontSize,
+        hideSettings: urlParams.get('hideSettings') === 'true'
+      };
     }
 
-    // Apply transparent background
-    if (transparent) {
-      document.body.classList.add('transparent-bg');
-    }
-
-    // Hide settings if requested
-    if (hideSettings) {
-      document.getElementById('settingsToggle').classList.add('hidden');
-      document.getElementById('settingsPanel').classList.add('hidden');
-      document.querySelector('.controls').classList.add('hidden');
-    }
-
-    // Hide album if disabled
-    if (!showAlbum) {
-      document.getElementById('songAlbum').style.display = 'none';
-    }
-
-    // Hide year if disabled
-    if (!showYear) {
-      document.getElementById('songYear').style.display = 'none';
-    }
-
-    // Hide cover art if disabled
-    if (!showCover) {
-      document.getElementById('albumArt').style.display = 'none';
-    }
-
-    // Settings Panel Logic
-    const settingsPanel = document.getElementById('settingsPanel');
-    const settingsToggle = document.getElementById('settingsToggle');
-    const setLayout = document.getElementById('setLayout');
-    const setTheme = document.getElementById('setTheme');
-    const setTransparent = document.getElementById('setTransparent');
-    const setShowAlbum = document.getElementById('setShowAlbum');
-    const setShowYear = document.getElementById('setShowYear');
-    const setShowCover = document.getElementById('setShowCover');
-    const setFade = document.getElementById('setFade');
-    const generatedUrl = document.getElementById('generatedUrl');
-    const copyUrlBtn = document.getElementById('copyUrl');
-    const copiedMsg = document.getElementById('copiedMsg');
-
-    // Set initial values
-    setLayout.value = layout;
-    setTheme.value = theme;
-    setTransparent.checked = transparent;
-    setShowAlbum.checked = showAlbum;
-    setShowYear.checked = showYear;
-    setShowCover.checked = showCover;
-    setFade.value = fadeTime;
-
-    function generateUrl() {
-      const base = window.location.origin + window.location.pathname;
-      const params = new URLSearchParams();
-
-      params.set('layout', setLayout.value);
-      params.set('theme', setTheme.value);
-      params.set('transparent', setTransparent.checked ? 'true' : 'false');
-      params.set('album', setShowAlbum.checked ? 'true' : 'false');
-      params.set('year', setShowYear.checked ? 'true' : 'false');
-      params.set('cover', setShowCover.checked ? 'true' : 'false');
-      params.set('fade', setFade.value);
-      params.set('hideSettings', 'true');
-
-      generatedUrl.value = base + '?' + params.toString();
-    }
-
-    // Generate URL on any change
-    [setLayout, setTheme, setTransparent, setShowAlbum, setShowYear, setShowCover, setFade].forEach(el => {
-      el.addEventListener('change', generateUrl);
-      el.addEventListener('input', generateUrl);
-    });
-
-    // Initial URL generation
-    generateUrl();
-
-    // Toggle settings panel
-    settingsToggle.addEventListener('click', () => {
-      settingsPanel.classList.toggle('open');
-    });
-
-    // Copy URL button
-    copyUrlBtn.addEventListener('click', () => {
-      generatedUrl.select();
-      navigator.clipboard.writeText(generatedUrl.value).then(() => {
-        copiedMsg.classList.add('show');
-        setTimeout(() => copiedMsg.classList.remove('show'), 2000);
-      });
-    });
-
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', function() {
-      document.body.classList.toggle('light-mode');
-      const isLight = document.body.classList.contains('light-mode');
-      this.textContent = isLight ? 'Dark Mode' : 'Light Mode';
-      if (layout === 'background') {
-        document.getElementById('bgArt').classList.toggle('light-blur', isLight);
-      }
-    });
+    let settings = loadSettings();
 
     // Elements
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsToggle = document.getElementById('settingsToggle');
     const nowPlayingEl = document.getElementById('nowPlaying');
     const albumArtEl = document.getElementById('albumArt');
     const albumArtImg = document.getElementById('albumArtImg');
@@ -646,189 +560,271 @@
     const songAlbumEl = document.getElementById('songAlbum');
     const songYearEl = document.getElementById('songYear');
 
-    // State
-    let displayActive = false;
-    let lastDisplayActive = false;
-    let title = '';
-    let artist = '';
-    let album = '';
-    let year = '';
-    let cover = '';
-    let lastCover = '';
-    let timeRemaining = 0;
-    let isVisible = false;
-    let regionName = '';
-    let lastRegionName = '';
-    let playPos = 0;
-    let itemStart = 0;
-    let itemEnd = 0;
-    let wasWithinItem = false;
+    // Settings inputs
+    const inputs = {
+      layout: document.getElementById('setLayout'),
+      transparent: document.getElementById('setTransparent'),
+      showAlbum: document.getElementById('setShowAlbum'),
+      showYear: document.getElementById('setShowYear'),
+      showCover: document.getElementById('setShowCover'),
+      animation: document.getElementById('setAnimation'),
+      duration: document.getElementById('setDuration'),
+      scrollAnim: document.getElementById('setScrollAnim'),
+      fade: document.getElementById('setFade'),
+      bgColor: document.getElementById('setBgColor'),
+      accentColor: document.getElementById('setAccentColor'),
+      textColor: document.getElementById('setTextColor'),
+      secondaryColor: document.getElementById('setSecondaryColor'),
+      fontSize: document.getElementById('setFontSize')
+    };
 
-    // Start REAPER web interface communication
-    wwr_start();
-    wwr_req_recur(
-      "GET/PROJEXTSTATE/NowPlaying/data;TRANSPORT",
-      50
-    );
+    function applySettings() {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-color', settings.bgColor);
+      root.style.setProperty('--accent-color', settings.accentColor);
+      root.style.setProperty('--text-color', settings.textColor);
+      root.style.setProperty('--secondary-color', settings.secondaryColor);
+      root.style.setProperty('--font-size', settings.fontSize / 100);
+      root.style.setProperty('--transition-duration', settings.duration + 's');
 
-    function wwr_onreply(results) {
-      const lines = results.split("\n");
+      // Layout
+      document.body.className = document.body.className.replace(/layout-\w+/g, '').replace(/anim-[\w-]+/g, '');
+      document.body.classList.add('layout-' + settings.layout);
+      document.body.classList.add('anim-' + settings.animation);
+      document.body.classList.toggle('transparent-bg', settings.transparent);
 
-      for (const line of lines) {
-        const tok = line.split("\t");
+      // Scroll animation
+      albumArtEl.classList.toggle('scroll-anim', settings.scrollAnim);
 
-        if (tok.length > 3 && tok[1] === "NowPlaying" && tok[2] === "data") {
-          const jsonStr = tok[3] || '';
-          if (jsonStr) {
-            try {
-              const d = JSON.parse(jsonStr);
-              displayActive = d.d || false;
-              title = d.t || '';
-              artist = d.a || '';
-              album = d.al || '';
-              year = d.y || '';
-              cover = d.c || '';
-              timeRemaining = d.tr || 0;
-              regionName = d.rn || '';
-              playPos = d.pp || 0;
-              itemStart = d.is || 0;
-              itemEnd = d.ie || 0;
-            } catch (e) {
-              // JSON parse error, ignore
-            }
-          }
-        }
+      // Visibility
+      songAlbumEl.style.display = settings.showAlbum ? '' : 'none';
+      songYearEl.style.display = settings.showYear ? '' : 'none';
+      albumArtEl.style.display = settings.showCover ? '' : 'none';
+
+      if (settings.hideSettings) {
+        settingsToggle.classList.add('hidden');
+        settingsPanel.classList.add('hidden');
       }
 
+      // Update inputs
+      inputs.layout.value = settings.layout;
+      inputs.transparent.checked = settings.transparent;
+      inputs.showAlbum.checked = settings.showAlbum;
+      inputs.showYear.checked = settings.showYear;
+      inputs.showCover.checked = settings.showCover;
+      inputs.animation.value = settings.animation;
+      inputs.duration.value = settings.duration;
+      inputs.scrollAnim.checked = settings.scrollAnim;
+      inputs.fade.value = settings.fade;
+      inputs.bgColor.value = settings.bgColor;
+      inputs.accentColor.value = settings.accentColor;
+      inputs.textColor.value = settings.textColor;
+      inputs.secondaryColor.value = settings.secondaryColor;
+      inputs.fontSize.value = settings.fontSize;
+
+      document.getElementById('durationValue').textContent = settings.duration;
+      document.getElementById('fadeValue').textContent = settings.fade;
+      document.getElementById('fontSizeValue').textContent = settings.fontSize;
+    }
+
+    function readSettings() {
+      settings.layout = inputs.layout.value;
+      settings.transparent = inputs.transparent.checked;
+      settings.showAlbum = inputs.showAlbum.checked;
+      settings.showYear = inputs.showYear.checked;
+      settings.showCover = inputs.showCover.checked;
+      settings.animation = inputs.animation.value;
+      settings.duration = parseFloat(inputs.duration.value);
+      settings.scrollAnim = inputs.scrollAnim.checked;
+      settings.fade = parseInt(inputs.fade.value);
+      settings.bgColor = inputs.bgColor.value;
+      settings.accentColor = inputs.accentColor.value;
+      settings.textColor = inputs.textColor.value;
+      settings.secondaryColor = inputs.secondaryColor.value;
+      settings.fontSize = parseInt(inputs.fontSize.value);
+    }
+
+    function generateUrl() {
+      const base = window.location.origin + window.location.pathname;
+      const p = new URLSearchParams();
+      p.set('layout', settings.layout);
+      p.set('transparent', settings.transparent);
+      p.set('album', settings.showAlbum);
+      p.set('year', settings.showYear);
+      p.set('cover', settings.showCover);
+      p.set('anim', settings.animation);
+      p.set('dur', settings.duration);
+      p.set('scroll', settings.scrollAnim);
+      p.set('fade', settings.fade);
+      p.set('bg', settings.bgColor);
+      p.set('accent', settings.accentColor);
+      p.set('text', settings.textColor);
+      p.set('secondary', settings.secondaryColor);
+      p.set('size', settings.fontSize);
+      p.set('hideSettings', 'true');
+      document.getElementById('generatedUrl').value = base + '?' + p.toString();
+    }
+
+    // Event listeners
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('change', () => { readSettings(); applySettings(); generateUrl(); });
+      input.addEventListener('input', () => { readSettings(); applySettings(); generateUrl(); });
+    });
+
+    settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      readSettings();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      alert('Settings saved!');
+    });
+
+    document.getElementById('resetSettings').addEventListener('click', () => {
+      if (confirm('Reset all settings to defaults?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        settings = { ...defaults };
+        applySettings();
+        generateUrl();
+      }
+    });
+
+    document.getElementById('copyUrl').addEventListener('click', () => {
+      const url = document.getElementById('generatedUrl');
+      url.select();
+      navigator.clipboard.writeText(url.value).then(() => {
+        const msg = document.getElementById('copiedMsg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      });
+    });
+
+    // Initialize
+    applySettings();
+    generateUrl();
+
+    // State
+    let displayActive = false, lastDisplayActive = false;
+    let title = '', artist = '', album = '', year = '', cover = '', lastCover = '';
+    let timeRemaining = 0, isVisible = false;
+    let regionName = '', lastRegionName = '';
+    let playPos = 0, itemStart = 0, itemEnd = 0, wasWithinItem = false;
+
+    // REAPER communication
+    wwr_start();
+    wwr_req_recur("GET/PROJEXTSTATE/NowPlaying/data;TRANSPORT", 50);
+
+    function wwr_onreply(results) {
+      for (const line of results.split("\n")) {
+        const tok = line.split("\t");
+        if (tok.length > 3 && tok[1] === "NowPlaying" && tok[2] === "data") {
+          try {
+            const d = JSON.parse(tok[3] || '{}');
+            displayActive = d.d || false;
+            title = d.t || '';
+            artist = d.a || '';
+            album = d.al || '';
+            year = d.y || '';
+            cover = d.c || '';
+            timeRemaining = d.tr || 0;
+            regionName = d.rn || '';
+            playPos = d.pp || 0;
+            itemStart = d.is || 0;
+            itemEnd = d.ie || 0;
+          } catch (e) {}
+        }
+      }
       updateDisplay();
     }
 
     function updateDisplay() {
-      // Check if within item boundaries
       const withinItem = itemEnd > 0 && playPos >= itemStart && playPos < itemEnd;
 
-      // Detect region change (leaving a region)
+      // Region change - fade out
       if (lastRegionName !== '' && regionName !== lastRegionName) {
-        // Region changed - fade out
-        fadeOutNowPlaying();
+        fadeOut();
       }
 
-      // Check if we left the item
+      // Left item - fade out
       if (wasWithinItem && !withinItem) {
-        fadeOutNowPlaying();
+        fadeOut();
       }
 
-      // Check if we entered the item
+      // Entered item - show
       if (displayActive && withinItem && !wasWithinItem) {
-        showNowPlaying();
+        show();
       }
 
-      // Also show if display just became active while within item
+      // Just became active while within item
       if (displayActive && withinItem && !lastDisplayActive && !isVisible) {
-        showNowPlaying();
+        show();
       }
 
-      // Hide if display became inactive
+      // Became inactive - fade out
       if (!displayActive && lastDisplayActive) {
-        fadeOutNowPlaying();
+        fadeOut();
       }
 
       wasWithinItem = withinItem;
 
-      // Fade out near end of song (only if not already fading)
-      if (displayActive && isVisible && !nowPlayingEl.classList.contains('fading-out') && timeRemaining > 0 && timeRemaining <= fadeTime) {
-        const opacity = timeRemaining / fadeTime;
+      // Fade near end
+      if (displayActive && isVisible && timeRemaining > 0 && timeRemaining <= settings.fade) {
+        const opacity = timeRemaining / settings.fade;
         nowPlayingEl.style.opacity = opacity;
-        if (layout === 'background') {
-          bgArt.style.opacity = opacity;
-        }
+        if (settings.layout === 'background') bgArt.style.opacity = opacity;
       }
 
       lastDisplayActive = displayActive;
       lastRegionName = regionName;
 
-      // Update content if visible
-      if (isVisible) {
-        updateContent();
-      }
+      if (isVisible) updateContent();
     }
 
-    function showNowPlaying() {
+    function show() {
       isVisible = true;
       updateContent();
-      // Remove fading-out class and reset opacity
-      nowPlayingEl.classList.remove('fading-out');
       nowPlayingEl.style.opacity = '';
-      // Add visible class to trigger 6s fade in
       nowPlayingEl.classList.add('visible');
-      if (layout === 'background' && cover) {
-        bgArt.classList.remove('fading-out');
+      if (settings.layout === 'background' && cover) {
         bgArt.classList.add('visible');
       }
     }
 
-    function fadeOutNowPlaying() {
+    function fadeOut() {
       if (!isVisible) return;
-      // Add fading-out class for 1s fade out transition
-      nowPlayingEl.classList.add('fading-out');
       nowPlayingEl.classList.remove('visible');
       nowPlayingEl.style.opacity = '';
-      if (layout === 'background') {
-        bgArt.classList.add('fading-out');
+      if (settings.layout === 'background') {
         bgArt.classList.remove('visible');
       }
-      // After fade out completes, fully hide
       setTimeout(() => {
-        if (nowPlayingEl.classList.contains('fading-out')) {
-          nowPlayingEl.classList.remove('fading-out');
-          isVisible = false;
-          lastCover = '';
-        }
-      }, 1000);
-    }
-
-    function hideNowPlaying() {
-      isVisible = false;
-      nowPlayingEl.classList.remove('visible');
-      nowPlayingEl.classList.remove('fading-out');
-      nowPlayingEl.style.opacity = '';
-      if (layout === 'background') {
-        bgArt.classList.remove('visible');
-        bgArt.classList.remove('fading-out');
-      }
-      lastCover = '';
+        isVisible = false;
+        lastCover = '';
+      }, settings.duration * 1000);
     }
 
     function updateContent() {
-      // Update text - always show all fields
       songTitleEl.textContent = title || '--';
       songArtistEl.textContent = artist || '--';
       songAlbumEl.textContent = album || '--';
-      songYearEl.textContent = year || '--';
+      songYearEl.textContent = year || '';
 
-      // Update album art
       if (cover && cover !== lastCover) {
         const imgUrl = cover + '?t=' + Date.now();
         albumArtImg.src = imgUrl;
         albumArtImg.style.display = 'block';
         noArtIcon.style.display = 'none';
-
-        if (layout === 'background') {
-          bgArtImg.src = imgUrl;
-        }
-
+        if (settings.layout === 'background') bgArtImg.src = imgUrl;
         lastCover = cover;
       } else if (!cover) {
         albumArtImg.style.display = 'none';
-        noArtIcon.style.display = 'block';
+        noArtIcon.style.display = 'flex';
         lastCover = '';
       }
     }
 
-    // Handle image load errors
     albumArtImg.onerror = function() {
       this.style.display = 'none';
-      noArtIcon.style.display = 'block';
+      noArtIcon.style.display = 'flex';
     };
 
     bgArtImg.onerror = function() {
