@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REAPER Now Playing</title>
+  <style>
+    :root {
+      --bg-color: #1a1a1a;
+      --text-color: #ffffff;
+      --accent-color: #00ff88;
+      --secondary-color: #888888;
+      --card-bg: #252525;
+    }
+
+    .light-mode {
+      --bg-color: #f5f5f5;
+      --text-color: #1a1a1a;
+      --accent-color: #007744;
+      --secondary-color: #666666;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Transparent background for OBS */
+    body.transparent-bg {
+      background-color: #1a1a1a00 !important;
+    }
+
+    body.transparent-bg.light-mode {
+      background-color: #f5f5f500 !important;
+    }
+
+    .controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls button {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .controls button:hover {
+      opacity: 0.8;
+    }
+
+    .controls.hidden {
+      display: none;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 100%;
+      background: var(--card-bg);
+      z-index: 200;
+      padding: 20px;
+      overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    }
+
+    .settings-panel.open {
+      transform: translateX(0);
+    }
+
+    .settings-panel h2 {
+      margin-bottom: 20px;
+      color: var(--accent-color);
+      font-size: 1.2rem;
+    }
+
+    .settings-group {
+      margin-bottom: 20px;
+    }
+
+    .settings-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--secondary-color);
+    }
+
+    .settings-group select,
+    .settings-group input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .settings-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+
+    .url-output {
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--bg-color);
+      border-radius: 8px;
+    }
+
+    .url-output label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--secondary-color);
+    }
+
+    .url-output input {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+    }
+
+    .url-output button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: var(--accent-color);
+      color: var(--bg-color);
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .url-output button:hover {
+      opacity: 0.8;
+    }
+
+    .url-output .copied {
+      text-align: center;
+      color: var(--accent-color);
+      font-size: 0.85rem;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .url-output .copied.show {
+      opacity: 1;
+    }
+
+    .settings-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 201;
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .settings-toggle:hover {
+      opacity: 0.8;
+    }
+
+    .settings-toggle.hidden {
+      display: none;
+    }
+
+    .settings-panel.hidden {
+      display: none;
+    }
+
+    /* Container - hidden by default */
+    .now-playing {
+      display: flex;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease-out; /* Default: 1s fade out */
+    }
+
+    .now-playing.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 2s ease-in;
+    }
+
+    .now-playing.fading-out {
+      opacity: 0;
+      transition: opacity 1s ease-out;
+    }
+
+    /* Album Art */
+    .album-art {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .album-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .album-art .no-art {
+      color: var(--secondary-color);
+      font-size: 3rem;
+    }
+
+    /* Song Info */
+    .song-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .song-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .song-artist {
+      font-size: 1.4rem;
+      color: var(--text-color);
+      margin-bottom: 4px;
+    }
+
+    .song-album {
+      font-size: 1.1rem;
+      color: var(--secondary-color);
+    }
+
+    .song-year {
+      font-size: 1rem;
+      color: var(--secondary-color);
+      margin-top: 8px;
+    }
+
+    /* =========================
+       LAYOUT: HORIZONTAL
+       ========================= */
+    .layout-horizontal .now-playing {
+      flex-direction: row;
+      gap: 30px;
+      max-width: 800px;
+      width: 90%;
+    }
+
+    .layout-horizontal .album-art {
+      width: 200px;
+      height: 200px;
+    }
+
+    .layout-horizontal .song-info {
+      text-align: left;
+    }
+
+    /* =========================
+       LAYOUT: VERTICAL
+       ========================= */
+    .layout-vertical .now-playing {
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .layout-vertical .album-art {
+      width: 250px;
+      height: 250px;
+    }
+
+    .layout-vertical .song-info {
+      text-align: center;
+    }
+
+
+    /* =========================
+       LAYOUT: BACKGROUND
+       ========================= */
+    .layout-background {
+      position: relative;
+    }
+
+    .layout-background .bg-art {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 1s ease-out;
+    }
+
+    .layout-background .bg-art.visible {
+      opacity: 1;
+      transition: opacity 2s ease-in;
+    }
+
+    .layout-background .bg-art.fading-out {
+      opacity: 0;
+      transition: opacity 1s ease-out;
+    }
+
+    .layout-background .bg-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(30px) brightness(0.4);
+      transform: scale(1.1);
+    }
+
+    .layout-background .bg-art.light-blur img {
+      filter: blur(30px) brightness(0.8);
+    }
+
+    .layout-background .now-playing {
+      position: relative;
+      z-index: 1;
+      flex-direction: row;
+      gap: 30px;
+      max-width: 700px;
+      width: 90%;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 16px;
+      padding: 30px;
+    }
+
+    .layout-background.light-mode .now-playing {
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .layout-background .album-art {
+      width: 180px;
+      height: 180px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .layout-background .song-info {
+      text-align: left;
+    }
+
+    .layout-background .song-title {
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .layout-horizontal .now-playing,
+      .layout-background .now-playing {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .layout-horizontal .song-info,
+      .layout-background .song-info {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Settings Toggle Button -->
+  <button class="settings-toggle" id="settingsToggle">Settings</button>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <h2>OBS Display Settings</h2>
+
+    <div class="settings-group">
+      <label>Layout</label>
+      <select id="setLayout">
+        <option value="horizontal">Horizontal</option>
+        <option value="vertical">Vertical</option>
+        <option value="background">Background Blur</option>
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label>Theme</label>
+      <select id="setTheme">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setTransparent">
+        Transparent background (for OBS)
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowAlbum" checked>
+        Show Album
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowYear" checked>
+        Show Year
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowCover" checked>
+        Show Cover Art
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label>Fade Before End (seconds)</label>
+      <input type="number" id="setFade" value="5" min="0" max="30" step="1">
+    </div>
+
+    <div class="url-output">
+      <label>OBS Browser URL:</label>
+      <input type="text" id="generatedUrl" readonly>
+      <button id="copyUrl">Copy URL</button>
+      <div class="copied" id="copiedMsg">Copied to clipboard!</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="themeToggle">Light Mode</button>
+  </div>
+
+  <!-- Background art (only for background layout) -->
+  <div class="bg-art" id="bgArt">
+    <img id="bgArtImg" src="" alt="">
+  </div>
+
+  <!-- Now Playing container -->
+  <div class="now-playing" id="nowPlaying">
+    <div class="album-art" id="albumArt">
+      <img id="albumArtImg" src="" alt="Album Art" style="display: none;">
+      <span class="no-art" id="noArtIcon">&#9835;</span>
+    </div>
+    <div class="song-info">
+      <div class="song-title" id="songTitle">--</div>
+      <div class="song-artist" id="songArtist">--</div>
+      <div class="song-album" id="songAlbum">--</div>
+      <div class="song-year" id="songYear"></div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // Parse URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const layout = urlParams.get('layout') || 'horizontal';
+    const theme = urlParams.get('theme') || 'dark';
+    const transparent = urlParams.get('transparent') === 'true';
+    const hideSettings = urlParams.get('hideSettings') === 'true';
+    const showAlbum = urlParams.get('album') !== 'false';
+    const showYear = urlParams.get('year') !== 'false';
+    const showCover = urlParams.get('cover') !== 'false';
+    const fadeTime = parseFloat(urlParams.get('fade') || '5');
+
+    // Apply layout
+    document.body.classList.add('layout-' + layout);
+
+    // Apply theme
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('themeToggle').textContent = 'Dark Mode';
+      if (layout === 'background') {
+        document.getElementById('bgArt').classList.add('light-blur');
+      }
+    }
+
+    // Apply transparent background
+    if (transparent) {
+      document.body.classList.add('transparent-bg');
+    }
+
+    // Hide settings if requested
+    if (hideSettings) {
+      document.getElementById('settingsToggle').classList.add('hidden');
+      document.getElementById('settingsPanel').classList.add('hidden');
+      document.querySelector('.controls').classList.add('hidden');
+    }
+
+    // Hide album if disabled
+    if (!showAlbum) {
+      document.getElementById('songAlbum').style.display = 'none';
+    }
+
+    // Hide year if disabled
+    if (!showYear) {
+      document.getElementById('songYear').style.display = 'none';
+    }
+
+    // Hide cover art if disabled
+    if (!showCover) {
+      document.getElementById('albumArt').style.display = 'none';
+    }
+
+    // Settings Panel Logic
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsToggle = document.getElementById('settingsToggle');
+    const setLayout = document.getElementById('setLayout');
+    const setTheme = document.getElementById('setTheme');
+    const setTransparent = document.getElementById('setTransparent');
+    const setShowAlbum = document.getElementById('setShowAlbum');
+    const setShowYear = document.getElementById('setShowYear');
+    const setShowCover = document.getElementById('setShowCover');
+    const setFade = document.getElementById('setFade');
+    const generatedUrl = document.getElementById('generatedUrl');
+    const copyUrlBtn = document.getElementById('copyUrl');
+    const copiedMsg = document.getElementById('copiedMsg');
+
+    // Set initial values
+    setLayout.value = layout;
+    setTheme.value = theme;
+    setTransparent.checked = transparent;
+    setShowAlbum.checked = showAlbum;
+    setShowYear.checked = showYear;
+    setShowCover.checked = showCover;
+    setFade.value = fadeTime;
+
+    function generateUrl() {
+      const base = window.location.origin + window.location.pathname;
+      const params = new URLSearchParams();
+
+      params.set('layout', setLayout.value);
+      params.set('theme', setTheme.value);
+      params.set('transparent', setTransparent.checked ? 'true' : 'false');
+      params.set('album', setShowAlbum.checked ? 'true' : 'false');
+      params.set('year', setShowYear.checked ? 'true' : 'false');
+      params.set('cover', setShowCover.checked ? 'true' : 'false');
+      params.set('fade', setFade.value);
+      params.set('hideSettings', 'true');
+
+      generatedUrl.value = base + '?' + params.toString();
+    }
+
+    // Generate URL on any change
+    [setLayout, setTheme, setTransparent, setShowAlbum, setShowYear, setShowCover, setFade].forEach(el => {
+      el.addEventListener('change', generateUrl);
+      el.addEventListener('input', generateUrl);
+    });
+
+    // Initial URL generation
+    generateUrl();
+
+    // Toggle settings panel
+    settingsToggle.addEventListener('click', () => {
+      settingsPanel.classList.toggle('open');
+    });
+
+    // Copy URL button
+    copyUrlBtn.addEventListener('click', () => {
+      generatedUrl.select();
+      navigator.clipboard.writeText(generatedUrl.value).then(() => {
+        copiedMsg.classList.add('show');
+        setTimeout(() => copiedMsg.classList.remove('show'), 2000);
+      });
+    });
+
+    // Theme toggle
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      this.textContent = isLight ? 'Dark Mode' : 'Light Mode';
+      if (layout === 'background') {
+        document.getElementById('bgArt').classList.toggle('light-blur', isLight);
+      }
+    });
+
+    // Elements
+    const nowPlayingEl = document.getElementById('nowPlaying');
+    const albumArtEl = document.getElementById('albumArt');
+    const albumArtImg = document.getElementById('albumArtImg');
+    const noArtIcon = document.getElementById('noArtIcon');
+    const bgArt = document.getElementById('bgArt');
+    const bgArtImg = document.getElementById('bgArtImg');
+    const songTitleEl = document.getElementById('songTitle');
+    const songArtistEl = document.getElementById('songArtist');
+    const songAlbumEl = document.getElementById('songAlbum');
+    const songYearEl = document.getElementById('songYear');
+
+    // State
+    let displayActive = false;
+    let lastDisplayActive = false;
+    let title = '';
+    let artist = '';
+    let album = '';
+    let year = '';
+    let cover = '';
+    let lastCover = '';
+    let timeRemaining = 0;
+    let isVisible = false;
+    let regionName = '';
+    let lastRegionName = '';
+    let playPos = 0;
+    let itemStart = 0;
+    let itemEnd = 0;
+    let wasWithinItem = false;
+
+    // Start REAPER web interface communication
+    wwr_start();
+    wwr_req_recur(
+      "GET/PROJEXTSTATE/NowPlaying/data;TRANSPORT",
+      50
+    );
+
+    function wwr_onreply(results) {
+      const lines = results.split("\n");
+
+      for (const line of lines) {
+        const tok = line.split("\t");
+
+        if (tok.length > 3 && tok[1] === "NowPlaying" && tok[2] === "data") {
+          const jsonStr = tok[3] || '';
+          if (jsonStr) {
+            try {
+              const d = JSON.parse(jsonStr);
+              displayActive = d.d || false;
+              title = d.t || '';
+              artist = d.a || '';
+              album = d.al || '';
+              year = d.y || '';
+              cover = d.c || '';
+              timeRemaining = d.tr || 0;
+              regionName = d.rn || '';
+              playPos = d.pp || 0;
+              itemStart = d.is || 0;
+              itemEnd = d.ie || 0;
+            } catch (e) {
+              // JSON parse error, ignore
+            }
+          }
+        }
+      }
+
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      // Check if within item boundaries
+      const withinItem = itemEnd > 0 && playPos >= itemStart && playPos < itemEnd;
+
+      // Detect region change (leaving a region)
+      if (lastRegionName !== '' && regionName !== lastRegionName) {
+        // Region changed - fade out
+        fadeOutNowPlaying();
+      }
+
+      // Check if we left the item
+      if (wasWithinItem && !withinItem) {
+        fadeOutNowPlaying();
+      }
+
+      // Check if we entered the item
+      if (displayActive && withinItem && !wasWithinItem) {
+        showNowPlaying();
+      }
+
+      // Also show if display just became active while within item
+      if (displayActive && withinItem && !lastDisplayActive && !isVisible) {
+        showNowPlaying();
+      }
+
+      // Hide if display became inactive
+      if (!displayActive && lastDisplayActive) {
+        fadeOutNowPlaying();
+      }
+
+      wasWithinItem = withinItem;
+
+      // Fade out near end of song (only if not already fading)
+      if (displayActive && isVisible && !nowPlayingEl.classList.contains('fading-out') && timeRemaining > 0 && timeRemaining <= fadeTime) {
+        const opacity = timeRemaining / fadeTime;
+        nowPlayingEl.style.opacity = opacity;
+        if (layout === 'background') {
+          bgArt.style.opacity = opacity;
+        }
+      }
+
+      lastDisplayActive = displayActive;
+      lastRegionName = regionName;
+
+      // Update content if visible
+      if (isVisible) {
+        updateContent();
+      }
+    }
+
+    function showNowPlaying() {
+      isVisible = true;
+      updateContent();
+      // Remove fading-out class and reset opacity
+      nowPlayingEl.classList.remove('fading-out');
+      nowPlayingEl.style.opacity = '';
+      // Add visible class to trigger 6s fade in
+      nowPlayingEl.classList.add('visible');
+      if (layout === 'background' && cover) {
+        bgArt.classList.remove('fading-out');
+        bgArt.classList.add('visible');
+      }
+    }
+
+    function fadeOutNowPlaying() {
+      if (!isVisible) return;
+      // Add fading-out class for 1s fade out transition
+      nowPlayingEl.classList.add('fading-out');
+      nowPlayingEl.classList.remove('visible');
+      nowPlayingEl.style.opacity = '';
+      if (layout === 'background') {
+        bgArt.classList.add('fading-out');
+        bgArt.classList.remove('visible');
+      }
+      // After fade out completes, fully hide
+      setTimeout(() => {
+        if (nowPlayingEl.classList.contains('fading-out')) {
+          nowPlayingEl.classList.remove('fading-out');
+          isVisible = false;
+          lastCover = '';
+        }
+      }, 1000);
+    }
+
+    function hideNowPlaying() {
+      isVisible = false;
+      nowPlayingEl.classList.remove('visible');
+      nowPlayingEl.classList.remove('fading-out');
+      nowPlayingEl.style.opacity = '';
+      if (layout === 'background') {
+        bgArt.classList.remove('visible');
+        bgArt.classList.remove('fading-out');
+      }
+      lastCover = '';
+    }
+
+    function updateContent() {
+      // Update text - always show all fields
+      songTitleEl.textContent = title || '--';
+      songArtistEl.textContent = artist || '--';
+      songAlbumEl.textContent = album || '--';
+      songYearEl.textContent = year || '--';
+
+      // Update album art
+      if (cover && cover !== lastCover) {
+        const imgUrl = cover + '?t=' + Date.now();
+        albumArtImg.src = imgUrl;
+        albumArtImg.style.display = 'block';
+        noArtIcon.style.display = 'none';
+
+        if (layout === 'background') {
+          bgArtImg.src = imgUrl;
+        }
+
+        lastCover = cover;
+      } else if (!cover) {
+        albumArtImg.style.display = 'none';
+        noArtIcon.style.display = 'block';
+        lastCover = '';
+      }
+    }
+
+    // Handle image load errors
+    albumArtImg.onerror = function() {
+      this.style.display = 'none';
+      noArtIcon.style.display = 'block';
+    };
+
+    bgArtImg.onerror = function() {
+      bgArt.classList.remove('visible');
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REAPER Playlist</title>
+  <style>
+    :root {
+      --bg-color: #1a1a1a;
+      --card-bg: #252525;
+      --text-color: #ffffff;
+      --text-secondary: #888888;
+      --accent-color: #00ff88;
+      --accent-hover: #00cc6a;
+      --danger-color: #ff4444;
+      --warning-color: #ffaa00;
+      --border-color: #333333;
+    }
+
+    .light-mode {
+      --bg-color: #f5f5f5;
+      --card-bg: #ffffff;
+      --text-color: #1a1a1a;
+      --text-secondary: #666666;
+      --accent-color: #007744;
+      --accent-hover: #005533;
+      --danger-color: #cc0000;
+      --warning-color: #cc8800;
+      --border-color: #dddddd;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ===== CONTROL MODE ===== */
+    .control-mode {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    /* Header with controls */
+    .header {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.2rem;
+      color: var(--accent-color);
+      margin-right: auto;
+    }
+
+    .control-btn {
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .control-btn.danger {
+      background: var(--danger-color);
+      color: #fff;
+    }
+
+    .control-btn.warning {
+      background: var(--warning-color);
+      color: #000;
+    }
+
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Search section */
+    .search-section {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    /* Main content area */
+    .main-content {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Songs browser */
+    .songs-panel {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: bold;
+      color: var(--text-secondary);
+    }
+
+    .songs-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 5px;
+    }
+
+    .song-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      gap: 10px;
+    }
+
+    .song-item:hover {
+      background: var(--bg-color);
+    }
+
+    .song-item .song-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .song-item .song-title {
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-item .song-artist {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-item .add-btn {
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .song-item:hover .add-btn {
+      opacity: 1;
+    }
+
+    /* Queue panel */
+    .queue-panel {
+      width: 350px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .queue-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 5px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 6px;
+      gap: 10px;
+      background: var(--bg-color);
+      margin-bottom: 5px;
+      transition: all 0.2s;
+    }
+
+    .queue-item.current {
+      border-left: 4px solid var(--accent-color);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .queue-item.loading {
+      border-left: 4px solid var(--warning-color);
+    }
+
+    .queue-item .queue-num {
+      font-weight: bold;
+      color: var(--text-secondary);
+      min-width: 24px;
+    }
+
+    .queue-item .queue-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .queue-item .queue-title {
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-item .queue-artist {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .queue-item .ready-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger-color);
+    }
+
+    .queue-item .ready-indicator.ready {
+      background: var(--accent-color);
+    }
+
+    .queue-item .ready-indicator.loading {
+      background: var(--warning-color);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .queue-item .queue-controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .queue-item .play-btn,
+    .queue-item .stop-btn {
+      background: transparent;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .queue-item .play-btn {
+      color: var(--accent-color);
+    }
+
+    .queue-item .play-btn:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .queue-item .play-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .queue-item .stop-btn {
+      color: var(--warning-color);
+    }
+
+    .queue-item .stop-btn:hover {
+      background: var(--warning-color);
+      color: #000;
+    }
+
+    .queue-item.playing {
+      border-left: 4px solid var(--accent-color);
+      background: rgba(0, 255, 136, 0.15);
+    }
+
+    .queue-item.playing .play-btn {
+      display: none;
+    }
+
+    .queue-item:not(.playing) .stop-btn {
+      display: none;
+    }
+
+    .queue-item .remove-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: opacity 0.2s;
+    }
+
+    .queue-item .remove-btn:hover {
+      color: var(--danger-color);
+    }
+
+    /* Now Playing bar */
+    .now-playing-bar {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .now-playing-info {
+      flex: 1;
+    }
+
+    .now-playing-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .now-playing-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .now-playing-artist {
+      color: var(--text-secondary);
+    }
+
+    .master-indicator {
+      background: var(--accent-color);
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    /* ===== VIEWER MODE ===== */
+    .viewer-mode {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .viewer-mode.transparent-bg {
+      background-color: transparent !important;
+    }
+
+    .viewer-current {
+      margin-bottom: 40px;
+    }
+
+    .viewer-current .label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .viewer-current .title {
+      font-size: 3rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+    }
+
+    .viewer-current .artist {
+      font-size: 1.8rem;
+      color: var(--text-color);
+    }
+
+    .viewer-upcoming {
+      opacity: 0.7;
+    }
+
+    .viewer-upcoming .label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .viewer-next-item {
+      margin-bottom: 15px;
+    }
+
+    .viewer-next-item .title {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .viewer-next-item .artist {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      min-width: 300px;
+      max-width: 400px;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 15px;
+      color: var(--accent-color);
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin-bottom: 15px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .playlist-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+
+    .playlist-item {
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .playlist-item:hover {
+      background: var(--bg-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+
+      .queue-panel {
+        width: 100%;
+        max-height: 300px;
+      }
+
+      .song-item .add-btn {
+        opacity: 1;
+      }
+
+      .queue-item .remove-btn {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Control Mode -->
+  <div class="control-mode" id="controlMode">
+    <div class="header">
+      <h1>Playlist Queue</h1>
+      <button class="control-btn" id="saveBtn">Save Playlist</button>
+      <button class="control-btn" id="loadBtn">Load Playlist</button>
+      <button class="control-btn" id="masterBtn">Go to Master</button>
+      <button class="control-btn warning" id="nextBtn">Next Song</button>
+      <button class="control-btn danger" id="closeNextBtn">Close & Next</button>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="saveModal" style="display: none;">
+      <div class="modal-content">
+        <h3>Save Playlist</h3>
+        <input type="text" id="savePlaylistName" placeholder="Enter playlist name...">
+        <div class="modal-buttons">
+          <button class="control-btn" id="saveConfirmBtn">Save</button>
+          <button class="control-btn danger" id="saveCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load Modal -->
+    <div class="modal" id="loadModal" style="display: none;">
+      <div class="modal-content">
+        <h3>Load Playlist</h3>
+        <div class="playlist-list" id="playlistList"></div>
+        <div class="modal-buttons">
+          <button class="control-btn danger" id="loadCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-section">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search songs by title or artist...">
+    </div>
+
+    <div class="main-content">
+      <div class="songs-panel">
+        <div class="panel-header">Songs (<span id="songCount">0</span>)</div>
+        <div class="songs-list" id="songsList"></div>
+      </div>
+
+      <div class="queue-panel">
+        <div class="panel-header">Queue (<span id="queueCount">0</span>)</div>
+        <div class="queue-list" id="queueList"></div>
+      </div>
+    </div>
+
+    <div class="now-playing-bar" id="nowPlayingBar">
+      <div class="now-playing-info">
+        <div class="now-playing-label">Now Playing</div>
+        <div class="now-playing-title" id="nowPlayingTitle">--</div>
+        <div class="now-playing-artist" id="nowPlayingArtist">--</div>
+      </div>
+      <div class="master-indicator" id="masterIndicator" style="display: none;">MASTER</div>
+    </div>
+  </div>
+
+  <!-- Viewer Mode -->
+  <div class="viewer-mode" id="viewerMode" style="display: none;">
+    <div class="viewer-current" id="viewerCurrent">
+      <div class="label">Now Playing</div>
+      <div class="title" id="viewerTitle">--</div>
+      <div class="artist" id="viewerArtist">--</div>
+    </div>
+    <div class="viewer-upcoming" id="viewerUpcoming">
+      <div class="label">Up Next</div>
+      <div id="viewerNextList"></div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // Parse URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') || 'control';
+    const theme = urlParams.get('theme') || 'dark';
+    const transparent = urlParams.get('transparent') === 'true';
+
+    // Apply theme
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+    }
+
+    // Apply mode
+    const isViewerMode = mode === 'viewer';
+    if (isViewerMode) {
+      document.getElementById('controlMode').style.display = 'none';
+      document.getElementById('viewerMode').style.display = 'flex';
+      if (transparent) {
+        document.getElementById('viewerMode').classList.add('transparent-bg');
+      }
+    }
+
+    // State
+    let songsIndex = [];
+    let queue = [];
+    let queuePos = 0;
+    let masterActive = false;
+    let currentSong = null;
+    let nextSong = null;
+    let lastQueueJson = '';
+    let lastMasterActive = null;
+
+    // Elements - Control mode
+    const searchInput = document.getElementById('searchInput');
+    const songsList = document.getElementById('songsList');
+    const queueList = document.getElementById('queueList');
+    const songCount = document.getElementById('songCount');
+    const queueCount = document.getElementById('queueCount');
+    const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+    const nowPlayingArtist = document.getElementById('nowPlayingArtist');
+    const masterIndicator = document.getElementById('masterIndicator');
+    const masterBtn = document.getElementById('masterBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const closeNextBtn = document.getElementById('closeNextBtn');
+
+    // Elements - Viewer mode
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerArtist = document.getElementById('viewerArtist');
+    const viewerNextList = document.getElementById('viewerNextList');
+
+    // Send command to REAPER
+    function sendCommand(cmd) {
+      fetch('/_/SET/EXTSTATE/Playlist/command/' + encodeURIComponent(cmd));
+    }
+
+    // Load songs index
+    async function loadSongsIndex() {
+      try {
+        const response = await fetch('songs_index.json?t=' + Date.now());
+        const data = await response.json();
+        songsIndex = data.songs || [];
+        songCount.textContent = songsIndex.length;
+        renderSongsList();
+      } catch (e) {
+        console.error('Failed to load songs index:', e);
+      }
+    }
+
+    // Render songs list
+    function renderSongsList(filter = '') {
+      const filtered = filter
+        ? songsIndex.filter(s =>
+            s.t.toLowerCase().includes(filter) ||
+            s.a.toLowerCase().includes(filter))
+        : songsIndex;
+
+      songsList.innerHTML = filtered.map(song => `
+        <div class="song-item" data-id="${song.id}">
+          <div class="song-info">
+            <div class="song-title">${escapeHtml(song.t)}</div>
+            <div class="song-artist">${escapeHtml(song.a)}</div>
+          </div>
+          <button class="add-btn" onclick="addToQueue('${song.id}')">+ Add</button>
+        </div>
+      `).join('');
+    }
+
+    // Render queue
+    function renderQueue() {
+      queueCount.textContent = queue.length;
+
+      queueList.innerHTML = queue.map((item, i) => `
+        <div class="queue-item ${item.c ? 'current' : ''} ${item.l ? 'loading' : ''} ${item.p ? 'playing' : ''}" data-index="${i + 1}">
+          <div class="queue-num">${i + 1}</div>
+          <div class="queue-info" onclick="switchToSong(${i + 1})" style="cursor: pointer;" title="Switch to this tab">
+            <div class="queue-title">${escapeHtml(item.t)}</div>
+            <div class="queue-artist">${escapeHtml(item.a)}</div>
+          </div>
+          <div class="queue-controls">
+            <button class="play-btn" onclick="playSong(${i + 1})" ${!item.r ? 'disabled' : ''} title="Play">▶</button>
+            <button class="stop-btn" onclick="stopSong(${i + 1})" title="Stop">■</button>
+          </div>
+          <div class="ready-indicator ${item.r ? 'ready' : ''} ${item.l ? 'loading' : ''}"></div>
+          <button class="remove-btn" onclick="removeFromQueue(${i + 1})" title="Remove">×</button>
+        </div>
+      `).join('');
+    }
+
+    // Play/Stop/Switch commands
+    function playSong(index) {
+      sendCommand('playsong:' + index);
+    }
+
+    function stopSong(index) {
+      sendCommand('stopsong:' + index);
+    }
+
+    function switchToSong(index) {
+      sendCommand('switch:' + index);
+    }
+
+    // Update viewer display
+    function updateViewer() {
+      // Find currently playing song
+      const playingSong = queue.find(item => item.p);
+
+      if (playingSong) {
+        viewerTitle.textContent = playingSong.t || '--';
+        viewerArtist.textContent = playingSong.a || '--';
+      } else if (masterActive) {
+        viewerTitle.textContent = 'Intermission';
+        viewerArtist.textContent = '';
+      } else {
+        viewerTitle.textContent = '--';
+        viewerArtist.textContent = '--';
+      }
+
+      // Show next songs (not currently playing)
+      const upcoming = queue.filter(item => !item.p).slice(0, 3);
+      viewerNextList.innerHTML = upcoming.map(item => `
+        <div class="viewer-next-item">
+          <div class="title">${escapeHtml(item.t)}</div>
+          <div class="artist">${escapeHtml(item.a)}</div>
+        </div>
+      `).join('');
+    }
+
+    // Update now playing bar
+    function updateNowPlaying() {
+      // Find currently playing song
+      const playingSong = queue.find(item => item.p);
+
+      if (playingSong) {
+        nowPlayingTitle.textContent = playingSong.t || '--';
+        nowPlayingArtist.textContent = playingSong.a || '--';
+        masterIndicator.style.display = 'none';
+      } else if (masterActive) {
+        nowPlayingTitle.textContent = 'Master Session';
+        nowPlayingArtist.textContent = 'Ready for next song';
+        masterIndicator.style.display = 'block';
+      } else {
+        nowPlayingTitle.textContent = '--';
+        nowPlayingArtist.textContent = 'No song playing';
+        masterIndicator.style.display = 'none';
+      }
+    }
+
+    // Commands
+    function addToQueue(id) {
+      sendCommand('add:' + id);
+    }
+
+    function removeFromQueue(index) {
+      sendCommand('remove:' + index);
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', (e) => {
+      renderSongsList(e.target.value.toLowerCase());
+    });
+
+    masterBtn.addEventListener('click', () => sendCommand('master'));
+    nextBtn.addEventListener('click', () => sendCommand('next'));
+    closeNextBtn.addEventListener('click', () => sendCommand('closenext'));
+
+    // Save/Load modal elements
+    const saveBtn = document.getElementById('saveBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    const saveModal = document.getElementById('saveModal');
+    const loadModal = document.getElementById('loadModal');
+    const savePlaylistName = document.getElementById('savePlaylistName');
+    const saveConfirmBtn = document.getElementById('saveConfirmBtn');
+    const saveCancelBtn = document.getElementById('saveCancelBtn');
+    const loadCancelBtn = document.getElementById('loadCancelBtn');
+    const playlistListEl = document.getElementById('playlistList');
+
+    let playlists = [];
+
+    // Save modal
+    saveBtn.addEventListener('click', () => {
+      savePlaylistName.value = '';
+      saveModal.style.display = 'flex';
+      savePlaylistName.focus();
+    });
+
+    saveConfirmBtn.addEventListener('click', () => {
+      const name = savePlaylistName.value.trim();
+      if (name) {
+        sendCommand('save:' + name);
+        saveModal.style.display = 'none';
+      }
+    });
+
+    saveCancelBtn.addEventListener('click', () => {
+      saveModal.style.display = 'none';
+    });
+
+    savePlaylistName.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveConfirmBtn.click();
+      } else if (e.key === 'Escape') {
+        saveCancelBtn.click();
+      }
+    });
+
+    // Load modal
+    loadBtn.addEventListener('click', () => {
+      renderPlaylistsList();
+      loadModal.style.display = 'flex';
+    });
+
+    loadCancelBtn.addEventListener('click', () => {
+      loadModal.style.display = 'none';
+    });
+
+    function renderPlaylistsList() {
+      playlistListEl.innerHTML = playlists.length === 0
+        ? '<div style="color: var(--text-secondary); padding: 10px;">No saved playlists</div>'
+        : playlists.map(name => `
+            <div class="playlist-item" onclick="loadPlaylist('${escapeHtml(name)}')">${escapeHtml(name)}</div>
+          `).join('');
+    }
+
+    function loadPlaylist(name) {
+      sendCommand('load:' + name);
+      loadModal.style.display = 'none';
+    }
+
+    // Close modals on background click
+    saveModal.addEventListener('click', (e) => {
+      if (e.target === saveModal) saveModal.style.display = 'none';
+    });
+    loadModal.addEventListener('click', (e) => {
+      if (e.target === loadModal) loadModal.style.display = 'none';
+    });
+
+    // Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+    }
+
+    // Start REAPER communication
+    wwr_start();
+    wwr_req_recur("GET/PROJEXTSTATE/Playlist/data", 100);
+
+    function wwr_onreply(results) {
+      const lines = results.split("\n");
+
+      for (const line of lines) {
+        const tok = line.split("\t");
+
+        if (tok.length > 3 && tok[1] === "Playlist" && tok[2] === "data") {
+          const jsonStr = tok[3] || '';
+          if (jsonStr) {
+            try {
+              const d = JSON.parse(jsonStr);
+              const newQueue = d.q || [];
+              const newQueueJson = JSON.stringify(newQueue);
+              const newMasterActive = d.ma || false;
+              const queueChanged = newQueueJson !== lastQueueJson;
+              const masterChanged = newMasterActive !== lastMasterActive;
+
+              queuePos = d.qp || 0;
+              currentSong = d.cs || null;
+              nextSong = d.ns || null;
+              playlists = d.pl || [];
+
+              // Always update queue data
+              queue = newQueue;
+
+              // Only re-render DOM if it actually changed
+              if (queueChanged) {
+                lastQueueJson = newQueueJson;
+                renderQueue();
+              }
+
+              // Update now playing if master state or queue changed
+              if (masterChanged || queueChanged) {
+                masterActive = newMasterActive;
+                lastMasterActive = newMasterActive;
+                updateNowPlaying();
+
+                if (isViewerMode) {
+                  updateViewer();
+                }
+              }
+            } catch (e) {
+              // JSON parse error
+            }
+          }
+        }
+      }
+    }
+
+    // Initial load
+    loadSongsIndex();
+  </script>
+</body>
+</html>
