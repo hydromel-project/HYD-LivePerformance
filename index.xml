@@ -16,6 +16,16 @@ Features:
         <source file="../www/Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
       </version>
     </reapack>
+    <reapack name="HYD-Setup.lua" type="script">
+      <version name="1.0.0">
+        <changelog><![CDATA[Initial release
+
+One-time setup script that:
+- Configures REAPER web server on port 9020
+- Adds Live Performance Server to main toolbar]]></changelog>
+        <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-Setup.lua</source>
+      </version>
+    </reapack>
     <reapack name="HYD-Playlist_IndexSongs.lua" type="script">
       <version name="1.0.0">
         <changelog><![CDATA[Initial release

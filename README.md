@@ -49,12 +49,18 @@ A comprehensive live performance toolkit for REAPER that provides real-time web 
 3. **Install the scripts**:
    - Extensions > ReaPack > Browse packages
    - Search for "HYD"
-   - Right-click > Install
+   - Right-click > Install all packages
 
-4. **Enable REAPER's web interface**:
-   - Preferences > Control/OSC/Web
-   - Add > Web browser interface
-   - Set port (default: 9010)
+4. **Run the Setup script** (one-time):
+   - Actions > Show action list
+   - Search for "HYD Setup"
+   - Run it
+
+   This will automatically:
+   - Configure REAPER web server on port 9020
+   - Add the Live Performance Server to your main toolbar
+
+5. **Restart REAPER** for changes to take effect
 
 ### Option 2: Manual Installation
 
