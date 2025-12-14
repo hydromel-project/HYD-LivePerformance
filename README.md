@@ -156,13 +156,22 @@ Open http://localhost:9020/GameHUD.html
 - Retro arcade + neon cyberpunk theme
 - Speedometer gauge with animated needle
 - Rhythm game style beat indicator
-- Fire effects when playrate goes fast (above 1.3x)
+- Calculated tempo display (BPM × playrate)
+- Doom-style fire simulation when playrate goes fast
 - Ice effects when playrate goes slow (below 0.8x)
 - Particle effects and screen shake on changes
-- Change feed showing recent playrate adjustments
+- Change feed showing recent playrate adjustments with user avatars
+
+**Fire Effects (Proportional to Playrate):**
+- Fire intensity scales with playrate (1.3x to 4.0x)
+- Canvas-based Doom fire algorithm with 38-color palette
+- Flame height grows from 150px to 400px based on intensity
+- Text elements glow and pulse with fire colors at high speeds
+- At maximum intensity (4.0x): white-hot text, towering inferno
 
 **Configurable Elements:**
 - BPM display
+- Calculated tempo (BPM × playrate)
 - Time signature
 - Speedometer gauge
 - Playrate bar
@@ -180,7 +189,7 @@ Open http://localhost:9020/GameHUD.html
 
 ## Twitch Integration (Playrate Bot)
 
-Let viewers control playrate using channel points and Streamlabs donations!
+Let viewers control playrate using channel points, Streamlabs, or StreamElements donations!
 
 ### Setup
 
@@ -193,13 +202,18 @@ Let viewers control playrate using channel points and Streamlabs donations!
 ### Features
 
 - **Channel Point Rewards**: Automatically created when game mode activates
-  - 🔥 Speed Up
-  - 🧊 Slow Down
-  - 🎲 CHAOS (random)
-  - ✨ Reset
-- **Streamlabs Donations**: Trigger actions based on tip amount
+  - 🔥 Speed Up (+0.1x)
+  - 🧊 Slow Down (-0.1x)
+  - 🎲 CHAOS (random 0.5x - 4.0x)
+  - ✨ Reset (back to 1.0x)
+- **Donation Integration**: Trigger actions based on tip amount
+  - Streamlabs Socket API
+  - StreamElements JWT Token
+- **Playrate Range**: 0.5x to 4.0x (configurable)
+- **Proportional Scaling**: BPM-aware increments keep tempo changes consistent
 - **Chat Announcements**: Configurable messages when playrate changes
-- **Configurable Everything**: Costs, increments, cooldowns, bounds
+- **Global Cooldown**: Prevent spam with configurable delay
+- **Auto-Reset**: Optionally return to 1.0x after inactivity
 
 See `bot/README.md` for detailed setup instructions.
 
