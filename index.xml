@@ -2,8 +2,14 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.5">
-        <changelog><![CDATA[v1.0.5: Snowfall/Snowstorm effects for slow speeds
+      <version name="1.0.6">
+        <changelog><![CDATA[v1.0.6: Snow accumulation on text
+- Snow piles build up on top of text elements (playrate, BPM, tempo)
+- Accumulation rate proportional to snowstorm intensity
+- Gradual melting when warming up
+- Improved text visibility with white glow and dark shadow contrast
+
+v1.0.5: Snowfall/Snowstorm effects for slow speeds
 - Canvas-based snowfall particle system
 - Three snowflake visual types (circles, stars, detailed)
 - Intensity scales particle count (50-500), size, speed
