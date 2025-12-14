@@ -8,9 +8,10 @@ Display lyrics, song info, and manage playlists for your live streams and perfor
 
 **Teleprompter** - Shows lyrics on screen as you perform
 **Now Playing** - Displays current song title, artist, and cover art
+**Game HUD** - Gamified BPM/playrate display for interactive streams
 **Playlist** - Queue up songs and switch between them easily
 
-All three work in your web browser and can be added to OBS.
+All four work in your web browser and can be added to OBS.
 
 ---
 
@@ -89,6 +90,7 @@ With the server running, open these in your web browser:
 
 - **Teleprompter:** http://localhost:9020/Teleprompter.html
 - **Now Playing:** http://localhost:9020/NowPlaying.html
+- **Game HUD:** http://localhost:9020/GameHUD.html
 - **Playlist:** http://localhost:9020/Playlist.html
 
 ### Customizing the Look
@@ -141,6 +143,38 @@ Switch between modes in the settings panel.
 - Fade, slide, or scale when song changes
 - Slow pan effect on cover art (Ken Burns style)
 - Auto-hide when nothing is playing
+
+---
+
+## Game HUD (Gamified Playrate Display)
+
+A video game-style display for streams where viewers can mess with the playrate using channel points or donations.
+
+Open http://localhost:9020/GameHUD.html
+
+**Features:**
+- Retro arcade + neon cyberpunk theme
+- Speedometer gauge with animated needle
+- Rhythm game style beat indicator
+- Fire effects when playrate goes fast (above 1.3x)
+- Ice effects when playrate goes slow (below 0.8x)
+- Particle effects and screen shake on changes
+- Change feed showing recent playrate adjustments
+
+**Configurable Elements:**
+- BPM display
+- Time signature
+- Speedometer gauge
+- Playrate bar
+- Beat indicator
+- Change feed
+
+**Effects (toggleable):**
+- Screen shake
+- Flash on change
+- Particle effects
+- Fire/ice threshold effects
+- Scanlines overlay
 
 ---
 

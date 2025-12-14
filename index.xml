@@ -2,8 +2,17 @@
 <index version="1" name="HYD Live Performance">
   <category name="Live Performance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.2">
-        <changelog><![CDATA[v1.0.2: Enhanced web interfaces
+      <version name="1.0.3">
+        <changelog><![CDATA[v1.0.3: GameHUD - Gamified playrate display
+- Retro arcade + neon cyberpunk themed HUD
+- Speedometer gauge with animated needle
+- Rhythm game style beat indicator
+- Fire/ice effects at speed thresholds
+- Particle effects and screen shake
+- Change feed showing playrate history
+- Playrate display in Teleprompter
+
+v1.0.2: Enhanced web interfaces
 - Teleprompter: Full settings panel with animation controls, colors, font size
 - NowPlaying: Settings panel with layout options, slow pan animation for cover art
 - All settings persist via localStorage
@@ -21,6 +30,7 @@ v1.0.0: Initial release
         <source file="../www/Teleprompter.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Teleprompter.html</source>
         <source file="../www/NowPlaying.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/NowPlaying.html</source>
         <source file="../www/Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
+        <source file="../www/GameHUD.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/GameHUD.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Setup.lua" type="script" author="hydromel-project">

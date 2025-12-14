@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game HUD - Playrate Challenge</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap');
+
+    :root {
+      --bg-color: #0a0a12;
+      --neon-blue: #00f0ff;
+      --neon-pink: #ff00ff;
+      --neon-green: #00ff88;
+      --neon-yellow: #ffff00;
+      --neon-orange: #ff8800;
+      --neon-red: #ff0044;
+      --ice-blue: #88ddff;
+      --fire-orange: #ff4400;
+      --ui-dark: #1a1a2e;
+      --ui-border: #333355;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--bg-color);
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+    }
+
+    body.transparent-bg { background: transparent !important; }
+
+    /* Scanlines overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    body.no-scanlines::before { display: none; }
+
+    /* Screen shake */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      10% { transform: translateX(-10px) translateY(-5px); }
+      20% { transform: translateX(10px) translateY(5px); }
+      30% { transform: translateX(-8px) translateY(-3px); }
+      40% { transform: translateX(8px) translateY(3px); }
+      50% { transform: translateX(-5px) translateY(-2px); }
+      60% { transform: translateX(5px) translateY(2px); }
+      70% { transform: translateX(-3px) translateY(-1px); }
+      80% { transform: translateX(3px) translateY(1px); }
+      90% { transform: translateX(-1px) translateY(0); }
+    }
+
+    .shake { animation: shake 0.5s ease-out; }
+
+    /* Main container */
+    .hud-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1200px;
+      max-height: 800px;
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Settings toggle */
+    .settings-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 201;
+      background: var(--ui-dark);
+      color: var(--neon-blue);
+      border: 2px solid var(--neon-blue);
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px var(--neon-blue);
+    }
+    .settings-toggle:hover { background: var(--neon-blue); color: var(--bg-color); }
+    .settings-toggle.hidden { display: none; }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 350px;
+      height: 100%;
+      background: var(--ui-dark);
+      border-right: 2px solid var(--neon-blue);
+      z-index: 200;
+      padding: 20px;
+      overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-panel.hidden { display: none; }
+
+    .settings-panel h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: var(--neon-pink);
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    .settings-panel h3 {
+      font-size: 10px;
+      color: var(--neon-blue);
+      margin: 20px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .settings-group {
+      margin-bottom: 15px;
+    }
+
+    .settings-group label {
+      display: block;
+      font-size: 10px;
+      color: #888;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .settings-group select,
+    .settings-group input[type="number"],
+    .settings-group input[type="color"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--ui-border);
+      border-radius: 4px;
+      background: var(--bg-color);
+      color: var(--neon-green);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+    }
+
+    .settings-group input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: #ccc;
+      font-size: 11px;
+    }
+    .checkbox-label input { margin-right: 10px; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-row button {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      text-transform: uppercase;
+    }
+
+    .btn-save {
+      background: transparent;
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+    }
+    .btn-save:hover { background: var(--neon-green); color: var(--bg-color); }
+
+    .btn-reset {
+      background: transparent;
+      border-color: var(--neon-red);
+      color: var(--neon-red);
+    }
+    .btn-reset:hover { background: var(--neon-red); color: var(--bg-color); }
+
+    /* ============ TOP SECTION ============ */
+    .top-section {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: linear-gradient(180deg, rgba(0,240,255,0.1) 0%, transparent 100%);
+      border-bottom: 2px solid var(--neon-blue);
+    }
+
+    .bpm-display {
+      text-align: center;
+    }
+
+    .bpm-label {
+      font-size: 10px;
+      color: var(--neon-blue);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    .bpm-value {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--neon-pink);
+      text-shadow:
+        0 0 10px var(--neon-pink),
+        0 0 20px var(--neon-pink),
+        0 0 40px var(--neon-pink);
+      line-height: 1;
+    }
+
+    .time-sig-display {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 24px;
+      color: var(--neon-green);
+      text-shadow: 0 0 15px var(--neon-green);
+      padding: 15px 25px;
+      border: 3px solid var(--neon-green);
+      border-radius: 10px;
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    /* ============ CENTER - PLAYRATE GAUGE ============ */
+    .center-section {
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .gauge-container {
+      position: relative;
+      width: 350px;
+      height: 200px;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: var(--ui-dark);
+      stroke-width: 20;
+      stroke-linecap: round;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke-width: 20;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+
+    .gauge-ticks text {
+      fill: #666;
+      font-size: 12px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .gauge-needle {
+      fill: var(--neon-pink);
+      filter: drop-shadow(0 0 10px var(--neon-pink));
+      transform-origin: 175px 180px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gauge-center-dot {
+      fill: var(--neon-blue);
+      filter: drop-shadow(0 0 15px var(--neon-blue));
+    }
+
+    /* Playrate number display */
+    .playrate-display {
+      position: absolute;
+      bottom: -30px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .playrate-value {
+      font-size: 72px;
+      font-weight: 900;
+      color: var(--neon-green);
+      text-shadow:
+        0 0 10px currentColor,
+        0 0 30px currentColor,
+        0 0 60px currentColor;
+      transition: color 0.3s ease, transform 0.1s ease;
+    }
+
+    .playrate-value.speed-up {
+      color: var(--fire-orange);
+      animation: pulseUp 0.3s ease;
+    }
+
+    .playrate-value.slow-down {
+      color: var(--ice-blue);
+      animation: pulseDown 0.3s ease;
+    }
+
+    @keyframes pulseUp {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulseDown {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    .playrate-label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      margin-top: 5px;
+    }
+
+    /* Speed/Slow indicators */
+    .speed-indicator {
+      position: absolute;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    .speed-indicator.fast {
+      top: 20px;
+      right: -80px;
+      color: var(--fire-orange);
+    }
+
+    .speed-indicator.slow {
+      top: 20px;
+      left: -80px;
+      color: var(--ice-blue);
+    }
+
+    .speed-indicator.active { opacity: 1; }
+
+    /* ============ LEFT - BEAT INDICATOR ============ */
+    .left-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .beat-ring-container {
+      position: relative;
+      width: 150px;
+      height: 150px;
+    }
+
+    .beat-ring {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 4px solid var(--ui-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle, rgba(0,240,255,0.1) 0%, transparent 70%);
+      transition: border-color 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .beat-ring.pulse {
+      border-color: var(--neon-blue);
+      box-shadow:
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-blue),
+        inset 0 0 30px rgba(0, 240, 255, 0.3);
+    }
+
+    .beat-ring.downbeat {
+      border-color: var(--neon-pink);
+      box-shadow:
+        0 0 30px var(--neon-pink),
+        0 0 60px var(--neon-pink),
+        inset 0 0 40px rgba(255, 0, 255, 0.3);
+    }
+
+    .beat-number {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 48px;
+      color: var(--neon-blue);
+      text-shadow: 0 0 20px var(--neon-blue);
+      transition: color 0.1s ease, transform 0.05s ease;
+    }
+
+    .beat-ring.pulse .beat-number {
+      transform: scale(1.1);
+    }
+
+    .beat-ring.downbeat .beat-number {
+      color: var(--neon-pink);
+      text-shadow: 0 0 30px var(--neon-pink);
+      transform: scale(1.2);
+    }
+
+    /* Beat dots */
+    .beat-dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .beat-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--ui-dark);
+      border: 2px solid var(--ui-border);
+      transition: all 0.1s ease;
+    }
+
+    .beat-dot.active {
+      background: var(--neon-blue);
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 15px var(--neon-blue);
+    }
+
+    .beat-dot.downbeat-dot {
+      width: 24px;
+      height: 24px;
+    }
+
+    .beat-dot.downbeat-dot.active {
+      background: var(--neon-pink);
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 20px var(--neon-pink);
+    }
+
+    /* ============ RIGHT - CHANGE FEED ============ */
+    .right-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .feed-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: var(--neon-pink);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--ui-border);
+    }
+
+    .change-feed {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .feed-item {
+      background: var(--ui-dark);
+      border-left: 4px solid var(--neon-blue);
+      padding: 10px 15px;
+      border-radius: 0 8px 8px 0;
+      animation: slideIn 0.3s ease;
+      font-size: 12px;
+    }
+
+    .feed-item.speed-up { border-color: var(--fire-orange); }
+    .feed-item.slow-down { border-color: var(--ice-blue); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .feed-item .change-amount {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .feed-item.speed-up .change-amount { color: var(--fire-orange); }
+    .feed-item.slow-down .change-amount { color: var(--ice-blue); }
+
+    .feed-item .change-time {
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* ============ BOTTOM - PLAYRATE BAR ============ */
+    .bottom-section {
+      grid-column: 1 / -1;
+      padding: 20px;
+    }
+
+    .playrate-bar-container {
+      position: relative;
+      height: 40px;
+      background: var(--ui-dark);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid var(--ui-border);
+    }
+
+    .playrate-bar-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+    }
+
+    .bar-zone {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-right: 1px solid var(--ui-border);
+    }
+
+    .bar-zone:last-child { border-right: none; }
+    .bar-zone.ice { background: rgba(136, 221, 255, 0.1); }
+    .bar-zone.normal { background: rgba(0, 255, 136, 0.1); }
+    .bar-zone.fire { background: rgba(255, 68, 0, 0.1); }
+
+    .playrate-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 50px;
+      background: var(--neon-pink);
+      border-radius: 4px;
+      box-shadow: 0 0 20px var(--neon-pink);
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10;
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding: 0 10px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* ============ PARTICLE EFFECTS ============ */
+    .particles-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .particle.fire {
+      background: radial-gradient(circle, var(--fire-orange) 0%, transparent 70%);
+      animation: particleFire 1s ease-out forwards;
+    }
+
+    .particle.ice {
+      background: radial-gradient(circle, var(--ice-blue) 0%, transparent 70%);
+      animation: particleIce 1.5s ease-out forwards;
+    }
+
+    @keyframes particleFire {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-200px) scale(0); opacity: 0; }
+    }
+
+    @keyframes particleIce {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(200px) scale(0); opacity: 0; }
+    }
+
+    /* ============ THRESHOLD EFFECTS ============ */
+    .effect-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .effect-overlay.fire-effect {
+      background: radial-gradient(ellipse at bottom, rgba(255,68,0,0.3) 0%, transparent 70%);
+      border-bottom: 5px solid var(--fire-orange);
+      box-shadow: inset 0 -100px 100px -50px rgba(255,68,0,0.4);
+    }
+
+    .effect-overlay.ice-effect {
+      background: radial-gradient(ellipse at top, rgba(136,221,255,0.3) 0%, transparent 70%);
+      border-top: 5px solid var(--ice-blue);
+      box-shadow: inset 0 100px 100px -50px rgba(136,221,255,0.4);
+    }
+
+    .effect-overlay.active { opacity: 1; }
+
+    /* Flash effect */
+    .flash-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 150;
+      background: white;
+      opacity: 0;
+    }
+
+    .flash-overlay.flash {
+      animation: flashAnim 0.2s ease-out;
+    }
+
+    @keyframes flashAnim {
+      0% { opacity: 0.5; }
+      100% { opacity: 0; }
+    }
+
+    /* URL output */
+    .url-output {
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--bg-color);
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+    }
+
+    .url-output input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid var(--ui-border);
+      border-radius: 4px;
+      background: var(--ui-dark);
+      color: var(--neon-green);
+      font-family: monospace;
+      font-size: 10px;
+    }
+
+    .url-output button {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid var(--neon-blue);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--neon-blue);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      cursor: pointer;
+    }
+    .url-output button:hover { background: var(--neon-blue); color: var(--bg-color); }
+
+    .copied-msg {
+      text-align: center;
+      color: var(--neon-green);
+      font-size: 10px;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .copied-msg.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <button class="settings-toggle" id="settingsToggle">CONFIG</button>
+
+  <div class="settings-panel" id="settingsPanel">
+    <h2>GAME HUD CONFIG</h2>
+
+    <h3>Display</h3>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setTransparent">
+        Transparent Background
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setScanlines" checked>
+        Scanlines Effect
+      </label>
+    </div>
+
+    <h3>Elements</h3>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowBpm" checked>
+        Show BPM
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowTimeSig" checked>
+        Show Time Signature
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowGauge" checked>
+        Show Speedometer
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowBar" checked>
+        Show Playrate Bar
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowBeat" checked>
+        Show Beat Indicator
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setShowFeed" checked>
+        Show Change Feed
+      </label>
+    </div>
+
+    <h3>Effects</h3>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setScreenShake" checked>
+        Screen Shake
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setFlash" checked>
+        Flash on Change
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setParticles" checked>
+        Particle Effects
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="setThresholdEffects" checked>
+        Fire/Ice Threshold Effects
+      </label>
+    </div>
+
+    <h3>Thresholds</h3>
+    <div class="settings-group">
+      <label>Fire Zone (above): <span id="fireThresholdVal">1.3</span>x</label>
+      <input type="range" id="setFireThreshold" min="1.1" max="1.8" step="0.1" value="1.3">
+    </div>
+    <div class="settings-group">
+      <label>Ice Zone (below): <span id="iceThresholdVal">0.8</span>x</label>
+      <input type="range" id="setIceThreshold" min="0.5" max="0.9" step="0.1" value="0.8">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-save" id="saveSettings">SAVE</button>
+      <button class="btn-reset" id="resetSettings">RESET</button>
+    </div>
+
+    <div class="url-output">
+      <label style="color: #666; font-size: 10px;">OBS URL:</label>
+      <input type="text" id="generatedUrl" readonly>
+      <button id="copyUrl">COPY URL</button>
+      <div class="copied-msg" id="copiedMsg">COPIED!</div>
+    </div>
+  </div>
+
+  <div class="hud-container" id="hudContainer">
+    <!-- Top Section: BPM & Time Sig -->
+    <div class="top-section">
+      <div class="bpm-display" id="bpmSection">
+        <div class="bpm-label">BPM</div>
+        <div class="bpm-value" id="bpmValue">120</div>
+      </div>
+      <div class="time-sig-display" id="timeSigSection">
+        <span id="timeSigValue">4/4</span>
+      </div>
+    </div>
+
+    <!-- Left: Beat Indicator -->
+    <div class="left-section" id="beatSection">
+      <div class="beat-ring-container">
+        <div class="beat-ring" id="beatRing">
+          <div class="beat-number" id="beatNumber">1</div>
+        </div>
+      </div>
+      <div class="beat-dots" id="beatDots"></div>
+    </div>
+
+    <!-- Center: Playrate Gauge -->
+    <div class="center-section" id="gaugeSection">
+      <div class="speed-indicator slow" id="slowIndicator">SLOW</div>
+      <div class="speed-indicator fast" id="fastIndicator">FAST!</div>
+
+      <div class="gauge-container">
+        <svg class="gauge-svg" viewBox="0 0 350 220">
+          <!-- Background arc -->
+          <path class="gauge-bg" d="M 30 180 A 145 145 0 0 1 320 180" />
+
+          <!-- Colored fill arc -->
+          <path class="gauge-fill" id="gaugeFill" d="M 30 180 A 145 145 0 0 1 320 180"
+                stroke="var(--neon-green)"
+                stroke-dasharray="455"
+                stroke-dashoffset="227" />
+
+          <!-- Tick marks and labels -->
+          <g class="gauge-ticks">
+            <text x="25" y="200" text-anchor="middle">0.5x</text>
+            <text x="95" y="85" text-anchor="middle">0.75x</text>
+            <text x="175" y="55" text-anchor="middle">1.0x</text>
+            <text x="255" y="85" text-anchor="middle">1.5x</text>
+            <text x="325" y="200" text-anchor="middle">2.0x</text>
+          </g>
+
+          <!-- Needle -->
+          <polygon class="gauge-needle" id="gaugeNeedle" points="175,60 170,180 180,180" />
+
+          <!-- Center dot -->
+          <circle class="gauge-center-dot" cx="175" cy="180" r="15" />
+        </svg>
+      </div>
+
+      <div class="playrate-display">
+        <div class="playrate-value" id="playrateValue">1.00x</div>
+        <div class="playrate-label">PLAYRATE</div>
+      </div>
+    </div>
+
+    <!-- Right: Change Feed -->
+    <div class="right-section" id="feedSection">
+      <div class="feed-title">CHANGES</div>
+      <div class="change-feed" id="changeFeed"></div>
+    </div>
+
+    <!-- Bottom: Playrate Bar -->
+    <div class="bottom-section" id="barSection">
+      <div class="playrate-bar-container">
+        <div class="playrate-bar-bg">
+          <div class="bar-zone ice">SLOW</div>
+          <div class="bar-zone normal">NORMAL</div>
+          <div class="bar-zone fire">FAST</div>
+        </div>
+        <div class="playrate-marker" id="playrateMarker"></div>
+      </div>
+      <div class="bar-labels">
+        <span>0.5x</span>
+        <span>1.0x</span>
+        <span>2.0x</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Effect overlays -->
+  <div class="effect-overlay fire-effect" id="fireOverlay"></div>
+  <div class="effect-overlay ice-effect" id="iceOverlay"></div>
+  <div class="flash-overlay" id="flashOverlay"></div>
+  <div class="particles-container" id="particlesContainer"></div>
+
+  <script src="main.js"></script>
+  <script>
+    const STORAGE_KEY = 'hyd_gamehud_settings';
+
+    const defaults = {
+      transparent: false,
+      scanlines: true,
+      showBpm: true,
+      showTimeSig: true,
+      showGauge: true,
+      showBar: true,
+      showBeat: true,
+      showFeed: true,
+      screenShake: true,
+      flash: true,
+      particles: true,
+      thresholdEffects: true,
+      fireThreshold: 1.3,
+      iceThreshold: 0.8
+    };
+
+    function loadSettings() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+      return {
+        transparent: urlParams.has('transparent') ? urlParams.get('transparent') === 'true' : (stored.transparent ?? defaults.transparent),
+        scanlines: urlParams.has('scanlines') ? urlParams.get('scanlines') !== 'false' : (stored.scanlines ?? defaults.scanlines),
+        showBpm: urlParams.has('bpm') ? urlParams.get('bpm') !== 'false' : (stored.showBpm ?? defaults.showBpm),
+        showTimeSig: urlParams.has('timesig') ? urlParams.get('timesig') !== 'false' : (stored.showTimeSig ?? defaults.showTimeSig),
+        showGauge: urlParams.has('gauge') ? urlParams.get('gauge') !== 'false' : (stored.showGauge ?? defaults.showGauge),
+        showBar: urlParams.has('bar') ? urlParams.get('bar') !== 'false' : (stored.showBar ?? defaults.showBar),
+        showBeat: urlParams.has('beat') ? urlParams.get('beat') !== 'false' : (stored.showBeat ?? defaults.showBeat),
+        showFeed: urlParams.has('feed') ? urlParams.get('feed') !== 'false' : (stored.showFeed ?? defaults.showFeed),
+        screenShake: urlParams.has('shake') ? urlParams.get('shake') !== 'false' : (stored.screenShake ?? defaults.screenShake),
+        flash: urlParams.has('flash') ? urlParams.get('flash') !== 'false' : (stored.flash ?? defaults.flash),
+        particles: urlParams.has('particles') ? urlParams.get('particles') !== 'false' : (stored.particles ?? defaults.particles),
+        thresholdEffects: urlParams.has('threshold') ? urlParams.get('threshold') !== 'false' : (stored.thresholdEffects ?? defaults.thresholdEffects),
+        fireThreshold: parseFloat(urlParams.get('fire')) || stored.fireThreshold || defaults.fireThreshold,
+        iceThreshold: parseFloat(urlParams.get('ice')) || stored.iceThreshold || defaults.iceThreshold,
+        hideSettings: urlParams.get('hideSettings') === 'true'
+      };
+    }
+
+    let settings = loadSettings();
+
+    // Elements
+    const hudContainer = document.getElementById('hudContainer');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsToggle = document.getElementById('settingsToggle');
+    const bpmSection = document.getElementById('bpmSection');
+    const timeSigSection = document.getElementById('timeSigSection');
+    const gaugeSection = document.getElementById('gaugeSection');
+    const barSection = document.getElementById('barSection');
+    const beatSection = document.getElementById('beatSection');
+    const feedSection = document.getElementById('feedSection');
+    const bpmValue = document.getElementById('bpmValue');
+    const timeSigValue = document.getElementById('timeSigValue');
+    const playrateValue = document.getElementById('playrateValue');
+    const gaugeFill = document.getElementById('gaugeFill');
+    const gaugeNeedle = document.getElementById('gaugeNeedle');
+    const playrateMarker = document.getElementById('playrateMarker');
+    const beatRing = document.getElementById('beatRing');
+    const beatNumber = document.getElementById('beatNumber');
+    const beatDots = document.getElementById('beatDots');
+    const changeFeed = document.getElementById('changeFeed');
+    const fireOverlay = document.getElementById('fireOverlay');
+    const iceOverlay = document.getElementById('iceOverlay');
+    const flashOverlay = document.getElementById('flashOverlay');
+    const particlesContainer = document.getElementById('particlesContainer');
+    const slowIndicator = document.getElementById('slowIndicator');
+    const fastIndicator = document.getElementById('fastIndicator');
+
+    // Inputs
+    const inputs = {
+      transparent: document.getElementById('setTransparent'),
+      scanlines: document.getElementById('setScanlines'),
+      showBpm: document.getElementById('setShowBpm'),
+      showTimeSig: document.getElementById('setShowTimeSig'),
+      showGauge: document.getElementById('setShowGauge'),
+      showBar: document.getElementById('setShowBar'),
+      showBeat: document.getElementById('setShowBeat'),
+      showFeed: document.getElementById('setShowFeed'),
+      screenShake: document.getElementById('setScreenShake'),
+      flash: document.getElementById('setFlash'),
+      particles: document.getElementById('setParticles'),
+      thresholdEffects: document.getElementById('setThresholdEffects'),
+      fireThreshold: document.getElementById('setFireThreshold'),
+      iceThreshold: document.getElementById('setIceThreshold')
+    };
+
+    function applySettings() {
+      document.body.classList.toggle('transparent-bg', settings.transparent);
+      document.body.classList.toggle('no-scanlines', !settings.scanlines);
+
+      bpmSection.style.display = settings.showBpm ? '' : 'none';
+      timeSigSection.style.display = settings.showTimeSig ? '' : 'none';
+      gaugeSection.style.display = settings.showGauge ? '' : 'none';
+      barSection.style.display = settings.showBar ? '' : 'none';
+      beatSection.style.display = settings.showBeat ? '' : 'none';
+      feedSection.style.display = settings.showFeed ? '' : 'none';
+
+      if (settings.hideSettings) {
+        settingsToggle.classList.add('hidden');
+        settingsPanel.classList.add('hidden');
+      }
+
+      // Update inputs
+      inputs.transparent.checked = settings.transparent;
+      inputs.scanlines.checked = settings.scanlines;
+      inputs.showBpm.checked = settings.showBpm;
+      inputs.showTimeSig.checked = settings.showTimeSig;
+      inputs.showGauge.checked = settings.showGauge;
+      inputs.showBar.checked = settings.showBar;
+      inputs.showBeat.checked = settings.showBeat;
+      inputs.showFeed.checked = settings.showFeed;
+      inputs.screenShake.checked = settings.screenShake;
+      inputs.flash.checked = settings.flash;
+      inputs.particles.checked = settings.particles;
+      inputs.thresholdEffects.checked = settings.thresholdEffects;
+      inputs.fireThreshold.value = settings.fireThreshold;
+      inputs.iceThreshold.value = settings.iceThreshold;
+
+      document.getElementById('fireThresholdVal').textContent = settings.fireThreshold;
+      document.getElementById('iceThresholdVal').textContent = settings.iceThreshold;
+    }
+
+    function readSettings() {
+      settings.transparent = inputs.transparent.checked;
+      settings.scanlines = inputs.scanlines.checked;
+      settings.showBpm = inputs.showBpm.checked;
+      settings.showTimeSig = inputs.showTimeSig.checked;
+      settings.showGauge = inputs.showGauge.checked;
+      settings.showBar = inputs.showBar.checked;
+      settings.showBeat = inputs.showBeat.checked;
+      settings.showFeed = inputs.showFeed.checked;
+      settings.screenShake = inputs.screenShake.checked;
+      settings.flash = inputs.flash.checked;
+      settings.particles = inputs.particles.checked;
+      settings.thresholdEffects = inputs.thresholdEffects.checked;
+      settings.fireThreshold = parseFloat(inputs.fireThreshold.value);
+      settings.iceThreshold = parseFloat(inputs.iceThreshold.value);
+    }
+
+    function generateUrl() {
+      const base = window.location.origin + window.location.pathname;
+      const p = new URLSearchParams();
+      p.set('transparent', settings.transparent);
+      p.set('scanlines', settings.scanlines);
+      p.set('bpm', settings.showBpm);
+      p.set('timesig', settings.showTimeSig);
+      p.set('gauge', settings.showGauge);
+      p.set('bar', settings.showBar);
+      p.set('beat', settings.showBeat);
+      p.set('feed', settings.showFeed);
+      p.set('shake', settings.screenShake);
+      p.set('flash', settings.flash);
+      p.set('particles', settings.particles);
+      p.set('threshold', settings.thresholdEffects);
+      p.set('fire', settings.fireThreshold);
+      p.set('ice', settings.iceThreshold);
+      p.set('hideSettings', 'true');
+      document.getElementById('generatedUrl').value = base + '?' + p.toString();
+    }
+
+    // Event listeners
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('change', () => { readSettings(); applySettings(); generateUrl(); });
+      input.addEventListener('input', () => { readSettings(); applySettings(); generateUrl(); });
+    });
+
+    settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      readSettings();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      alert('Settings saved!');
+    });
+
+    document.getElementById('resetSettings').addEventListener('click', () => {
+      if (confirm('Reset all settings?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        settings = { ...defaults };
+        applySettings();
+        generateUrl();
+      }
+    });
+
+    document.getElementById('copyUrl').addEventListener('click', () => {
+      const url = document.getElementById('generatedUrl');
+      url.select();
+      navigator.clipboard.writeText(url.value).then(() => {
+        const msg = document.getElementById('copiedMsg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      });
+    });
+
+    applySettings();
+    generateUrl();
+
+    // ============ GAME STATE ============
+    let currentPlayrate = 1.0;
+    let lastPlayrate = 1.0;
+    let currentBpm = 120;
+    let currentTimeSig = '4/4';
+    let currentBeat = 1;
+    let timeSigNum = 4;
+    let changeHistory = [];
+
+    // Generate beat dots
+    function generateBeatDots(beats) {
+      beatDots.innerHTML = '';
+      for (let i = 1; i <= beats; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'beat-dot' + (i === 1 ? ' downbeat-dot' : '');
+        dot.id = 'dot-' + i;
+        beatDots.appendChild(dot);
+      }
+    }
+    generateBeatDots(4);
+
+    // ============ EFFECTS ============
+    function triggerShake() {
+      if (!settings.screenShake) return;
+      hudContainer.classList.remove('shake');
+      void hudContainer.offsetWidth; // Reflow
+      hudContainer.classList.add('shake');
+    }
+
+    function triggerFlash() {
+      if (!settings.flash) return;
+      flashOverlay.classList.remove('flash');
+      void flashOverlay.offsetWidth;
+      flashOverlay.classList.add('flash');
+    }
+
+    function spawnParticles(type, count = 20) {
+      if (!settings.particles) return;
+
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle ' + type;
+
+        const size = Math.random() * 30 + 10;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = type === 'fire' ? '100%' : '0%';
+
+        particle.style.animationDelay = Math.random() * 0.5 + 's';
+        particle.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+
+        particlesContainer.appendChild(particle);
+
+        setTimeout(() => particle.remove(), 2000);
+      }
+    }
+
+    function updateThresholdEffects(playrate) {
+      if (!settings.thresholdEffects) {
+        fireOverlay.classList.remove('active');
+        iceOverlay.classList.remove('active');
+        return;
+      }
+
+      if (playrate >= settings.fireThreshold) {
+        fireOverlay.classList.add('active');
+        iceOverlay.classList.remove('active');
+        fastIndicator.classList.add('active');
+        slowIndicator.classList.remove('active');
+      } else if (playrate <= settings.iceThreshold) {
+        iceOverlay.classList.add('active');
+        fireOverlay.classList.remove('active');
+        slowIndicator.classList.add('active');
+        fastIndicator.classList.remove('active');
+      } else {
+        fireOverlay.classList.remove('active');
+        iceOverlay.classList.remove('active');
+        fastIndicator.classList.remove('active');
+        slowIndicator.classList.remove('active');
+      }
+    }
+
+    function addToFeed(oldRate, newRate) {
+      const diff = newRate - oldRate;
+      if (Math.abs(diff) < 0.01) return;
+
+      const item = document.createElement('div');
+      item.className = 'feed-item ' + (diff > 0 ? 'speed-up' : 'slow-down');
+
+      const direction = diff > 0 ? '+' : '';
+      item.innerHTML = `
+        <div class="change-amount">${direction}${(diff * 100).toFixed(0)}%</div>
+        <div>Now: ${newRate.toFixed(2)}x</div>
+        <div class="change-time">${new Date().toLocaleTimeString()}</div>
+      `;
+
+      changeFeed.insertBefore(item, changeFeed.firstChild);
+
+      // Keep only last 5
+      while (changeFeed.children.length > 5) {
+        changeFeed.removeChild(changeFeed.lastChild);
+      }
+    }
+
+    // ============ GAUGE UPDATE ============
+    function updateGauge(playrate) {
+      // Map playrate (0.5 - 2.0) to angle (-90 to 90 degrees)
+      const minRate = 0.5, maxRate = 2.0;
+      const clampedRate = Math.max(minRate, Math.min(maxRate, playrate));
+      const normalized = (clampedRate - minRate) / (maxRate - minRate);
+      const angle = -90 + (normalized * 180);
+
+      gaugeNeedle.style.transform = `rotate(${angle}deg)`;
+
+      // Color based on zone
+      let color;
+      if (playrate >= settings.fireThreshold) {
+        color = 'var(--fire-orange)';
+      } else if (playrate <= settings.iceThreshold) {
+        color = 'var(--ice-blue)';
+      } else if (playrate > 1.1) {
+        color = 'var(--neon-yellow)';
+      } else if (playrate < 0.9) {
+        color = 'var(--neon-blue)';
+      } else {
+        color = 'var(--neon-green)';
+      }
+
+      gaugeFill.style.stroke = color;
+
+      // Arc fill amount
+      const arcLength = 455;
+      const fillAmount = arcLength * (1 - normalized);
+      gaugeFill.style.strokeDashoffset = fillAmount;
+    }
+
+    function updatePlayrateBar(playrate) {
+      // Map 0.5-2.0 to 0-100%
+      const minRate = 0.5, maxRate = 2.0;
+      const normalized = (playrate - minRate) / (maxRate - minRate);
+      const percent = Math.max(0, Math.min(100, normalized * 100));
+      playrateMarker.style.left = percent + '%';
+    }
+
+    function updatePlayrateDisplay(playrate) {
+      playrateValue.textContent = playrate.toFixed(2) + 'x';
+
+      let color;
+      if (playrate >= settings.fireThreshold) {
+        color = 'var(--fire-orange)';
+      } else if (playrate <= settings.iceThreshold) {
+        color = 'var(--ice-blue)';
+      } else {
+        color = 'var(--neon-green)';
+      }
+      playrateValue.style.color = color;
+    }
+
+    // ============ BEAT UPDATE ============
+    function updateBeat(beat, isDownbeat) {
+      beatNumber.textContent = beat;
+
+      beatRing.classList.remove('pulse', 'downbeat');
+      void beatRing.offsetWidth;
+
+      if (isDownbeat) {
+        beatRing.classList.add('downbeat');
+      } else {
+        beatRing.classList.add('pulse');
+      }
+
+      // Update dots
+      const dots = beatDots.querySelectorAll('.beat-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i < beat);
+      });
+    }
+
+    // ============ REAPER COMMUNICATION ============
+    wwr_start();
+    wwr_req_recur("GET/PROJEXTSTATE/Teleprompter/data;TRANSPORT", 16);
+
+    let lastBeat = 0;
+
+    function wwr_onreply(results) {
+      for (const line of results.split("\n")) {
+        const tok = line.split("\t");
+        if (tok.length > 3 && tok[1] === "Teleprompter" && tok[2] === "data") {
+          try {
+            const d = JSON.parse(tok[3] || '{}');
+
+            const newPlayrate = d.pr || 1;
+            const newBpm = d.bpm || 120;
+            const newTimeSig = d.ts || '4/4';
+            const newBeat = d.b || 1;
+
+            // Playrate change detection
+            if (Math.abs(newPlayrate - lastPlayrate) > 0.01) {
+              const wasSpeedUp = newPlayrate > lastPlayrate;
+
+              triggerShake();
+              triggerFlash();
+
+              if (wasSpeedUp) {
+                spawnParticles('fire', 30);
+                playrateValue.classList.remove('slow-down');
+                playrateValue.classList.add('speed-up');
+              } else {
+                spawnParticles('ice', 30);
+                playrateValue.classList.remove('speed-up');
+                playrateValue.classList.add('slow-down');
+              }
+
+              setTimeout(() => {
+                playrateValue.classList.remove('speed-up', 'slow-down');
+              }, 300);
+
+              addToFeed(lastPlayrate, newPlayrate);
+              lastPlayrate = newPlayrate;
+            }
+
+            currentPlayrate = newPlayrate;
+            currentBpm = newBpm;
+            currentBeat = newBeat;
+
+            // Time sig change
+            if (newTimeSig !== currentTimeSig) {
+              currentTimeSig = newTimeSig;
+              timeSigNum = parseInt(newTimeSig.split('/')[0]) || 4;
+              generateBeatDots(timeSigNum);
+            }
+
+            // Beat change
+            if (newBeat !== lastBeat) {
+              updateBeat(newBeat, newBeat === 1);
+              lastBeat = newBeat;
+            }
+
+          } catch (e) {}
+        }
+      }
+
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      bpmValue.textContent = Math.round(currentBpm);
+      timeSigValue.textContent = currentTimeSig;
+
+      updatePlayrateDisplay(currentPlayrate);
+      updateGauge(currentPlayrate);
+      updatePlayrateBar(currentPlayrate);
+      updateThresholdEffects(currentPlayrate);
+    }
+
+    // Initial display
+    updateDisplay();
+  </script>
+</body>
+</html>
