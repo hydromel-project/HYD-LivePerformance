@@ -17,15 +17,16 @@ Features:
       </version>
     </reapack>
     <reapack name="HYD-Setup.lua" type="script">
-      <version name="1.0.1">
-        <changelog><![CDATA[v1.0.1: Fixed configuration format
-- Fixed web server csurf format to match REAPER's expected format
+      <version name="1.0.2">
+        <changelog><![CDATA[v1.0.2: Improved setup experience
+- Added double-width text icon (text_wide) for toolbar button
+- Web server setup now opens Preferences dialog with instructions
+- Removed automatic web config (REAPER overwrites on exit)
+
+v1.0.1: Fixed configuration format
 - Fixed toolbar command using proper _RS hash format
-- Added option to close REAPER immediately after setup
-- Settings now persist correctly after restart
 
 v1.0.0: Initial release
-- Configures REAPER web server on port 9020
 - Adds Live Performance Server to main toolbar]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-Setup.lua</source>
       </version>

@@ -1,18 +1,15 @@
 --[[
 @description HYD Live Performance Setup
-@version 1.0.1
+@version 1.0.2
 @author hydromel-project
 @about
   # HYD Live Performance Setup
 
   One-time setup script that:
-  - Configures REAPER web server on port 9020
-  - Adds the Live Performance Server to the main toolbar
+  - Adds the Live Performance Server to the main toolbar (with text icon)
+  - Provides instructions for web server setup
 
   Run this once after installing via ReaPack.
-
-  IMPORTANT: Close REAPER immediately after running this script
-  (don't make other changes) for settings to persist.
 @link https://github.com/hydromel-project/HYD-LivePerformance
 --]]
 
@@ -21,7 +18,6 @@ local WEB_PORT = 9020
 
 -- Get paths
 local resource_path = reaper.GetResourcePath()
-local ini_path = resource_path .. "/reaper.ini"
 local menu_path = resource_path .. "/reaper-menu.ini"
 
 -- Read file contents
@@ -40,79 +36,6 @@ local function WriteFile(path, content)
   file:write(content)
   file:close()
   return true
-end
-
--- Check if web server is already configured on our port
-local function IsWebServerConfigured()
-  local content = ReadFile(ini_path)
-  if not content then return false end
-  -- Look for HTTP on port 9020 with correct format
-  return content:find("HTTP 0 " .. WEB_PORT .. " ") ~= nil
-end
-
--- Find highest csurf index
-local function GetNextCsurfIndex(content)
-  local max_idx = -1
-  for idx in content:gmatch("csurf_(%d+)=") do
-    local num = tonumber(idx)
-    if num and num > max_idx then
-      max_idx = num
-    end
-  end
-  return max_idx + 1
-end
-
--- Configure web server
-local function ConfigureWebServer()
-  if IsWebServerConfigured() then
-    return true, "Web server already configured on port " .. WEB_PORT
-  end
-
-  local content = ReadFile(ini_path)
-  if not content then
-    return false, "Could not read reaper.ini"
-  end
-
-  local next_idx = GetNextCsurfIndex(content)
-
-  -- Correct format: HTTP 0 PORT '' 'DEFAULT_PAGE' FLAGS ''
-  -- FLAGS: 0 = normal, other values for specific features
-  local new_line = string.format("csurf_%d=HTTP 0 %d '' '' 0 ''\n", next_idx, WEB_PORT)
-
-  -- Update csurf_cnt to include new entry
-  local cnt_pattern = "csurf_cnt=(%d+)"
-  local current_cnt = content:match(cnt_pattern)
-
-  if current_cnt then
-    local new_cnt = next_idx + 1  -- cnt should be one more than highest index
-    content = content:gsub(cnt_pattern, "csurf_cnt=" .. new_cnt)
-  else
-    -- Add csurf_cnt if not present
-    content = content:gsub("(%[reaper%]\r?\n)", "%1csurf_cnt=1\n")
-  end
-
-  -- Add the new csurf entry after the last one
-  local search_pos = 1
-  local final_pos = nil
-  while true do
-    local s, e = content:find("csurf_%d+=[^\r\n]*\r?\n", search_pos)
-    if not s then break end
-    final_pos = e
-    search_pos = e + 1
-  end
-
-  if final_pos then
-    content = content:sub(1, final_pos) .. new_line .. content:sub(final_pos + 1)
-  else
-    -- No csurf entries yet, add after [reaper] section header
-    content = content:gsub("(csurf_cnt=%d+\r?\n)", "%1" .. new_line)
-  end
-
-  if WriteFile(ini_path, content) then
-    return true, "Web server configured on port " .. WEB_PORT
-  else
-    return false, "Could not write to reaper.ini"
-  end
 end
 
 -- Register and get the command ID for our script
@@ -146,20 +69,7 @@ local function GetServerCommandString()
   return nil, nil, nil
 end
 
--- Check if our script is already in toolbar
-local function IsScriptInToolbar(cmd_string)
-  local content = ReadFile(menu_path)
-  if not content then return false end
-  -- Check for our specific command string
-  if cmd_string then
-    return content:find(cmd_string, 1, true) ~= nil
-  end
-  -- Also check for HYD-LivePerformanceServer in any form
-  return content:find("HYD%-LivePerformanceServer") ~= nil or
-         content:find("LivePerformanceServer") ~= nil
-end
-
--- Add action to main toolbar
+-- Add action to main toolbar with text_wide icon
 local function AddToToolbar()
   local cmd_string, cmd_id, script_path = GetServerCommandString()
 
@@ -167,13 +77,41 @@ local function AddToToolbar()
     return false, "Could not find/register Live Performance Server script.\nMake sure HYD-LivePerformanceServer.lua is installed."
   end
 
-  if IsScriptInToolbar(cmd_string) then
-    return true, "Script already in toolbar"
-  end
-
   local content = ReadFile(menu_path)
   if not content then
     content = ""
+  end
+
+  -- Check if already in toolbar
+  if content:find(cmd_string, 1, true) then
+    -- Already exists, but check if it has text_wide icon
+    local item_idx = nil
+    for idx, cmd in content:gmatch("item_(%d+)=([^\r\n]+)") do
+      if cmd:find(cmd_string, 1, true) then
+        item_idx = tonumber(idx)
+        break
+      end
+    end
+
+    if item_idx then
+      -- Check if icon already exists
+      local icon_pattern = "icon_" .. item_idx .. "="
+      if not content:find(icon_pattern) then
+        -- Add icon entry after [Main toolbar] line
+        local section_start = content:find("%[Main toolbar%]")
+        if section_start then
+          local line_end = content:find("\n", section_start)
+          if line_end then
+            local icon_line = "icon_" .. item_idx .. "=text_wide\n"
+            content = content:sub(1, line_end) .. icon_line .. content:sub(line_end + 1)
+            if WriteFile(menu_path, content) then
+              return true, "Added text icon to existing toolbar button"
+            end
+          end
+        end
+      end
+    end
+    return true, "Script already in toolbar"
   end
 
   -- Find [Main toolbar] section
@@ -194,10 +132,26 @@ local function AddToToolbar()
       end
     end
 
-    -- Create new toolbar item with command string format
-    local new_item = string.format("item_%d=%s HYD Live Performance Server\n", max_idx + 1, cmd_string)
+    local new_idx = max_idx + 1
 
-    -- Find where to insert (before tbf_ entries or next section)
+    -- Create new toolbar item with command string format
+    local new_item = string.format("item_%d=%s HYD Live Performance Server\n", new_idx, cmd_string)
+    -- Create icon entry for text_wide (double width text)
+    local new_icon = string.format("icon_%d=text_wide\n", new_idx)
+
+    -- Insert icon after [Main toolbar] header
+    local header_end = content:find("\n", section_start)
+    if header_end then
+      content = content:sub(1, header_end) .. new_icon .. content:sub(header_end + 1)
+    end
+
+    -- Now find where to insert item (before tbf_ entries or next section)
+    -- Re-find section_end since content changed
+    section_end = content:find("\r?\n%[", section_start + 1)
+    toolbar_section = section_end
+      and content:sub(section_start, section_end)
+      or content:sub(section_start)
+
     local insert_pos = toolbar_section:find("tbf_")
     if insert_pos then
       insert_pos = section_start + insert_pos - 2  -- Before tbf_ line
@@ -210,20 +164,26 @@ local function AddToToolbar()
     content = content:sub(1, insert_pos) .. new_item .. content:sub(insert_pos + 1)
   else
     -- Add new Main toolbar section at end
-    content = content .. "\n[Main toolbar]\nitem_0=" .. cmd_string .. " HYD Live Performance Server\n"
+    content = content .. "\n[Main toolbar]\nicon_0=text_wide\nitem_0=" .. cmd_string .. " HYD Live Performance Server\n"
   end
 
   if WriteFile(menu_path, content) then
-    return true, "Added to main toolbar"
+    return true, "Added to main toolbar with text icon"
   else
     return false, "Could not write to reaper-menu.ini"
   end
 end
 
+-- Open web server preferences
+local function OpenWebPreferences()
+  -- Action 40016 opens Preferences, but we need Control/OSC/Web
+  -- Use action 40293 for Control/OSC/Web preferences
+  reaper.Main_OnCommand(40293, 0)
+end
+
 -- Main setup function
 local function RunSetup()
   local messages = {}
-  local all_ok = true
 
   -- Check if setup was already run
   local setup_done = reaper.GetExtState("HYD_LivePerformance", "setup_complete")
@@ -239,24 +199,14 @@ local function RunSetup()
   reaper.ShowConsoleMsg("  HYD Live Performance Setup\n")
   reaper.ShowConsoleMsg(string.rep("=", 50) .. "\n\n")
 
-  -- Step 1: Configure web server
-  reaper.ShowConsoleMsg("Configuring web server on port " .. WEB_PORT .. "...\n")
-  local web_ok, web_msg = ConfigureWebServer()
-  reaper.ShowConsoleMsg("  " .. (web_ok and "[OK] " or "[FAIL] ") .. web_msg .. "\n\n")
-  table.insert(messages, (web_ok and "[OK] " or "[FAIL] ") .. web_msg)
-  if not web_ok then all_ok = false end
-
-  -- Step 2: Add to toolbar
-  reaper.ShowConsoleMsg("Adding to main toolbar...\n")
+  -- Step 1: Add to toolbar
+  reaper.ShowConsoleMsg("Adding to main toolbar with text icon...\n")
   local toolbar_ok, toolbar_msg = AddToToolbar()
   reaper.ShowConsoleMsg("  " .. (toolbar_ok and "[OK] " or "[FAIL] ") .. toolbar_msg .. "\n\n")
   table.insert(messages, (toolbar_ok and "[OK] " or "[FAIL] ") .. toolbar_msg)
-  if not toolbar_ok then all_ok = false end
 
   -- Mark setup as complete
-  if all_ok then
-    reaper.SetExtState("HYD_LivePerformance", "setup_complete", "1", true)
-  end
+  reaper.SetExtState("HYD_LivePerformance", "setup_complete", "1", true)
 
   -- Summary
   reaper.ShowConsoleMsg(string.rep("=", 50) .. "\n")
@@ -266,27 +216,30 @@ local function RunSetup()
     summary = summary .. i .. ". " .. msg .. "\n"
   end
 
-  summary = summary .. "\nWeb Interface URLs (after restart):\n"
-  summary = summary .. "- Teleprompter: http://localhost:" .. WEB_PORT .. "/Teleprompter.html\n"
-  summary = summary .. "- Now Playing: http://localhost:" .. WEB_PORT .. "/NowPlaying.html\n"
-  summary = summary .. "- Playlist: http://localhost:" .. WEB_PORT .. "/Playlist.html\n"
+  summary = summary .. "\n" .. string.rep("-", 40) .. "\n"
+  summary = summary .. "WEB SERVER SETUP (Manual Step):\n\n"
+  summary = summary .. "1. Go to: Preferences > Control/OSC/Web\n"
+  summary = summary .. "2. Click 'Add'\n"
+  summary = summary .. "3. Select 'Web browser interface'\n"
+  summary = summary .. "4. Set port to: " .. WEB_PORT .. "\n"
+  summary = summary .. "5. Click OK, then Apply\n"
 
   summary = summary .. "\n" .. string.rep("-", 40) .. "\n"
-  summary = summary .. "IMPORTANT: Close REAPER now!\n"
-  summary = summary .. "Don't make other changes before closing.\n"
-  summary = summary .. "Settings will apply on next launch."
+  summary = summary .. "After web server setup, URLs will be:\n"
+  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/Teleprompter.html\n"
+  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/NowPlaying.html\n"
+  summary = summary .. "- http://localhost:" .. WEB_PORT .. "/Playlist.html\n"
 
   reaper.ShowConsoleMsg(summary .. "\n")
 
   local result = reaper.MB(
-    summary .. "\n\nClose REAPER now to apply settings?",
+    summary .. "\n\nOpen Control/OSC/Web preferences now?",
     script_name,
     4  -- Yes/No
   )
 
   if result == 6 then  -- Yes
-    -- Close REAPER (action 40004)
-    reaper.Main_OnCommand(40004, 0)
+    OpenWebPreferences()
   end
 end
 
