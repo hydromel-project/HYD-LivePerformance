@@ -74,16 +74,19 @@
 
     /* Main container */
     .hud-container {
-      position: relative;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
       width: 100%;
-      height: 100%;
-      max-width: 1200px;
-      max-height: 800px;
+      max-width: 1000px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 2fr 1fr;
-      grid-template-rows: auto 1fr auto;
-      gap: 20px;
-      padding: 20px;
+      grid-template-rows: auto auto auto;
+      gap: 10px;
+      padding: 10px;
+      z-index: 10;
     }
 
     /* Settings toggle */
@@ -217,41 +220,65 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 5px 15px;
       background: linear-gradient(180deg, rgba(0,240,255,0.1) 0%, transparent 100%);
       border-bottom: 2px solid var(--neon-blue);
     }
 
-    .bpm-display {
+    .bpm-display, .tempo-display {
       text-align: center;
     }
 
-    .bpm-label {
-      font-size: 10px;
+    .bpm-label, .tempo-label {
+      font-size: 8px;
       color: var(--neon-blue);
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
     }
 
     .bpm-value {
-      font-size: 48px;
+      font-size: 32px;
       font-weight: 900;
       color: var(--neon-pink);
       text-shadow:
         0 0 10px var(--neon-pink),
-        0 0 20px var(--neon-pink),
-        0 0 40px var(--neon-pink);
+        0 0 20px var(--neon-pink);
       line-height: 1;
+    }
+
+    .tempo-value {
+      font-size: 40px;
+      font-weight: 900;
+      color: var(--neon-green);
+      text-shadow:
+        0 0 10px var(--neon-green),
+        0 0 20px var(--neon-green);
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+
+    .tempo-value.fast {
+      color: var(--fire-orange);
+      text-shadow:
+        0 0 10px var(--fire-orange),
+        0 0 20px var(--fire-orange);
+    }
+
+    .tempo-value.slow {
+      color: var(--ice-blue);
+      text-shadow:
+        0 0 10px var(--ice-blue),
+        0 0 20px var(--ice-blue);
     }
 
     .time-sig-display {
       font-family: 'Press Start 2P', monospace;
-      font-size: 24px;
+      font-size: 18px;
       color: var(--neon-green);
-      text-shadow: 0 0 15px var(--neon-green);
-      padding: 15px 25px;
-      border: 3px solid var(--neon-green);
-      border-radius: 10px;
+      text-shadow: 0 0 10px var(--neon-green);
+      padding: 8px 15px;
+      border: 2px solid var(--neon-green);
+      border-radius: 6px;
       background: rgba(0, 255, 136, 0.1);
     }
 
@@ -260,15 +287,16 @@
       grid-column: 2;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
       position: relative;
+      padding-top: 5px;
     }
 
     .gauge-container {
       position: relative;
-      width: 350px;
-      height: 200px;
+      width: 280px;
+      height: 160px;
     }
 
     .gauge-svg {
@@ -313,19 +341,18 @@
     /* Playrate number display */
     .playrate-display {
       position: absolute;
-      bottom: -30px;
+      bottom: -20px;
       text-align: center;
       width: 100%;
     }
 
     .playrate-value {
-      font-size: 72px;
+      font-size: 48px;
       font-weight: 900;
       color: var(--neon-green);
       text-shadow:
         0 0 10px currentColor,
-        0 0 30px currentColor,
-        0 0 60px currentColor;
+        0 0 20px currentColor;
       transition: color 0.3s ease, transform 0.1s ease;
     }
 
@@ -352,32 +379,32 @@
     }
 
     .playrate-label {
-      font-size: 14px;
+      font-size: 10px;
       color: #666;
       text-transform: uppercase;
-      letter-spacing: 5px;
-      margin-top: 5px;
+      letter-spacing: 3px;
+      margin-top: 3px;
     }
 
     /* Speed/Slow indicators */
     .speed-indicator {
       position: absolute;
       font-family: 'Press Start 2P', monospace;
-      font-size: 20px;
+      font-size: 14px;
       opacity: 0;
       transition: opacity 0.3s ease;
-      text-shadow: 0 0 20px currentColor;
+      text-shadow: 0 0 15px currentColor;
     }
 
     .speed-indicator.fast {
-      top: 20px;
-      right: -80px;
+      top: 10px;
+      right: -60px;
       color: var(--fire-orange);
     }
 
     .speed-indicator.slow {
-      top: 20px;
-      left: -80px;
+      top: 10px;
+      left: -60px;
       color: var(--ice-blue);
     }
 
@@ -387,22 +414,23 @@
     .left-section {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
-      gap: 20px;
+      gap: 10px;
+      padding-top: 10px;
     }
 
     .beat-ring-container {
       position: relative;
-      width: 150px;
-      height: 150px;
+      width: 100px;
+      height: 100px;
     }
 
     .beat-ring {
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      border: 4px solid var(--ui-border);
+      border: 3px solid var(--ui-border);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -428,9 +456,9 @@
 
     .beat-number {
       font-family: 'Press Start 2P', monospace;
-      font-size: 48px;
+      font-size: 32px;
       color: var(--neon-blue);
-      text-shadow: 0 0 20px var(--neon-blue);
+      text-shadow: 0 0 15px var(--neon-blue);
       transition: color 0.1s ease, transform 0.05s ease;
     }
 
@@ -447,13 +475,13 @@
     /* Beat dots */
     .beat-dots {
       display: flex;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 5px;
+      margin-top: 5px;
     }
 
     .beat-dot {
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background: var(--ui-dark);
       border: 2px solid var(--ui-border);
@@ -463,35 +491,39 @@
     .beat-dot.active {
       background: var(--neon-blue);
       border-color: var(--neon-blue);
-      box-shadow: 0 0 15px var(--neon-blue);
+      box-shadow: 0 0 10px var(--neon-blue);
     }
 
     .beat-dot.downbeat-dot {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
     }
 
     .beat-dot.downbeat-dot.active {
       background: var(--neon-pink);
       border-color: var(--neon-pink);
-      box-shadow: 0 0 20px var(--neon-pink);
+      box-shadow: 0 0 15px var(--neon-pink);
     }
 
     /* ============ RIGHT - CHANGE FEED ============ */
     .right-section {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 5px;
+      padding-top: 5px;
+      max-height: 200px;
+      overflow: hidden;
     }
 
     .feed-title {
       font-family: 'Press Start 2P', monospace;
-      font-size: 10px;
+      font-size: 8px;
       color: var(--neon-pink);
       text-transform: uppercase;
       letter-spacing: 2px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--ui-border);
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--ui-border);
+      flex-shrink: 0;
     }
 
     .change-feed {
@@ -499,16 +531,20 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 5px;
+      max-height: 180px;
     }
 
     .feed-item {
       background: var(--ui-dark);
-      border-left: 4px solid var(--neon-blue);
-      padding: 10px 15px;
-      border-radius: 0 8px 8px 0;
+      border-left: 3px solid var(--neon-blue);
+      padding: 8px 10px;
+      border-radius: 0 6px 6px 0;
       animation: slideIn 0.3s ease;
-      font-size: 12px;
+      font-size: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
     }
 
     .feed-item.speed-up { border-color: var(--fire-orange); }
@@ -519,31 +555,84 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; max-height: 100px; margin-bottom: 8px; }
+      to { transform: translateX(100%); opacity: 0; max-height: 0; margin-bottom: 0; }
+    }
+
+    .feed-item.slide-out {
+      animation: slideOut 0.5s ease forwards;
+    }
+
+    .feed-item .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--neon-pink);
+      box-shadow: 0 0 8px var(--neon-pink);
+      flex-shrink: 0;
+      object-fit: cover;
+      background: var(--ui-border);
+    }
+
+    .feed-item .feed-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feed-item .change-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+
     .feed-item .change-amount {
       font-weight: 700;
-      font-size: 16px;
+      font-size: 14px;
     }
 
     .feed-item.speed-up .change-amount { color: var(--fire-orange); }
     .feed-item.slow-down .change-amount { color: var(--ice-blue); }
 
+    .feed-item .change-user {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: var(--neon-pink);
+      text-shadow: 0 0 6px var(--neon-pink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-item .change-rate {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--neon-green);
+      text-shadow: 0 0 8px var(--neon-green);
+      margin: 3px 0;
+    }
+
+    .feed-item.speed-up .change-rate { color: var(--fire-orange); text-shadow: 0 0 8px var(--fire-orange); }
+    .feed-item.slow-down .change-rate { color: var(--ice-blue); text-shadow: 0 0 8px var(--ice-blue); }
+
     .feed-item .change-time {
-      font-size: 10px;
+      font-size: 8px;
       color: #666;
-      margin-top: 4px;
     }
 
     /* ============ BOTTOM - PLAYRATE BAR ============ */
     .bottom-section {
       grid-column: 1 / -1;
-      padding: 20px;
+      padding: 5px 10px;
     }
 
     .playrate-bar-container {
       position: relative;
-      height: 40px;
+      height: 25px;
       background: var(--ui-dark);
-      border-radius: 20px;
+      border-radius: 12px;
       overflow: hidden;
       border: 2px solid var(--ui-border);
     }
@@ -562,7 +651,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 10px;
+      font-size: 8px;
       color: rgba(255,255,255,0.3);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -578,11 +667,11 @@
       position: absolute;
       top: 50%;
       transform: translate(-50%, -50%);
-      width: 8px;
-      height: 50px;
+      width: 6px;
+      height: 35px;
       background: var(--neon-pink);
-      border-radius: 4px;
-      box-shadow: 0 0 20px var(--neon-pink);
+      border-radius: 3px;
+      box-shadow: 0 0 15px var(--neon-pink);
       transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 10;
     }
@@ -590,9 +679,9 @@
     .bar-labels {
       display: flex;
       justify-content: space-between;
-      margin-top: 8px;
+      margin-top: 4px;
       padding: 0 10px;
-      font-size: 11px;
+      font-size: 9px;
       color: #666;
     }
 
@@ -604,34 +693,367 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 100;
+      z-index: 1;
       overflow: hidden;
+      contain: strict;
+      will-change: contents;
     }
 
     .particle {
       position: absolute;
       border-radius: 50%;
       pointer-events: none;
+      contain: layout style;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
     }
 
     .particle.fire {
       background: radial-gradient(circle, var(--fire-orange) 0%, transparent 70%);
-      animation: particleFire 1s ease-out forwards;
     }
 
     .particle.ice {
       background: radial-gradient(circle, var(--ice-blue) 0%, transparent 70%);
-      animation: particleIce 1.5s ease-out forwards;
     }
 
     @keyframes particleFire {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(-200px) scale(0); opacity: 0; }
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      100% { transform: translate3d(0, -150px, 0) scale(0); opacity: 0; }
     }
 
     @keyframes particleIce {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(200px) scale(0); opacity: 0; }
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      100% { transform: translate3d(0, 150px, 0) scale(0); opacity: 0; }
+    }
+
+    /* ============ REALISTIC FIRE - 60FPS GPU ACCELERATED ============ */
+
+    /* Base flame particle - teardrop shape */
+    .particle.flame {
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      mix-blend-mode: screen;
+      contain: layout style paint;
+      filter: none; /* No blur for 60fps */
+    }
+
+    /* Core flame - hottest, white-yellow center */
+    .particle.flame.core {
+      background: radial-gradient(ellipse at 50% 70%,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 200, 0.9) 15%,
+        rgba(255, 220, 100, 0.8) 30%,
+        rgba(255, 180, 50, 0.6) 50%,
+        rgba(255, 120, 0, 0.3) 70%,
+        transparent 100%);
+    }
+
+    /* Inner flame - orange-yellow */
+    .particle.flame.inner {
+      background: radial-gradient(ellipse at 50% 65%,
+        rgba(255, 200, 80, 0.85) 0%,
+        rgba(255, 150, 30, 0.7) 30%,
+        rgba(255, 100, 0, 0.5) 55%,
+        rgba(200, 50, 0, 0.25) 75%,
+        transparent 100%);
+    }
+
+    /* Outer flame - red-orange */
+    .particle.flame.outer {
+      background: radial-gradient(ellipse at 50% 60%,
+        rgba(255, 130, 30, 0.7) 0%,
+        rgba(255, 80, 0, 0.5) 35%,
+        rgba(200, 30, 0, 0.3) 60%,
+        rgba(120, 0, 0, 0.1) 80%,
+        transparent 100%);
+    }
+
+    /* Smoke wisps at top */
+    .particle.smoke {
+      background: radial-gradient(circle,
+        rgba(80, 80, 80, 0.3) 0%,
+        rgba(60, 60, 60, 0.15) 40%,
+        transparent 70%);
+      mix-blend-mode: multiply;
+    }
+
+    /* Multiple animation variations for natural look */
+    .particle.flame.anim-1 { animation: flameRise1 var(--dur, 1s) ease-out forwards; }
+    .particle.flame.anim-2 { animation: flameRise2 var(--dur, 1s) ease-out forwards; }
+    .particle.flame.anim-3 { animation: flameRise3 var(--dur, 1s) ease-out forwards; }
+    .particle.smoke { animation: smokeRise var(--dur, 1.5s) ease-out forwards; }
+
+    /* Varied flame animations - turbulent motion */
+    @keyframes flameRise1 {
+      0% { transform: translate3d(0, 0, 0) scale(1, 1) rotate(0deg); opacity: 0.9; }
+      20% { transform: translate3d(-8px, -40px, 0) scale(0.95, 1.2) rotate(-5deg); opacity: 1; }
+      40% { transform: translate3d(5px, -90px, 0) scale(0.8, 1.0) rotate(3deg); opacity: 0.75; }
+      60% { transform: translate3d(-3px, -140px, 0) scale(0.6, 0.7) rotate(-2deg); opacity: 0.45; }
+      80% { transform: translate3d(6px, -180px, 0) scale(0.35, 0.4) rotate(4deg); opacity: 0.2; }
+      100% { transform: translate3d(0, -220px, 0) scale(0.1, 0.15) rotate(0deg); opacity: 0; }
+    }
+
+    @keyframes flameRise2 {
+      0% { transform: translate3d(0, 0, 0) scale(1, 1) rotate(0deg); opacity: 0.85; }
+      25% { transform: translate3d(10px, -50px, 0) scale(0.9, 1.15) rotate(6deg); opacity: 0.95; }
+      50% { transform: translate3d(-6px, -110px, 0) scale(0.7, 0.85) rotate(-4deg); opacity: 0.6; }
+      75% { transform: translate3d(4px, -165px, 0) scale(0.4, 0.45) rotate(2deg); opacity: 0.25; }
+      100% { transform: translate3d(-2px, -210px, 0) scale(0.15, 0.2) rotate(-1deg); opacity: 0; }
+    }
+
+    @keyframes flameRise3 {
+      0% { transform: translate3d(0, 0, 0) scale(1, 1) rotate(0deg); opacity: 0.8; }
+      15% { transform: translate3d(-5px, -30px, 0) scale(1.05, 1.25) rotate(-3deg); opacity: 0.9; }
+      35% { transform: translate3d(8px, -75px, 0) scale(0.85, 0.95) rotate(5deg); opacity: 0.7; }
+      55% { transform: translate3d(-4px, -125px, 0) scale(0.55, 0.6) rotate(-3deg); opacity: 0.4; }
+      80% { transform: translate3d(3px, -175px, 0) scale(0.3, 0.35) rotate(2deg); opacity: 0.15; }
+      100% { transform: translate3d(0, -200px, 0) scale(0.1, 0.1) rotate(0deg); opacity: 0; }
+    }
+
+    @keyframes smokeRise {
+      0% { transform: translate3d(0, -150px, 0) scale(0.5); opacity: 0; }
+      20% { transform: translate3d(5px, -180px, 0) scale(0.8); opacity: 0.2; }
+      60% { transform: translate3d(-8px, -250px, 0) scale(1.2); opacity: 0.15; }
+      100% { transform: translate3d(10px, -320px, 0) scale(1.8); opacity: 0; }
+    }
+
+    /* Canvas fire simulation */
+    #fireCanvas {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.3s, height 0.5s ease-out;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #fireCanvas.active {
+      opacity: 1;
+    }
+
+    /* Fire intensity text effects */
+    .fire-text-effect {
+      transition: text-shadow 0.3s, color 0.3s, transform 0.1s;
+    }
+
+    .fire-text-effect.intensity-low {
+      text-shadow:
+        0 0 10px currentColor,
+        0 0 20px rgba(255, 100, 0, 0.3);
+    }
+
+    .fire-text-effect.intensity-medium {
+      text-shadow:
+        0 0 15px currentColor,
+        0 0 30px rgba(255, 100, 0, 0.5),
+        0 0 50px rgba(255, 50, 0, 0.3);
+      animation: fireTextPulse 0.5s ease-in-out infinite alternate;
+    }
+
+    .fire-text-effect.intensity-high {
+      color: #ffcc00 !important;
+      text-shadow:
+        0 0 10px #ff8800,
+        0 0 20px #ff4400,
+        0 0 40px #ff2200,
+        0 0 60px #ff0000,
+        0 0 80px rgba(255, 0, 0, 0.5);
+      animation: fireTextIntense 0.15s ease-in-out infinite alternate;
+    }
+
+    .fire-text-effect.intensity-max {
+      color: #ffffff !important;
+      text-shadow:
+        0 0 10px #ffff88,
+        0 0 20px #ffcc00,
+        0 0 40px #ff8800,
+        0 0 60px #ff4400,
+        0 0 100px #ff0000,
+        0 0 150px rgba(255, 0, 0, 0.8);
+      animation: fireTextMax 0.1s ease-in-out infinite alternate;
+    }
+
+    @keyframes fireTextPulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.02); filter: brightness(1.1); }
+    }
+
+    @keyframes fireTextIntense {
+      0% { transform: scale(1) translateY(0); filter: brightness(1.1); }
+      100% { transform: scale(1.03) translateY(-1px); filter: brightness(1.3); }
+    }
+
+    @keyframes fireTextMax {
+      0% { transform: scale(1) translateY(0); filter: brightness(1.2); }
+      50% { transform: scale(1.05) translateY(-2px); filter: brightness(1.5); }
+      100% { transform: scale(1.02) translateY(-1px); filter: brightness(1.3); }
+    }
+
+    /* Fire glow with flickering */
+    .fire-glow {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: linear-gradient(to top,
+        rgba(255, 100, 0, 0.35) 0%,
+        rgba(255, 60, 0, 0.2) 30%,
+        rgba(255, 30, 0, 0.08) 60%,
+        transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      will-change: opacity;
+      contain: strict;
+    }
+
+    .fire-glow.active {
+      opacity: 1;
+      animation: glowFlicker 0.15s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowFlicker {
+      0% { opacity: 0.85; }
+      100% { opacity: 1; }
+    }
+
+    /* Heat shimmer effect above fire */
+    .heat-shimmer {
+      position: fixed;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: transparent;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      will-change: opacity;
+    }
+
+    .heat-shimmer.active {
+      opacity: 1;
+      animation: shimmer 0.1s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(1px); }
+    }
+
+    /* Ember sparks */
+    .particle.ember {
+      border-radius: 50%;
+      background: #ffdd44;
+      box-shadow: 0 0 3px #ff8800, 0 0 6px #ff4400;
+    }
+
+    @keyframes emberFloat {
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      30% { transform: translate3d(15px, -80px, 0) scale(0.9); opacity: 0.9; }
+      60% { transform: translate3d(-10px, -180px, 0) scale(0.6); opacity: 0.6; }
+      100% { transform: translate3d(20px, -280px, 0) scale(0.2); opacity: 0; }
+    }
+
+    /* Auto-reset countdown overlay */
+    .countdown-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .countdown-overlay.active {
+      opacity: 1;
+    }
+
+    .countdown-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: var(--neon-yellow);
+      text-shadow: 0 0 20px var(--neon-yellow);
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      animation: countdownPulse 1s ease-in-out infinite;
+    }
+
+    .countdown-number {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 120px;
+      font-weight: 900;
+      color: var(--neon-green);
+      text-shadow:
+        0 0 20px var(--neon-green),
+        0 0 40px var(--neon-green),
+        0 0 80px var(--neon-green);
+      line-height: 1;
+      animation: countdownBounce 1s ease-in-out infinite;
+    }
+
+    .countdown-number.urgent {
+      color: var(--neon-red);
+      text-shadow:
+        0 0 20px var(--neon-red),
+        0 0 40px var(--neon-red),
+        0 0 80px var(--neon-red);
+      animation: countdownUrgent 0.5s ease-in-out infinite;
+    }
+
+    @keyframes countdownPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes countdownBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    @keyframes countdownUrgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .countdown-bar {
+      width: 300px;
+      height: 8px;
+      background: var(--ui-dark);
+      border-radius: 4px;
+      margin-top: 30px;
+      overflow: hidden;
+      border: 2px solid var(--neon-green);
+      box-shadow: 0 0 15px var(--neon-green);
+    }
+
+    .countdown-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow));
+      transition: width 1s linear;
+      box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    .countdown-bar.urgent {
+      border-color: var(--neon-red);
+      box-shadow: 0 0 15px var(--neon-red);
+    }
+
+    .countdown-bar.urgent .countdown-bar-fill {
+      background: linear-gradient(90deg, var(--neon-red), var(--neon-yellow));
     }
 
     /* ============ THRESHOLD EFFECTS ============ */
@@ -757,6 +1179,12 @@
     </div>
     <div class="settings-group">
       <label class="checkbox-label">
+        <input type="checkbox" id="setShowTempo" checked>
+        Show Calculated Tempo
+      </label>
+    </div>
+    <div class="settings-group">
+      <label class="checkbox-label">
         <input type="checkbox" id="setShowTimeSig" checked>
         Show Time Signature
       </label>
@@ -836,11 +1264,15 @@
   </div>
 
   <div class="hud-container" id="hudContainer">
-    <!-- Top Section: BPM & Time Sig -->
+    <!-- Top Section: BPM, Calculated Tempo & Time Sig -->
     <div class="top-section">
       <div class="bpm-display" id="bpmSection">
         <div class="bpm-label">BPM</div>
         <div class="bpm-value" id="bpmValue">120</div>
+      </div>
+      <div class="tempo-display" id="tempoSection">
+        <div class="tempo-label">TEMPO</div>
+        <div class="tempo-value" id="tempoValue">120</div>
       </div>
       <div class="time-sig-display" id="timeSigSection">
         <span id="timeSigValue">4/4</span>
@@ -924,16 +1356,36 @@
   <div class="effect-overlay fire-effect" id="fireOverlay"></div>
   <div class="effect-overlay ice-effect" id="iceOverlay"></div>
   <div class="flash-overlay" id="flashOverlay"></div>
+  <canvas id="fireCanvas"></canvas>
   <div class="particles-container" id="particlesContainer"></div>
+
+  <!-- Auto-reset countdown -->
+  <div class="countdown-overlay" id="countdownOverlay">
+    <div class="countdown-label">RESETTING IN</div>
+    <div class="countdown-number" id="countdownNumber">10</div>
+    <div class="countdown-bar" id="countdownBar">
+      <div class="countdown-bar-fill" id="countdownBarFill"></div>
+    </div>
+  </div>
 
   <script src="main.js"></script>
   <script>
     const STORAGE_KEY = 'hyd_gamehud_settings';
 
+    // Default avatar SVG (properly encoded for use in src attribute)
+    const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#333"/><circle cx="50" cy="40" r="20" fill="#666"/><ellipse cx="50" cy="85" rx="35" ry="25" fill="#666"/></svg>');
+
+    // Handle avatar loading errors
+    function handleAvatarError(img) {
+      img.onerror = null; // Prevent infinite loop
+      img.src = DEFAULT_AVATAR;
+    }
+
     const defaults = {
       transparent: false,
       scanlines: true,
       showBpm: true,
+      showTempo: true,
       showTimeSig: true,
       showGauge: true,
       showBar: true,
@@ -944,7 +1396,8 @@
       particles: true,
       thresholdEffects: true,
       fireThreshold: 1.3,
-      iceThreshold: 0.8
+      iceThreshold: 0.8,
+      botUrl: 'ws://localhost:9030'
     };
 
     function loadSettings() {
@@ -955,6 +1408,7 @@
         transparent: urlParams.has('transparent') ? urlParams.get('transparent') === 'true' : (stored.transparent ?? defaults.transparent),
         scanlines: urlParams.has('scanlines') ? urlParams.get('scanlines') !== 'false' : (stored.scanlines ?? defaults.scanlines),
         showBpm: urlParams.has('bpm') ? urlParams.get('bpm') !== 'false' : (stored.showBpm ?? defaults.showBpm),
+        showTempo: urlParams.has('tempo') ? urlParams.get('tempo') !== 'false' : (stored.showTempo ?? defaults.showTempo),
         showTimeSig: urlParams.has('timesig') ? urlParams.get('timesig') !== 'false' : (stored.showTimeSig ?? defaults.showTimeSig),
         showGauge: urlParams.has('gauge') ? urlParams.get('gauge') !== 'false' : (stored.showGauge ?? defaults.showGauge),
         showBar: urlParams.has('bar') ? urlParams.get('bar') !== 'false' : (stored.showBar ?? defaults.showBar),
@@ -966,6 +1420,7 @@
         thresholdEffects: urlParams.has('threshold') ? urlParams.get('threshold') !== 'false' : (stored.thresholdEffects ?? defaults.thresholdEffects),
         fireThreshold: parseFloat(urlParams.get('fire')) || stored.fireThreshold || defaults.fireThreshold,
         iceThreshold: parseFloat(urlParams.get('ice')) || stored.iceThreshold || defaults.iceThreshold,
+        botUrl: urlParams.get('bot') || stored.botUrl || defaults.botUrl,
         hideSettings: urlParams.get('hideSettings') === 'true'
       };
     }
@@ -977,6 +1432,8 @@
     const settingsPanel = document.getElementById('settingsPanel');
     const settingsToggle = document.getElementById('settingsToggle');
     const bpmSection = document.getElementById('bpmSection');
+    const tempoSection = document.getElementById('tempoSection');
+    const tempoValue = document.getElementById('tempoValue');
     const timeSigSection = document.getElementById('timeSigSection');
     const gaugeSection = document.getElementById('gaugeSection');
     const barSection = document.getElementById('barSection');
@@ -1004,6 +1461,7 @@
       transparent: document.getElementById('setTransparent'),
       scanlines: document.getElementById('setScanlines'),
       showBpm: document.getElementById('setShowBpm'),
+      showTempo: document.getElementById('setShowTempo'),
       showTimeSig: document.getElementById('setShowTimeSig'),
       showGauge: document.getElementById('setShowGauge'),
       showBar: document.getElementById('setShowBar'),
@@ -1022,6 +1480,7 @@
       document.body.classList.toggle('no-scanlines', !settings.scanlines);
 
       bpmSection.style.display = settings.showBpm ? '' : 'none';
+      tempoSection.style.display = settings.showTempo ? '' : 'none';
       timeSigSection.style.display = settings.showTimeSig ? '' : 'none';
       gaugeSection.style.display = settings.showGauge ? '' : 'none';
       barSection.style.display = settings.showBar ? '' : 'none';
@@ -1037,6 +1496,7 @@
       inputs.transparent.checked = settings.transparent;
       inputs.scanlines.checked = settings.scanlines;
       inputs.showBpm.checked = settings.showBpm;
+      inputs.showTempo.checked = settings.showTempo;
       inputs.showTimeSig.checked = settings.showTimeSig;
       inputs.showGauge.checked = settings.showGauge;
       inputs.showBar.checked = settings.showBar;
@@ -1057,6 +1517,7 @@
       settings.transparent = inputs.transparent.checked;
       settings.scanlines = inputs.scanlines.checked;
       settings.showBpm = inputs.showBpm.checked;
+      settings.showTempo = inputs.showTempo.checked;
       settings.showTimeSig = inputs.showTimeSig.checked;
       settings.showGauge = inputs.showGauge.checked;
       settings.showBar = inputs.showBar.checked;
@@ -1076,6 +1537,7 @@
       p.set('transparent', settings.transparent);
       p.set('scanlines', settings.scanlines);
       p.set('bpm', settings.showBpm);
+      p.set('tempo', settings.showTempo);
       p.set('timesig', settings.showTimeSig);
       p.set('gauge', settings.showGauge);
       p.set('bar', settings.showBar);
@@ -1163,26 +1625,42 @@
       flashOverlay.classList.add('flash');
     }
 
-    function spawnParticles(type, count = 20) {
+    // Burst particle pool
+    const burstPool = [];
+    const BURST_POOL_SIZE = 40;
+    for (let i = 0; i < BURST_POOL_SIZE; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.display = 'none';
+      particlesContainer.appendChild(p);
+      burstPool.push(p);
+    }
+
+    function spawnParticles(type, count = 15) {
       if (!settings.particles) return;
 
+      // Use DocumentFragment for batch insert if pool exhausted
+      const isFireType = type === 'fire';
+
       for (let i = 0; i < count; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle ' + type;
+        const p = burstPool.find(p => p.style.display === 'none');
+        if (!p) continue;
 
-        const size = Math.random() * 30 + 10;
-        particle.style.width = size + 'px';
-        particle.style.height = size + 'px';
+        const size = 10 + Math.random() * 20;
+        const dur = 0.4 + Math.random() * 0.4;
 
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = type === 'fire' ? '100%' : '0%';
+        p.className = 'particle ' + type;
+        p.style.cssText = `
+          display:block;
+          width:${size}px;
+          height:${size}px;
+          left:${Math.random() * 100}%;
+          ${isFireType ? 'bottom:0' : 'top:0'};
+          animation:particle${isFireType ? 'Fire' : 'Ice'} ${dur}s ease-out forwards;
+          animation-delay:${Math.random() * 0.3}s;
+        `;
 
-        particle.style.animationDelay = Math.random() * 0.5 + 's';
-        particle.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
-
-        particlesContainer.appendChild(particle);
-
-        setTimeout(() => particle.remove(), 2000);
+        setTimeout(() => { p.style.display = 'none'; }, (dur + 0.3) * 1000);
       }
     }
 
@@ -1211,26 +1689,351 @@
       }
     }
 
-    function addToFeed(oldRate, newRate) {
+    // ============ DOOM FIRE SIMULATION (60FPS Canvas) ============
+    const fireCanvas = document.getElementById('fireCanvas');
+    const fireCtx = fireCanvas.getContext('2d');
+
+    // Fire simulation config
+    const FIRE_WIDTH = 160;  // Low res for performance + retro look
+    const FIRE_HEIGHT = 50;
+    const PIXEL_SIZE = 4;
+
+    // Fire color palette (black -> red -> orange -> yellow -> white)
+    const FIRE_PALETTE = [
+      [0, 0, 0, 0],         // 0: transparent
+      [7, 7, 7, 255],       // 1: near black
+      [31, 7, 7, 255],      // 2: dark red
+      [47, 15, 7, 255],     // 3
+      [71, 15, 7, 255],     // 4
+      [87, 23, 7, 255],     // 5
+      [103, 31, 7, 255],    // 6
+      [119, 31, 7, 255],    // 7
+      [143, 39, 7, 255],    // 8
+      [159, 47, 7, 255],    // 9
+      [175, 63, 7, 255],    // 10
+      [191, 71, 7, 255],    // 11
+      [199, 71, 7, 255],    // 12
+      [223, 79, 7, 255],    // 13
+      [223, 87, 7, 255],    // 14
+      [223, 87, 7, 255],    // 15
+      [215, 95, 7, 255],    // 16
+      [215, 95, 7, 255],    // 17
+      [215, 103, 15, 255],  // 18
+      [207, 111, 15, 255],  // 19
+      [207, 119, 15, 255],  // 20
+      [207, 127, 15, 255],  // 21
+      [207, 135, 23, 255],  // 22
+      [199, 135, 23, 255],  // 23
+      [199, 143, 23, 255],  // 24
+      [199, 151, 31, 255],  // 25
+      [191, 159, 31, 255],  // 26
+      [191, 159, 31, 255],  // 27
+      [191, 167, 39, 255],  // 28
+      [191, 167, 39, 255],  // 29
+      [191, 175, 47, 255],  // 30
+      [183, 175, 47, 255],  // 31
+      [183, 183, 47, 255],  // 32
+      [183, 183, 55, 255],  // 33
+      [207, 207, 111, 255], // 34
+      [223, 223, 159, 255], // 35
+      [239, 239, 199, 255], // 36
+      [255, 255, 255, 255]  // 37: white (hottest)
+    ];
+
+    // Fire state
+    let firePixels = new Uint8Array(FIRE_WIDTH * FIRE_HEIGHT);
+    let fireImageData = null;
+    let fireRAF = null;
+    let fireIntensity = 0;
+    let fireRunning = false;
+
+    // Initialize canvas
+    function initFireCanvas() {
+      fireCanvas.width = FIRE_WIDTH;
+      fireCanvas.height = FIRE_HEIGHT;
+      fireImageData = fireCtx.createImageData(FIRE_WIDTH, FIRE_HEIGHT);
+
+      // Initialize bottom row with max heat
+      for (let x = 0; x < FIRE_WIDTH; x++) {
+        firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + x] = FIRE_PALETTE.length - 1;
+      }
+    }
+    initFireCanvas();
+
+    // Elements to apply fire text effects to
+    const fireTextElements = [
+      playrateValue,
+      tempoValue,
+      document.querySelector('.bpm-value'),
+      document.querySelector('.beat-number')
+    ].filter(Boolean);
+
+    function updateFireTextEffects(intensity) {
+      const intensityClass =
+        intensity >= 0.85 ? 'intensity-max' :
+        intensity >= 0.6 ? 'intensity-high' :
+        intensity >= 0.3 ? 'intensity-medium' :
+        intensity > 0 ? 'intensity-low' : '';
+
+      fireTextElements.forEach(el => {
+        el.classList.remove('intensity-low', 'intensity-medium', 'intensity-high', 'intensity-max');
+        if (intensityClass) {
+          el.classList.add('fire-text-effect', intensityClass);
+        } else {
+          el.classList.remove('fire-text-effect');
+        }
+      });
+    }
+
+    function startAmbientFire(intensity) {
+      fireIntensity = intensity;
+      fireCanvas.classList.add('active');
+
+      // Scale canvas height based on intensity (150px to 400px)
+      const minHeight = 150;
+      const maxHeight = 400;
+      const height = minHeight + intensity * (maxHeight - minHeight);
+      fireCanvas.style.height = height + 'px';
+
+      // Apply text effects
+      updateFireTextEffects(intensity);
+
+      if (!fireRunning && settings.particles) {
+        fireRunning = true;
+        fireRAF = requestAnimationFrame(fireLoop);
+      }
+    }
+
+    function stopAmbientFire() {
+      fireIntensity = 0;
+      fireCanvas.classList.remove('active');
+      fireRunning = false;
+      if (fireRAF) {
+        cancelAnimationFrame(fireRAF);
+        fireRAF = null;
+      }
+      // Cool down the fire
+      firePixels.fill(0);
+
+      // Clear text effects
+      updateFireTextEffects(0);
+    }
+
+    function fireLoop() {
+      if (!fireRunning) return;
+
+      updateFire();
+      renderFire();
+
+      fireRAF = requestAnimationFrame(fireLoop);
+    }
+
+    function updateFire() {
+      const maxColor = FIRE_PALETTE.length - 1;
+
+      // Intensity affects fuel amount, decay rate, and spread
+      // At low intensity (0.1): less fuel, more decay = small flames
+      // At high intensity (1.0): max fuel, less decay = towering inferno
+      const fuelBase = 0.3 + fireIntensity * 0.7;  // 0.3 to 1.0
+      const fuel = Math.floor(maxColor * fuelBase);
+      const decayRate = 3.5 - fireIntensity * 2.0;  // 3.5 to 1.5 (less decay at high intensity)
+      const spreadChance = 0.3 + fireIntensity * 0.4;  // 0.3 to 0.7
+
+      // Update bottom row (fuel source) with randomness
+      for (let x = 0; x < FIRE_WIDTH; x++) {
+        // More consistent fuel at higher intensity
+        const fuelVariation = 1 - fireIntensity * 0.5;  // Less variation at high intensity
+        firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + x] =
+          Math.floor(Math.random() * fuel * fuelVariation) + Math.floor(fuel * (1 - fuelVariation));
+      }
+
+      // Propagate fire upward
+      for (let y = 0; y < FIRE_HEIGHT - 1; y++) {
+        for (let x = 0; x < FIRE_WIDTH; x++) {
+          const srcIdx = (y + 1) * FIRE_WIDTH + x;
+          const pixel = firePixels[srcIdx];
+
+          if (pixel === 0) {
+            firePixels[y * FIRE_WIDTH + x] = 0;
+          } else {
+            // Decay scales with intensity - less decay = taller flames
+            const decay = Math.floor(Math.random() * decayRate);
+
+            // Horizontal drift - more spread at higher intensity
+            const driftRange = Math.random() < spreadChance ? 2 : 1;
+            const drift = Math.floor(Math.random() * (driftRange * 2 + 1)) - driftRange;
+            const dstX = Math.min(FIRE_WIDTH - 1, Math.max(0, x + drift));
+            const dstIdx = y * FIRE_WIDTH + dstX;
+
+            firePixels[dstIdx] = Math.max(0, pixel - decay);
+          }
+        }
+      }
+    }
+
+    function renderFire() {
+      const data = fireImageData.data;
+
+      for (let y = 0; y < FIRE_HEIGHT; y++) {
+        for (let x = 0; x < FIRE_WIDTH; x++) {
+          const fireIdx = y * FIRE_WIDTH + x;
+          const colorIdx = firePixels[fireIdx];
+          const color = FIRE_PALETTE[colorIdx] || FIRE_PALETTE[0];
+
+          const pixelIdx = fireIdx * 4;
+          data[pixelIdx] = color[0];
+          data[pixelIdx + 1] = color[1];
+          data[pixelIdx + 2] = color[2];
+          data[pixelIdx + 3] = color[3];
+        }
+      }
+
+      fireCtx.putImageData(fireImageData, 0, 0);
+    }
+
+    function updateAmbientEffects(playrate) {
+      if (playrate >= settings.fireThreshold) {
+        // Calculate intensity proportional to playrate
+        // Fire threshold (e.g. 1.3x) = intensity 0.1 (small flames)
+        // 2.0x = intensity ~0.4 (medium flames)
+        // 3.0x = intensity ~0.7 (large flames)
+        // 4.0x = intensity 1.0 (maximum inferno)
+        const minRate = settings.fireThreshold;
+        const maxRate = 4.0;  // Max playrate supported
+
+        // Non-linear scaling - fire grows faster at higher speeds
+        const normalized = (playrate - minRate) / (maxRate - minRate);
+        const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
+
+        startAmbientFire(intensity);
+      } else {
+        stopAmbientFire();
+      }
+    }
+
+    // ============ AUTO-RESET COUNTDOWN ============
+    const countdownOverlay = document.getElementById('countdownOverlay');
+    const countdownNumber = document.getElementById('countdownNumber');
+    const countdownBar = document.getElementById('countdownBar');
+    const countdownBarFill = document.getElementById('countdownBarFill');
+
+    let countdownTimer = null;
+    let countdownEndTime = 0;
+    let autoResetEnabled = false; // Will be updated from bot config
+    let autoResetDelay = 60; // Will be updated from bot config
+    let showCountdownAt = 10; // Show countdown when this many seconds remain
+
+    function startCountdown(delaySeconds) {
+      cancelCountdown();
+      autoResetDelay = delaySeconds;
+      countdownEndTime = Date.now() + (delaySeconds * 1000);
+      countdownTimer = setInterval(updateCountdown, 100);
+    }
+
+    function cancelCountdown() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      countdownOverlay.classList.remove('active');
+      countdownNumber.classList.remove('urgent');
+      countdownBar.classList.remove('urgent');
+    }
+
+    function updateCountdown() {
+      const remaining = Math.max(0, countdownEndTime - Date.now()) / 1000;
+
+      if (remaining <= 0) {
+        cancelCountdown();
+        // Reset happened - flash effect
+        triggerFlash();
+        triggerShake();
+        return;
+      }
+
+      // Only show countdown in final seconds
+      if (remaining <= showCountdownAt) {
+        countdownOverlay.classList.add('active');
+
+        const displaySeconds = Math.ceil(remaining);
+        countdownNumber.textContent = displaySeconds;
+
+        // Progress bar
+        const progress = (remaining / showCountdownAt) * 100;
+        countdownBarFill.style.width = progress + '%';
+
+        // Urgent mode in final 3 seconds
+        if (remaining <= 3) {
+          countdownNumber.classList.add('urgent');
+          countdownBar.classList.add('urgent');
+        } else {
+          countdownNumber.classList.remove('urgent');
+          countdownBar.classList.remove('urgent');
+        }
+      } else {
+        countdownOverlay.classList.remove('active');
+      }
+    }
+
+    function addToFeed(oldRate, newRate, username, action, avatarUrl) {
       const diff = newRate - oldRate;
-      if (Math.abs(diff) < 0.01) return;
+      if (Math.abs(diff) < 0.01 && !username) return;
 
       const item = document.createElement('div');
       item.className = 'feed-item ' + (diff > 0 ? 'speed-up' : 'slow-down');
 
       const direction = diff > 0 ? '+' : '';
-      item.innerHTML = `
-        <div class="change-amount">${direction}${(diff * 100).toFixed(0)}%</div>
-        <div>Now: ${newRate.toFixed(2)}x</div>
+      const actionIcons = {
+        speedUp: '🔥',
+        slowDown: '🧊',
+        chaos: '🎲',
+        reset: '✨'
+      };
+      const icon = actionIcons[action] || (diff > 0 ? '🔥' : '🧊');
+      const displayName = username || 'Unknown';
+
+      // Use provided avatar or default
+      const avatar = avatarUrl || DEFAULT_AVATAR;
+
+      // Create elements properly to avoid inline handler issues
+      const avatarImg = document.createElement('img');
+      avatarImg.className = 'user-avatar';
+      avatarImg.src = avatar;
+      avatarImg.alt = displayName;
+      avatarImg.onerror = function() { handleAvatarError(this); };
+
+      const feedContent = document.createElement('div');
+      feedContent.className = 'feed-content';
+      feedContent.innerHTML = `
+        <div class="change-header">
+          <span class="change-amount">${icon} ${direction}${(diff * 100).toFixed(0)}%</span>
+        </div>
+        <div class="change-user">${displayName}</div>
+        <div class="change-rate">${newRate.toFixed(2)}x</div>
         <div class="change-time">${new Date().toLocaleTimeString()}</div>
       `;
 
+      item.appendChild(avatarImg);
+      item.appendChild(feedContent);
       changeFeed.insertBefore(item, changeFeed.firstChild);
 
-      // Keep only last 5
-      while (changeFeed.children.length > 5) {
+      // Keep only last 4
+      while (changeFeed.children.length > 4) {
         changeFeed.removeChild(changeFeed.lastChild);
       }
+
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        if (item.parentNode) {
+          item.classList.add('slide-out');
+          // Remove from DOM after animation completes
+          setTimeout(() => {
+            if (item.parentNode) {
+              item.remove();
+            }
+          }, 500);
+        }
+      }, 4000);
     }
 
     // ============ GAUGE UPDATE ============
@@ -1327,27 +2130,36 @@
 
             // Playrate change detection
             if (Math.abs(newPlayrate - lastPlayrate) > 0.01) {
-              const wasSpeedUp = newPlayrate > lastPlayrate;
+              // Check if this change was already handled by bot WebSocket
+              const recentBotAction = pendingAction && (Date.now() - pendingAction.time < 2000);
+              const matchesBotAction = recentBotAction && Math.abs(newPlayrate - pendingAction.newRate) < 0.02;
 
-              triggerShake();
-              triggerFlash();
+              if (!matchesBotAction) {
+                // This is a manual change or bot isn't connected - show effects without username
+                const wasSpeedUp = newPlayrate > lastPlayrate;
 
-              if (wasSpeedUp) {
-                spawnParticles('fire', 30);
-                playrateValue.classList.remove('slow-down');
-                playrateValue.classList.add('speed-up');
-              } else {
-                spawnParticles('ice', 30);
-                playrateValue.classList.remove('speed-up');
-                playrateValue.classList.add('slow-down');
+                triggerShake();
+                triggerFlash();
+
+                if (wasSpeedUp) {
+                  spawnParticles('fire', 30);
+                  playrateValue.classList.remove('slow-down');
+                  playrateValue.classList.add('speed-up');
+                } else {
+                  spawnParticles('ice', 30);
+                  playrateValue.classList.remove('speed-up');
+                  playrateValue.classList.add('slow-down');
+                }
+
+                setTimeout(() => {
+                  playrateValue.classList.remove('speed-up', 'slow-down');
+                }, 300);
+
+                addToFeed(lastPlayrate, newPlayrate, null, null);
               }
 
-              setTimeout(() => {
-                playrateValue.classList.remove('speed-up', 'slow-down');
-              }, 300);
-
-              addToFeed(lastPlayrate, newPlayrate);
               lastPlayrate = newPlayrate;
+              pendingAction = null; // Clear after handling
             }
 
             currentPlayrate = newPlayrate;
@@ -1378,14 +2190,188 @@
       bpmValue.textContent = Math.round(currentBpm);
       timeSigValue.textContent = currentTimeSig;
 
+      // Calculate and display effective tempo (BPM * playrate)
+      const calculatedTempo = Math.round(currentBpm * currentPlayrate);
+      tempoValue.textContent = calculatedTempo;
+
+      // Color the tempo based on playrate
+      tempoValue.classList.remove('fast', 'slow');
+      if (currentPlayrate >= settings.fireThreshold) {
+        tempoValue.classList.add('fast');
+      } else if (currentPlayrate <= settings.iceThreshold) {
+        tempoValue.classList.add('slow');
+      }
+
       updatePlayrateDisplay(currentPlayrate);
       updateGauge(currentPlayrate);
       updatePlayrateBar(currentPlayrate);
       updateThresholdEffects(currentPlayrate);
+      updateAmbientEffects(currentPlayrate);
     }
 
     // Initial display
     updateDisplay();
+
+    // ============ BOT WEBSOCKET CONNECTION ============
+    let botWs = null;
+    let lastSentBpm = 0;
+    let pendingAction = null; // Store action info to match with playrate change
+
+    function connectToBot() {
+      if (!settings.botUrl) return;
+
+      try {
+        botWs = new WebSocket(settings.botUrl);
+
+        botWs.onopen = () => {
+          console.log('Connected to Playrate Bot');
+          // Send current BPM immediately
+          if (currentBpm > 0) {
+            sendBpmToBot(currentBpm);
+          }
+        };
+
+        botWs.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            console.log('Bot message received:', msg.type, msg);
+
+            // Handle action events from bot (with username!)
+            if (msg.type === 'actionProcessed' && msg.data) {
+              const { action, username, newRate, avatarUrl } = msg.data;
+              const oldRate = lastPlayrate;
+
+              // Trigger effects
+              triggerShake();
+              triggerFlash();
+
+              if (newRate > oldRate) {
+                spawnParticles('fire', 30);
+                playrateValue.classList.add('speed-up');
+              } else {
+                spawnParticles('ice', 30);
+                playrateValue.classList.add('slow-down');
+              }
+
+              setTimeout(() => {
+                playrateValue.classList.remove('speed-up', 'slow-down');
+              }, 300);
+
+              // Add to feed with username and avatar
+              addToFeed(oldRate, newRate, username, action, avatarUrl);
+
+              // Store for REAPER sync
+              pendingAction = { username, action, newRate, time: Date.now() };
+              lastPlayrate = newRate;
+
+              // Restart countdown if auto-reset is enabled and playrate changed from 1.0
+              if (action !== 'reset' && autoResetEnabled && autoResetDelay > 0) {
+                startCountdown(autoResetDelay);
+              } else if (action === 'reset') {
+                cancelCountdown();
+              }
+            }
+
+            // Handle auto-reset event
+            if (msg.type === 'autoReset') {
+              cancelCountdown();
+              triggerFlash();
+              triggerShake();
+              spawnParticles('ice', 50); // Cool down effect
+              addToFeed(lastPlayrate, msg.data?.rate || 1.0, 'AUTO-RESET', 'reset');
+              lastPlayrate = msg.data?.rate || 1.0;
+            }
+
+            // Handle config/init to get auto-reset settings
+            if (msg.type === 'init' && msg.data?.config?.game?.autoReset) {
+              const ar = msg.data.config.game.autoReset;
+              autoResetEnabled = ar.enabled || false;
+              autoResetDelay = ar.delaySeconds || 60;
+            }
+
+            if (msg.type === 'configUpdated' && msg.data?.game?.autoReset) {
+              const ar = msg.data.game.autoReset;
+              autoResetEnabled = ar.enabled || false;
+              autoResetDelay = ar.delaySeconds || 60;
+            }
+
+            // ============ TEST MESSAGE HANDLERS ============
+
+            // Test countdown
+            if (msg.type === 'testCountdown' && msg.data?.seconds) {
+              startCountdown(msg.data.seconds);
+            }
+
+            // Cancel test countdown
+            if (msg.type === 'testCancelCountdown') {
+              cancelCountdown();
+            }
+
+            // Test individual visual effects
+            if (msg.type === 'testVisualEffect' && msg.data?.effect) {
+              switch (msg.data.effect) {
+                case 'shake':
+                  triggerShake();
+                  break;
+                case 'flash':
+                  triggerFlash();
+                  break;
+                case 'fireParticles':
+                  spawnParticles('fire', 40);
+                  break;
+                case 'iceParticles':
+                  spawnParticles('ice', 40);
+                  break;
+                case 'ambientFire':
+                  startAmbientFire(0.7);
+                  break;
+                case 'stopAmbient':
+                  stopAmbientFire();
+                  break;
+              }
+            }
+
+            // Handle playrate changes from bot (fallback)
+            if (msg.type === 'playrateChanged' && msg.data?.rate) {
+              // Update display immediately for responsiveness
+              currentPlayrate = msg.data.rate;
+              updateDisplay();
+            }
+          } catch (e) {}
+        };
+
+        botWs.onclose = () => {
+          console.log('Disconnected from bot, reconnecting in 5s...');
+          setTimeout(connectToBot, 5000);
+        };
+
+        botWs.onerror = (err) => {
+          console.error('Bot WebSocket error:', err);
+        };
+      } catch (e) {
+        // WebSocket connection failed - bot probably not running
+      }
+    }
+
+    function sendBpmToBot(bpm) {
+      if (botWs && botWs.readyState === WebSocket.OPEN && bpm !== lastSentBpm) {
+        botWs.send(JSON.stringify({ type: 'updateBpm', bpm: bpm }));
+        lastSentBpm = bpm;
+      }
+    }
+
+    // Connect to bot on load
+    connectToBot();
+
+    // Send BPM updates when detected from REAPER
+    const originalWwrOnreply = wwr_onreply;
+    wwr_onreply = function(results) {
+      originalWwrOnreply(results);
+      // Send BPM to bot if changed
+      if (currentBpm > 0 && currentBpm !== lastSentBpm) {
+        sendBpmToBot(currentBpm);
+      }
+    };
   </script>
 </body>
 </html>

@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="HYD Live Performance">
-  <category name="Live Performance">
+<index version="1" name="HYD-LivePerformance">
+  <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.3">
-        <changelog><![CDATA[v1.0.3: GameHUD - Gamified playrate display
+      <version name="1.0.4">
+        <changelog><![CDATA[v1.0.4: Enhanced GameHUD fire effects
+- Doom-style fire simulation with 38-color palette
+- Fire intensity proportional to playrate (1.3x-4.0x)
+- Flame height scales with intensity (150px-400px)
+- Text glow effects at high playrates
+- Calculated tempo display (BPM x playrate)
+- Feed cards auto-hide after 4 seconds
+- Fixed avatar error handling
+
+v1.0.3: GameHUD - Gamified playrate display
 - Retro arcade + neon cyberpunk themed HUD
 - Speedometer gauge with animated needle
 - Rhythm game style beat indicator
@@ -57,6 +66,35 @@ v1.0.0: Initial release
 
 Song library indexer for Playlist system.]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/Playlist_IndexSongs.lua</source>
+      </version>
+    </reapack>
+    <reapack name="HYD-PlayrateBot" type="data" author="hydromel-project">
+      <version name="1.0.0">
+        <changelog><![CDATA[v1.0.0: Initial release
+- Twitch channel point rewards for playrate control
+- Streamlabs donation integration
+- StreamElements donation integration
+- Configurable rewards, costs, cooldowns
+- Web config panel at localhost:9030
+- Proportional BPM scaling
+- Auto-reset option
+
+To install: Run Install.cmd (or install.bat), then use desktop shortcut.]]></changelog>
+        <source file="bot/README.md">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/README.md</source>
+        <source file="bot/package.json">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/package.json</source>
+        <source file="bot/index.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/index.js</source>
+        <source file="bot/Install.cmd">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/Install.cmd</source>
+        <source file="bot/Install-PlayrateBot.ps1">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/Install-PlayrateBot.ps1</source>
+        <source file="bot/install.bat">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/install.bat</source>
+        <source file="bot/launch.bat">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/launch.bat</source>
+        <source file="bot/src/config.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/config.js</source>
+        <source file="bot/src/game-engine.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/game-engine.js</source>
+        <source file="bot/src/reaper.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/reaper.js</source>
+        <source file="bot/src/server.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/server.js</source>
+        <source file="bot/src/streamelements.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamelements.js</source>
+        <source file="bot/src/streamlabs.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamlabs.js</source>
+        <source file="bot/src/twitch.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/twitch.js</source>
+        <source file="bot/public/index.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/public/index.html</source>
       </version>
     </reapack>
   </category>
