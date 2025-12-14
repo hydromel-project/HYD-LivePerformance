@@ -2,8 +2,16 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.4">
-        <changelog><![CDATA[v1.0.4: Enhanced GameHUD fire effects
+      <version name="1.0.5">
+        <changelog><![CDATA[v1.0.5: Snowfall/Snowstorm effects for slow speeds
+- Canvas-based snowfall particle system
+- Three snowflake visual types (circles, stars, detailed)
+- Intensity scales particle count (50-500), size, speed
+- Dynamic wind with gusting for natural movement
+- Fog overlay at high intensity for blizzard effect
+- Gradual fade out when warming up
+
+v1.0.4: Enhanced GameHUD fire effects
 - Doom-style fire simulation with 38-color palette
 - Fire intensity proportional to playrate (1.3x-4.0x)
 - Flame height scales with intensity (150px-400px)
