@@ -2,8 +2,14 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.6">
-        <changelog><![CDATA[v1.0.6: Snow accumulation on text
+      <version name="1.0.7">
+        <changelog><![CDATA[v1.0.7: Frost contour effect on text
+- Icy outline/contour around text using text-stroke
+- Multi-directional shadow creates frosted border effect
+- Contour thickness scales with cold intensity (1px to 2.5px)
+- Lighter blue-white on top, deeper blue on bottom
+
+v1.0.6: Snow accumulation on text
 - Snow piles build up on top of text elements (playrate, BPM, tempo)
 - Accumulation rate proportional to snowstorm intensity
 - Gradual melting when warming up
