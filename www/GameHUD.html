@@ -948,39 +948,47 @@
     }
 
     .ice-text-effect.intensity-low {
+      color: #e0f4ff !important;
       text-shadow:
-        0 0 10px currentColor,
-        0 0 20px rgba(136, 200, 255, 0.3);
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px rgba(136, 200, 255, 0.5),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
     }
 
     .ice-text-effect.intensity-medium {
+      color: #ffffff !important;
       text-shadow:
-        0 0 15px currentColor,
-        0 0 30px rgba(100, 180, 255, 0.5),
-        0 0 50px rgba(50, 150, 255, 0.3);
+        0 0 5px #fff,
+        0 0 15px #b8e8ff,
+        0 0 30px rgba(100, 180, 255, 0.6),
+        0 0 50px rgba(50, 150, 255, 0.4),
+        3px 3px 6px rgba(0, 0, 0, 0.9);
       animation: iceTextPulse 0.8s ease-in-out infinite alternate;
     }
 
     .ice-text-effect.intensity-high {
-      color: #88ddff !important;
+      color: #ffffff !important;
       text-shadow:
-        0 0 10px #66ccff,
-        0 0 20px #44aaff,
-        0 0 40px #2288ff,
-        0 0 60px #0066ff,
-        0 0 80px rgba(0, 100, 255, 0.5);
+        0 0 8px #fff,
+        0 0 15px #b8e8ff,
+        0 0 25px #66ccff,
+        0 0 40px #44aaff,
+        0 0 60px #2288ff,
+        4px 4px 8px rgba(0, 0, 0, 1);
       animation: iceTextIntense 0.2s ease-in-out infinite alternate;
     }
 
     .ice-text-effect.intensity-max {
       color: #ffffff !important;
       text-shadow:
-        0 0 10px #eeffff,
-        0 0 20px #bbffff,
-        0 0 40px #88ddff,
-        0 0 60px #44aaff,
-        0 0 100px #0088ff,
-        0 0 150px rgba(0, 136, 255, 0.8);
+        0 0 10px #fff,
+        0 0 20px #eeffff,
+        0 0 35px #bbffff,
+        0 0 50px #88ddff,
+        0 0 80px #44aaff,
+        0 0 120px #0088ff,
+        5px 5px 10px rgba(0, 0, 0, 1);
       animation: iceTextMax 0.15s ease-in-out infinite alternate;
     }
 
@@ -2201,6 +2209,126 @@
     }
     initSnowCanvas();
 
+    // ============ SNOW ACCUMULATION ON TEXT ============
+    // Track snow piles on text elements
+    const snowPiles = new Map();  // elementId -> { particles: [], maxHeight: number }
+    const textElementIds = ['playrateValue', 'bpmValue', 'tempoValue', 'timeSigValue'];
+    let snowAccumulationRate = 0;
+    let maxSnowHeight = 25;  // Maximum snow pile height in pixels
+
+    class SnowPileParticle {
+      constructor(x, baseY, size) {
+        this.x = x;
+        this.y = baseY;
+        this.size = size * (0.8 + Math.random() * 0.4);  // Vary size slightly
+        this.opacity = 0.85 + Math.random() * 0.15;
+        this.settled = false;
+        this.settleSpeed = 0.5 + Math.random() * 0.5;
+        this.targetY = baseY;
+      }
+
+      update(deltaTime, pileHeight) {
+        // Settle down to rest on top of existing pile
+        this.targetY = this.y - pileHeight;
+        if (!this.settled) {
+          const dy = (this.targetY - this.y) * 0.1;
+          this.y += dy;
+          if (Math.abs(this.y - this.targetY) < 0.5) {
+            this.settled = true;
+          }
+        }
+      }
+
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    function getTextElementBounds() {
+      const bounds = [];
+      for (const id of textElementIds) {
+        const el = document.getElementById(id);
+        if (el && el.offsetParent !== null) {  // Check if visible
+          const rect = el.getBoundingClientRect();
+          bounds.push({
+            id: id,
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height
+          });
+        }
+      }
+      return bounds;
+    }
+
+    function accumulateSnowOnText(deltaTime) {
+      if (iceIntensity <= 0 || snowFading) return;
+
+      const bounds = getTextElementBounds();
+      const accumRate = iceIntensity * 2 * deltaTime;  // More snow at higher intensity
+
+      for (const bound of bounds) {
+        if (!snowPiles.has(bound.id)) {
+          snowPiles.set(bound.id, { particles: [], height: 0 });
+        }
+
+        const pile = snowPiles.get(bound.id);
+
+        // Add new snow particles based on intensity and time
+        if (Math.random() < accumRate) {
+          // Random x position along the top of the text
+          const x = bound.left + Math.random() * bound.width;
+          const y = bound.top - 2;  // Just above the text
+          const size = 2 + Math.random() * 3;
+
+          // Only add if pile isn't too high
+          if (pile.height < maxSnowHeight) {
+            pile.particles.push(new SnowPileParticle(x, y, size));
+            pile.height = Math.min(maxSnowHeight, pile.height + size * 0.3);
+          }
+        }
+
+        // Update existing particles
+        for (const particle of pile.particles) {
+          particle.update(deltaTime, pile.height);
+        }
+      }
+    }
+
+    function renderSnowPiles() {
+      for (const [id, pile] of snowPiles) {
+        for (const particle of pile.particles) {
+          particle.draw(iceCtx);
+        }
+      }
+    }
+
+    function clearSnowPiles() {
+      for (const [id, pile] of snowPiles) {
+        pile.particles = [];
+        pile.height = 0;
+      }
+    }
+
+    function meltSnowPiles(deltaTime) {
+      for (const [id, pile] of snowPiles) {
+        if (pile.particles.length > 0) {
+          // Remove particles gradually (melting)
+          const meltRate = Math.ceil(pile.particles.length * 0.05 * deltaTime * 60);
+          for (let i = 0; i < meltRate && pile.particles.length > 0; i++) {
+            pile.particles.pop();
+          }
+          pile.height = Math.max(0, pile.height - deltaTime * 10);
+        }
+      }
+    }
+
     // Ice text effects - similar structure to fire but for cold
     function updateIceTextEffects(intensity) {
       const intensityClass =
@@ -2325,6 +2453,9 @@
       // Clear all snowflakes
       snowflakes.length = 0;
 
+      // Clear snow piles on text
+      clearSnowPiles();
+
       // Clear canvas
       iceCtx.clearRect(0, 0, iceCanvas.width, iceCanvas.height);
 
@@ -2352,7 +2483,19 @@
           snowflakes.pop();
         }
 
-        if (fadeProgress >= 1 || snowflakes.length === 0) {
+        // Melt snow piles gradually
+        meltSnowPiles(deltaTime);
+
+        // Check if everything is cleared
+        let allPilesMelted = true;
+        for (const [id, pile] of snowPiles) {
+          if (pile.particles.length > 0) {
+            allPilesMelted = false;
+            break;
+          }
+        }
+
+        if (fadeProgress >= 1 && snowflakes.length === 0 && allPilesMelted) {
           forceStopAmbientIce();
           return;
         }
@@ -2373,6 +2516,9 @@
       for (const flake of snowflakes) {
         flake.update(iceCanvas.width, iceCanvas.height, iceIntensity, deltaTime, wind);
       }
+
+      // Accumulate snow on text elements
+      accumulateSnowOnText(deltaTime);
     }
 
     function renderSnow() {
@@ -2390,6 +2536,9 @@
       for (const flake of snowflakes) {
         flake.draw(iceCtx);
       }
+
+      // Draw snow piles on text
+      renderSnowPiles();
     }
 
     function updateAmbientEffects(playrate) {
