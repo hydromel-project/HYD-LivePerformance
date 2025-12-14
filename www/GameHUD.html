@@ -925,19 +925,17 @@
 
     /* ============ ICE/FROST EFFECTS ============ */
 
-    /* Canvas ice simulation */
+    /* Canvas snow simulation */
     #iceCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 150px;
+      height: 100%;
       pointer-events: none;
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.3s, height 0.5s ease-out;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
+      transition: opacity 0.5s;
     }
 
     #iceCanvas.active {
@@ -2076,67 +2074,132 @@
       fireCtx.putImageData(fireImageData, 0, 0);
     }
 
-    // ============ ICE/FROST SIMULATION (60FPS Canvas) ============
+    // ============ SNOWFALL/SNOWSTORM SIMULATION (60FPS Canvas) ============
     const iceCanvas = document.getElementById('iceCanvas');
     const iceCtx = iceCanvas.getContext('2d');
     const iceGlow = document.getElementById('iceGlow');
     const iceCrackOverlay = document.getElementById('iceCrackOverlay');
     const iceCrackSound = document.getElementById('iceCrackSound');
 
-    // Ice simulation config
-    const ICE_WIDTH = 160;
-    const ICE_HEIGHT = 50;
+    // Snowfall configuration
+    const MAX_SNOWFLAKES = 500;  // Maximum particles for heavy snowstorm
+    const snowflakes = [];
 
-    // Ice color palette (transparent -> dark blue -> cyan -> white)
-    const ICE_PALETTE = [
-      [0, 0, 0, 0],           // 0: transparent
-      [10, 20, 40, 255],      // 1: very dark blue
-      [20, 40, 70, 255],      // 2: dark blue
-      [30, 60, 100, 255],     // 3
-      [40, 80, 130, 255],     // 4
-      [50, 100, 160, 255],    // 5
-      [60, 120, 180, 255],    // 6
-      [70, 140, 200, 255],    // 7
-      [80, 155, 210, 255],    // 8
-      [90, 170, 220, 255],    // 9
-      [100, 180, 230, 255],   // 10
-      [110, 190, 235, 255],   // 11
-      [120, 200, 240, 255],   // 12: cyan
-      [130, 210, 245, 255],   // 13
-      [140, 215, 248, 255],   // 14
-      [150, 220, 250, 255],   // 15
-      [160, 225, 252, 255],   // 16
-      [170, 230, 253, 255],   // 17
-      [180, 235, 254, 255],   // 18
-      [190, 240, 255, 255],   // 19: light cyan
-      [200, 242, 255, 255],   // 20
-      [210, 244, 255, 255],   // 21
-      [220, 246, 255, 255],   // 22
-      [230, 248, 255, 255],   // 23
-      [235, 250, 255, 255],   // 24
-      [240, 252, 255, 255],   // 25
-      [245, 253, 255, 255],   // 26
-      [250, 254, 255, 255],   // 27
-      [255, 255, 255, 255]    // 28: white (coldest/brightest)
-    ];
-
-    // Ice state
-    let icePixels = new Uint8Array(ICE_WIDTH * ICE_HEIGHT);
-    let iceImageData = null;
+    // Snow state
     let iceRAF = null;
     let iceIntensity = 0;
     let iceRunning = false;
-    let iceMelting = false;  // Gradual melt transition
-    let meltProgress = 0;    // 0 to 1, how melted the ice is
+    let snowFading = false;  // Gradual fade out transition
+    let fadeProgress = 0;
+    let windOffset = 0;      // For wind animation
     let lastIceCrackTime = 0;
 
-    // Initialize ice canvas
-    function initIceCanvas() {
-      iceCanvas.width = ICE_WIDTH;
-      iceCanvas.height = ICE_HEIGHT;
-      iceImageData = iceCtx.createImageData(ICE_WIDTH, ICE_HEIGHT);
+    // Snowflake class
+    class Snowflake {
+      constructor(canvasWidth, canvasHeight, intensity) {
+        this.reset(canvasWidth, canvasHeight, intensity, true);
+      }
+
+      reset(canvasWidth, canvasHeight, intensity, randomY = false) {
+        this.x = Math.random() * canvasWidth;
+        this.y = randomY ? Math.random() * canvasHeight : -10;
+        this.size = 1 + Math.random() * 4 + intensity * 2;  // 1-7px based on intensity
+        this.speed = 1 + Math.random() * 2 + intensity * 3;  // Fall speed
+        this.wobbleSpeed = 0.5 + Math.random() * 1.5;
+        this.wobbleAmount = 10 + Math.random() * 20 + intensity * 30;  // Side-to-side
+        this.wobbleOffset = Math.random() * Math.PI * 2;
+        this.opacity = 0.4 + Math.random() * 0.6;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+
+        // Snowflake type: 0 = circle, 1 = star, 2 = detailed
+        this.type = this.size > 4 ? (Math.random() < 0.3 ? 2 : 1) : 0;
+      }
+
+      update(canvasWidth, canvasHeight, intensity, deltaTime, wind) {
+        // Fall down
+        this.y += this.speed * deltaTime * 60;
+
+        // Wobble side to side + wind
+        const wobble = Math.sin(this.y * 0.01 * this.wobbleSpeed + this.wobbleOffset) * this.wobbleAmount * 0.1;
+        this.x += wobble + wind * deltaTime * 60;
+
+        // Rotate
+        this.rotation += this.rotationSpeed;
+
+        // Reset if off screen
+        if (this.y > canvasHeight + 10 || this.x < -50 || this.x > canvasWidth + 50) {
+          this.reset(canvasWidth, canvasHeight, intensity);
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = this.opacity;
+
+        if (this.type === 0) {
+          // Simple circle snowflake
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+          ctx.fillStyle = 'white';
+          ctx.fill();
+        } else if (this.type === 1) {
+          // Star snowflake
+          this.drawStar(ctx, this.size / 2);
+        } else {
+          // Detailed snowflake
+          this.drawDetailedSnowflake(ctx, this.size / 2);
+        }
+
+        ctx.restore();
+      }
+
+      drawStar(ctx, radius) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        ctx.stroke();
+      }
+
+      drawDetailedSnowflake(ctx, radius) {
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.save();
+          ctx.rotate(angle);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(radius, 0);
+          // Branch
+          ctx.moveTo(radius * 0.5, 0);
+          ctx.lineTo(radius * 0.7, -radius * 0.3);
+          ctx.moveTo(radius * 0.5, 0);
+          ctx.lineTo(radius * 0.7, radius * 0.3);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
     }
-    initIceCanvas();
+
+    // Initialize snow canvas
+    function initSnowCanvas() {
+      resizeSnowCanvas();
+      window.addEventListener('resize', resizeSnowCanvas);
+    }
+
+    function resizeSnowCanvas() {
+      iceCanvas.width = window.innerWidth;
+      iceCanvas.height = window.innerHeight;
+    }
+    initSnowCanvas();
 
     // Ice text effects - similar structure to fire but for cold
     function updateIceTextEffects(intensity) {
@@ -2164,37 +2227,52 @@
       });
     }
 
-    // Play ice crack sound
-    function playIceCrackSound() {
+    // Play wind/blizzard sound
+    function playWindSound() {
       const now = Date.now();
-      // Limit sound frequency
-      if (now - lastIceCrackTime < 2000) return;
+      if (now - lastIceCrackTime < 3000) return;
       lastIceCrackTime = now;
 
-      // Try to play sound if it has a valid source
       if (iceCrackSound && iceCrackSound.src && !iceCrackSound.src.includes('AAAA')) {
         iceCrackSound.currentTime = 0;
-        iceCrackSound.volume = 0.3 * iceIntensity;
-        iceCrackSound.play().catch(() => {}); // Ignore autoplay errors
+        iceCrackSound.volume = 0.2 * iceIntensity;
+        iceCrackSound.play().catch(() => {});
       }
     }
 
+    let lastSnowTime = performance.now();
+
     function startAmbientIce(intensity) {
+      const prevIntensity = iceIntensity;
       iceIntensity = intensity;
-      iceMelting = false;  // Cancel any melting in progress
-      meltProgress = 0;
+      snowFading = false;
+      fadeProgress = 0;
+
       iceCanvas.classList.add('active');
+      iceCanvas.style.opacity = '';
       iceGlow.classList.add('active');
 
-      // Scale canvas height based on intensity (150px to 350px)
-      const minHeight = 150;
-      const maxHeight = 350;
-      const height = minHeight + intensity * (maxHeight - minHeight);
-      iceCanvas.style.height = height + 'px';
+      // Target number of snowflakes based on intensity
+      // Light snow: 50, Heavy blizzard: 500
+      const targetCount = Math.floor(50 + intensity * 450);
 
-      // Show crack overlay at high intensity
-      if (intensity >= 0.6) {
+      // Add snowflakes if needed
+      while (snowflakes.length < targetCount) {
+        snowflakes.push(new Snowflake(iceCanvas.width, iceCanvas.height, intensity));
+      }
+
+      // Remove excess snowflakes
+      while (snowflakes.length > targetCount) {
+        snowflakes.pop();
+      }
+
+      // Show blizzard overlay at high intensity
+      if (intensity >= 0.7) {
         iceCrackOverlay.classList.add('active');
+        iceCrackOverlay.style.background = `
+          linear-gradient(to bottom, rgba(200, 230, 255, ${0.1 + intensity * 0.15}) 0%, transparent 30%),
+          linear-gradient(to top, rgba(200, 230, 255, ${0.05 + intensity * 0.1}) 0%, transparent 20%)
+        `;
       } else {
         iceCrackOverlay.classList.remove('active');
       }
@@ -2202,282 +2280,115 @@
       // Apply ice text effects
       updateIceTextEffects(intensity);
 
-      // Occasional crack sound at high intensity
-      if (intensity >= 0.7 && Math.random() < 0.01) {
-        playIceCrackSound();
+      // Occasional wind sound at high intensity
+      if (intensity >= 0.8 && Math.random() < 0.005) {
+        playWindSound();
       }
 
       if (!iceRunning && settings.particles) {
         iceRunning = true;
-        iceRAF = requestAnimationFrame(iceLoop);
+        lastSnowTime = performance.now();
+        iceRAF = requestAnimationFrame(snowLoop);
       }
     }
 
     function stopAmbientIce() {
-      // If there's ice to melt, start melting instead of stopping immediately
-      if (iceRunning && !iceMelting && hasVisibleIce()) {
-        iceMelting = true;
-        meltProgress = 0;
+      // Start fade out instead of stopping immediately
+      if (iceRunning && !snowFading && snowflakes.length > 0) {
+        snowFading = true;
+        fadeProgress = 0;
         iceGlow.classList.remove('active');
         iceCrackOverlay.classList.remove('active');
         clearTextEffects();
-        // Keep iceRunning true so the melt animation continues
         return;
       }
 
-      // Force stop (no ice to melt, or already melted)
       forceStopAmbientIce();
     }
 
     function forceStopAmbientIce() {
       iceIntensity = 0;
-      iceMelting = false;
-      meltProgress = 0;
+      snowFading = false;
+      fadeProgress = 0;
 
-      // Reset canvas opacity (in case it was fading during melt)
       iceCanvas.style.opacity = '';
-
       iceCanvas.classList.remove('active');
       iceGlow.classList.remove('active');
       iceCrackOverlay.classList.remove('active');
       iceRunning = false;
+
       if (iceRAF) {
         cancelAnimationFrame(iceRAF);
         iceRAF = null;
       }
 
-      // Clear the ice pixels
-      icePixels.fill(0);
+      // Clear all snowflakes
+      snowflakes.length = 0;
 
-      // Render one last frame to clear the canvas visually
-      renderIce();
-
-      // Also clear the canvas context directly to be sure
-      iceCtx.clearRect(0, 0, ICE_WIDTH, ICE_HEIGHT);
+      // Clear canvas
+      iceCtx.clearRect(0, 0, iceCanvas.width, iceCanvas.height);
 
       clearTextEffects();
     }
 
-    // Check if there's any visible ice on the canvas
-    function hasVisibleIce() {
-      for (let i = 0; i < icePixels.length; i++) {
-        if (icePixels[i] > 3) return true;
-      }
-      return false;
-    }
-
-    function iceLoop() {
+    function snowLoop() {
       if (!iceRunning) return;
 
-      updateIce();
-      renderIce();
+      const now = performance.now();
+      const deltaTime = Math.min((now - lastSnowTime) / 1000, 0.1);  // Cap at 100ms
+      lastSnowTime = now;
 
-      // Check if melting is complete
-      if (iceMelting) {
-        meltProgress += 0.02;  // ~3 seconds to fully melt at 60fps
+      updateSnow(deltaTime);
+      renderSnow();
 
-        // Gradually fade out the canvas
-        const fadeOpacity = Math.max(0, 1 - meltProgress * 0.7);
-        iceCanvas.style.opacity = fadeOpacity;
+      // Handle fading
+      if (snowFading) {
+        fadeProgress += deltaTime * 0.5;  // ~2 seconds to fade
+        iceCanvas.style.opacity = Math.max(0, 1 - fadeProgress);
 
-        // Check if melt is complete (time elapsed OR no visible ice OR fully faded)
-        if (meltProgress >= 1 || fadeOpacity <= 0.05 || !hasVisibleIce()) {
-          // Melting complete - force full cleanup
+        // Gradually remove snowflakes
+        const removeCount = Math.ceil(snowflakes.length * deltaTime * 0.5);
+        for (let i = 0; i < removeCount && snowflakes.length > 0; i++) {
+          snowflakes.pop();
+        }
+
+        if (fadeProgress >= 1 || snowflakes.length === 0) {
           forceStopAmbientIce();
           return;
         }
       }
 
-      iceRAF = requestAnimationFrame(iceLoop);
+      iceRAF = requestAnimationFrame(snowLoop);
     }
 
-    function updateIce() {
-      const maxColor = ICE_PALETTE.length - 1;
+    function updateSnow(deltaTime) {
+      // Calculate wind based on intensity (stronger wind = more horizontal movement)
+      // Oscillating wind for natural effect
+      windOffset += deltaTime * (1 + iceIntensity * 2);
+      const baseWind = Math.sin(windOffset * 0.5) * iceIntensity * 2;  // -2 to +2
+      const gustWind = Math.sin(windOffset * 2.3) * iceIntensity * 1.5;  // Gusts
+      const wind = baseWind + gustWind;
 
-      // When melting, use different parameters
-      if (iceMelting) {
-        // MELTING MODE: No new frost, faster decay, dripping effect
-
-        // Don't generate new frost at top - clear top row gradually
-        for (let x = 0; x < ICE_WIDTH; x++) {
-          if (icePixels[x] > 0) {
-            icePixels[x] = Math.max(0, icePixels[x] - Math.floor(Math.random() * 3) - 1);
-          }
-        }
-
-        // Melt/drip downward with faster decay
-        const meltDecay = 4 + meltProgress * 4;  // 4 to 8 - gets faster as it warms
-
-        for (let y = ICE_HEIGHT - 1; y > 0; y--) {
-          for (let x = 0; x < ICE_WIDTH; x++) {
-            const srcIdx = (y - 1) * ICE_WIDTH + x;
-            const pixel = icePixels[srcIdx];
-            const dstIdx = y * ICE_WIDTH + x;
-
-            if (pixel > 0) {
-              // Faster decay during melting
-              const decay = Math.floor(Math.random() * meltDecay);
-
-              // Drip effect: water runs straight down, occasionally spreads
-              let drift = 0;
-              if (Math.random() < 0.15) {  // 15% chance to spread sideways (water pooling)
-                drift = Math.floor(Math.random() * 3) - 1;
-              }
-              const dstX = Math.min(ICE_WIDTH - 1, Math.max(0, x + drift));
-              const finalDstIdx = y * ICE_WIDTH + dstX;
-
-              // Water drips down - transfer more value downward
-              const newValue = Math.max(0, pixel - decay);
-              if (newValue > icePixels[finalDstIdx]) {
-                icePixels[finalDstIdx] = newValue;
-              }
-            }
-
-            // Current pixel also decays (melts in place)
-            if (icePixels[dstIdx] > 0) {
-              icePixels[dstIdx] = Math.max(0, icePixels[dstIdx] - Math.floor(Math.random() * 2));
-            }
-          }
-        }
-
-        // Spawn water droplet particles during melt
-        if (Math.random() < 0.1 && settings.particles) {
-          spawnWaterDroplet();
-        }
-
-        return;
-      }
-
-      // NORMAL FREEZING MODE
-      // Intensity affects frost amount, spread rate
-      const frostBase = 0.3 + iceIntensity * 0.7;
-      const frost = Math.floor(maxColor * frostBase);
-      const spreadRate = 2.5 + iceIntensity * 1.5;  // 2.5 to 4.0
-      const crystallizeChance = 0.2 + iceIntensity * 0.3;  // 0.2 to 0.5
-
-      // Update TOP row (frost source) - ice grows from top
-      for (let x = 0; x < ICE_WIDTH; x++) {
-        // Crystalline pattern - some columns freeze more than others
-        const columnFactor = (Math.sin(x * 0.3) + 1) * 0.3 + 0.4;  // 0.4 to 1.0
-        const frostAmount = Math.floor(frost * columnFactor);
-        icePixels[x] = Math.floor(Math.random() * frostAmount * 0.4) + Math.floor(frostAmount * 0.6);
-      }
-
-      // Propagate ice DOWNWARD (opposite of fire)
-      for (let y = ICE_HEIGHT - 1; y > 0; y--) {
-        for (let x = 0; x < ICE_WIDTH; x++) {
-          const srcIdx = (y - 1) * ICE_WIDTH + x;
-          const pixel = icePixels[srcIdx];
-
-          if (pixel === 0) {
-            // Small chance to spontaneously crystallize if neighbor has ice
-            const leftIdx = srcIdx - 1;
-            const rightIdx = srcIdx + 1;
-            const hasNeighbor = (x > 0 && icePixels[leftIdx] > 5) || (x < ICE_WIDTH - 1 && icePixels[rightIdx] > 5);
-
-            if (hasNeighbor && Math.random() < crystallizeChance * 0.1) {
-              icePixels[y * ICE_WIDTH + x] = Math.floor(Math.random() * 10) + 5;
-            } else {
-              icePixels[y * ICE_WIDTH + x] = 0;
-            }
-          } else {
-            // Ice decay/melt (slower than fire)
-            const decay = Math.floor(Math.random() * spreadRate);
-
-            // Branching crystalline spread
-            let drift = 0;
-            if (Math.random() < crystallizeChance) {
-              drift = Math.floor(Math.random() * 3) - 1;  // -1, 0, or 1
-            }
-            const dstX = Math.min(ICE_WIDTH - 1, Math.max(0, x + drift));
-            const dstIdx = y * ICE_WIDTH + dstX;
-
-            // Ice accumulates rather than just replacing
-            const newValue = Math.max(0, pixel - decay);
-            icePixels[dstIdx] = Math.max(icePixels[dstIdx], newValue);
-          }
-        }
-      }
-
-      // Add occasional sparkle/glint effect
-      if (Math.random() < iceIntensity * 0.02) {
-        const sparkleX = Math.floor(Math.random() * ICE_WIDTH);
-        const sparkleY = Math.floor(Math.random() * ICE_HEIGHT * 0.7);
-        if (icePixels[sparkleY * ICE_WIDTH + sparkleX] > 10) {
-          icePixels[sparkleY * ICE_WIDTH + sparkleX] = maxColor;  // Bright sparkle
-        }
+      // Update all snowflakes
+      for (const flake of snowflakes) {
+        flake.update(iceCanvas.width, iceCanvas.height, iceIntensity, deltaTime, wind);
       }
     }
 
-    // Spawn a water droplet particle (for melting effect)
-    function spawnWaterDroplet() {
-      const p = document.createElement('div');
-      p.className = 'water-droplet';
+    function renderSnow() {
+      // Clear canvas
+      iceCtx.clearRect(0, 0, iceCanvas.width, iceCanvas.height);
 
-      const startX = Math.random() * 100;
-      const duration = 1 + Math.random() * 1.5;
-
-      p.style.cssText = `
-        position: absolute;
-        width: 3px;
-        height: 6px;
-        background: linear-gradient(to bottom, rgba(150, 200, 255, 0.8), rgba(100, 180, 255, 0.4));
-        border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
-        left: ${startX}%;
-        top: 0;
-        pointer-events: none;
-        animation: waterDrip ${duration}s ease-in forwards;
-      `;
-
-      particlesContainer.appendChild(p);
-      setTimeout(() => p.remove(), duration * 1000);
-    }
-
-    function renderIce() {
-      const data = iceImageData.data;
-
-      for (let y = 0; y < ICE_HEIGHT; y++) {
-        for (let x = 0; x < ICE_WIDTH; x++) {
-          const iceIdx = y * ICE_WIDTH + x;
-          const colorIdx = Math.min(icePixels[iceIdx], ICE_PALETTE.length - 1);
-          const color = ICE_PALETTE[colorIdx] || ICE_PALETTE[0];
-
-          const pixelIdx = iceIdx * 4;
-          data[pixelIdx] = color[0];
-          data[pixelIdx + 1] = color[1];
-          data[pixelIdx + 2] = color[2];
-          data[pixelIdx + 3] = color[3];
-        }
+      // Optional: Add slight blur/fog at high intensity
+      if (iceIntensity >= 0.6) {
+        const fogOpacity = (iceIntensity - 0.6) * 0.15;  // 0 to 0.06
+        iceCtx.fillStyle = `rgba(200, 220, 255, ${fogOpacity})`;
+        iceCtx.fillRect(0, 0, iceCanvas.width, iceCanvas.height);
       }
 
-      iceCtx.putImageData(iceImageData, 0, 0);
-    }
-
-    // Spawn frost particles (falling snowflakes/ice crystals)
-    function spawnFrostParticles(count = 10) {
-      if (!settings.particles) return;
-
-      for (let i = 0; i < count; i++) {
-        const p = document.createElement('div');
-        p.className = 'frost-particle';
-
-        const size = 4 + Math.random() * 8;
-        const duration = 2 + Math.random() * 2;
-        const startX = Math.random() * 100;
-
-        p.style.cssText = `
-          width: ${size}px;
-          height: ${size}px;
-          left: ${startX}%;
-          top: 0;
-          animation-duration: ${duration}s;
-          animation-delay: ${Math.random() * 0.5}s;
-        `;
-
-        particlesContainer.appendChild(p);
-
-        // Remove after animation
-        setTimeout(() => p.remove(), (duration + 0.5) * 1000);
+      // Draw all snowflakes
+      for (const flake of snowflakes) {
+        flake.draw(iceCtx);
       }
     }
 
@@ -2518,11 +2429,6 @@
         const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
 
         startAmbientIce(intensity);
-
-        // Spawn frost particles occasionally at high intensity
-        if (intensity >= 0.5 && Math.random() < 0.02) {
-          spawnFrostParticles(Math.floor(intensity * 5));
-        }
       }
       // Normal zone: no effects
       else {
