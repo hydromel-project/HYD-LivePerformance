@@ -178,6 +178,33 @@ Open http://localhost:9020/GameHUD.html
 
 ---
 
+## Twitch Integration (Playrate Bot)
+
+Let viewers control playrate using channel points and Streamlabs donations!
+
+### Setup
+
+1. Install [Node.js](https://nodejs.org) (LTS version)
+2. Open terminal in the `bot` folder
+3. Run `npm install`
+4. Run `npm start`
+5. Open http://localhost:9030 to configure
+
+### Features
+
+- **Channel Point Rewards**: Automatically created when game mode activates
+  - 🔥 Speed Up
+  - 🧊 Slow Down
+  - 🎲 CHAOS (random)
+  - ✨ Reset
+- **Streamlabs Donations**: Trigger actions based on tip amount
+- **Chat Announcements**: Configurable messages when playrate changes
+- **Configurable Everything**: Costs, increments, cooldowns, bounds
+
+See `bot/README.md` for detailed setup instructions.
+
+---
+
 ## Playlist (For Multiple Songs)
 
 If you have many songs saved as separate REAPER projects:

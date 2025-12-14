@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HYD Playrate Bot - Config Panel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --bg-input: #21262d;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-dim: #8b949e;
+      --accent: #00ff88;
+      --accent-dim: rgba(0, 255, 136, 0.1);
+      --danger: #f85149;
+      --warning: #d29922;
+      --info: #58a6ff;
+      --purple: #a855f7;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    .status-badges {
+      display: flex;
+      gap: 10px;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .badge.connected .dot { background: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 .icon {
+      font-size: 1.2rem;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-group input[type="color"] {
+      height: 40px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-row.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-input);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-group span {
+      font-size: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-dark);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-dim);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-purple {
+      background: var(--purple);
+      color: white;
+    }
+
+    .btn-info {
+      background: var(--info);
+      color: white;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    /* Game Control Panel */
+    .game-control {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .game-toggle {
+      position: relative;
+      width: 200px;
+      height: 60px;
+      margin: 0 auto 20px;
+    }
+
+    .game-toggle input {
+      display: none;
+    }
+
+    .game-toggle label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .game-toggle input:checked + label {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .game-status {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* Playrate Display */
+    .playrate-display {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .playrate-value {
+      font-size: 72px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .playrate-slider {
+      width: 100%;
+      margin: 20px 0;
+      -webkit-appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--bg-input);
+    }
+
+    .playrate-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    .playrate-bounds {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .quick-action {
+      padding: 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .quick-action.speed-up {
+      background: linear-gradient(135deg, #ff4400, #ff8800);
+      color: white;
+    }
+
+    .quick-action.slow-down {
+      background: linear-gradient(135deg, #0088ff, #00ddff);
+      color: white;
+    }
+
+    .quick-action.chaos {
+      background: linear-gradient(135deg, #ff00ff, #8800ff);
+      color: white;
+    }
+
+    .quick-action.reset {
+      background: linear-gradient(135deg, #00ff88, #00ddaa);
+      color: var(--bg-dark);
+    }
+
+    .quick-action:hover {
+      transform: scale(1.05);
+    }
+
+    /* Reward Config */
+    .reward-item {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .reward-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .reward-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reward-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* History */
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-action {
+      font-weight: 500;
+    }
+
+    .history-action.speed-up { color: #ff8800; }
+    .history-action.slow-down { color: #00ddff; }
+    .history-action.chaos { color: #ff00ff; }
+    .history-action.reset { color: #00ff88; }
+
+    .history-time {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* Donation Thresholds */
+    .threshold-item {
+      display: grid;
+      grid-template-columns: 100px 100px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: var(--bg-input);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .threshold-item input {
+      padding: 8px;
+    }
+
+    /* Messages */
+    .message-preview {
+      background: var(--bg-input);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    /* Section divider */
+    .divider {
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* Help text */
+    .help-text {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: var(--accent); }
+    .toast.error { border-color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>HYD <span>Playrate Bot</span></h1>
+      <div class="status-badges">
+        <div class="badge" id="reaperStatus">
+          <span class="dot"></span>
+          <span>REAPER</span>
+        </div>
+        <div class="badge" id="twitchStatus">
+          <span class="dot"></span>
+          <span>Twitch</span>
+        </div>
+        <div class="badge" id="streamlabsStatus">
+          <span class="dot"></span>
+          <span>Streamlabs</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Game Control -->
+      <div class="card">
+        <h2><span class="icon">🎮</span> Game Mode</h2>
+        <div class="game-control">
+          <div class="game-toggle">
+            <input type="checkbox" id="gameEnabled">
+            <label for="gameEnabled">
+              <span id="gameToggleText">ACTIVATE</span>
+            </label>
+          </div>
+          <p class="game-status" id="gameStatus">
+            Enable to create channel point rewards and start accepting viewer interactions.
+          </p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="playrate-display">
+          <div class="playrate-value" id="currentPlayrate">1.00x</div>
+          <input type="range" class="playrate-slider" id="playrateSlider" min="0.5" max="2.5" step="0.05" value="1">
+          <div class="playrate-bounds">
+            <span id="minBound">0.5x</span>
+            <span id="maxBound">2.5x</span>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-action slow-down" onclick="triggerAction('slowDown')">🧊 SLOW</button>
+          <button class="quick-action speed-up" onclick="triggerAction('speedUp')">🔥 FAST</button>
+          <button class="quick-action chaos" onclick="triggerAction('chaos')">🎲 CHAOS</button>
+          <button class="quick-action reset" onclick="triggerAction('reset')">✨ RESET</button>
+        </div>
+      </div>
+
+      <!-- Twitch Setup -->
+      <div class="card">
+        <h2><span class="icon">🟣</span> Twitch Setup</h2>
+
+        <div class="form-group">
+          <label>Client ID</label>
+          <input type="text" id="twitchClientId" placeholder="From Twitch Developer Console">
+          <p class="help-text">Get this from <a href="https://dev.twitch.tv/console" target="_blank" style="color:var(--info)">dev.twitch.tv/console</a></p>
+        </div>
+
+        <div class="form-group">
+          <label>Client Secret</label>
+          <input type="password" id="twitchClientSecret" placeholder="Keep this secret!">
+        </div>
+
+        <div class="form-group">
+          <label>Channel Name</label>
+          <input type="text" id="twitchChannel" placeholder="Your Twitch username">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-purple" id="twitchAuthBtn" onclick="startTwitchAuth()">
+            Connect to Twitch
+          </button>
+          <button class="btn btn-secondary" onclick="saveTwitchConfig()">
+            Save
+          </button>
+        </div>
+      </div>
+
+      <!-- Streamlabs Setup -->
+      <div class="card">
+        <h2><span class="icon">💜</span> Streamlabs Setup</h2>
+
+        <div class="form-group">
+          <label>Socket API Token</label>
+          <input type="password" id="streamlabsToken" placeholder="From Streamlabs Dashboard">
+          <p class="help-text">
+            Find this in Streamlabs Dashboard → Settings → API Settings → API Tokens → Socket API Token
+          </p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="saveStreamlabsConfig()">
+            Save & Connect
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:14px;margin-bottom:15px;">Donation Actions</h3>
+        <div id="donationThresholds"></div>
+        <button class="btn btn-secondary btn-block" onclick="addDonationThreshold()">
+          + Add Threshold
+        </button>
+      </div>
+
+      <!-- REAPER OSC Setup -->
+      <div class="card">
+        <h2><span class="icon">📡</span> REAPER OSC</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Send Port (REAPER listens)</label>
+            <input type="number" id="reaperSendPort" value="8000">
+          </div>
+          <div class="form-group">
+            <label>Receive Port (Bot listens)</label>
+            <input type="number" id="reaperReceivePort" value="9000">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="saveReaperConfig()">
+            Save
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:14px;margin-bottom:10px;">REAPER Setup Instructions</h3>
+        <ol style="font-size:13px;color:var(--text-dim);padding-left:20px;">
+          <li>Open REAPER Preferences (Ctrl+P)</li>
+          <li>Go to Control/OSC/Web</li>
+          <li>Click Add → OSC (Open Sound Control)</li>
+          <li>Set Mode: Configure device IP+local port</li>
+          <li>Device IP: 127.0.0.1</li>
+          <li>Device port: <span id="oscDevicePort">9000</span></li>
+          <li>Local listen port: <span id="oscLocalPort">8000</span></li>
+          <li>Enable "Allow binding messages..."</li>
+        </ol>
+      </div>
+
+      <!-- Channel Point Rewards -->
+      <div class="card">
+        <h2><span class="icon">🎁</span> Channel Point Rewards</h2>
+
+        <div class="reward-item">
+          <div class="reward-header">
+            <span class="reward-title">
+              <span class="reward-color" style="background:#FF4400"></span>
+              🔥 Speed Up
+            </span>
+            <label class="checkbox-group" style="padding:5px 10px;">
+              <input type="checkbox" id="rewardSpeedUpEnabled" checked>
+              <span>Enabled</span>
+            </label>
+          </div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>Cost</label>
+              <input type="number" id="rewardSpeedUpCost" value="100">
+            </div>
+            <div class="form-group">
+              <label>Increment</label>
+              <input type="number" id="rewardSpeedUpIncrement" value="0.1" step="0.05">
+            </div>
+            <div class="form-group">
+              <label>Cooldown (s)</label>
+              <input type="number" id="rewardSpeedUpCooldown" value="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="reward-item">
+          <div class="reward-header">
+            <span class="reward-title">
+              <span class="reward-color" style="background:#00AAFF"></span>
+              🧊 Slow Down
+            </span>
+            <label class="checkbox-group" style="padding:5px 10px;">
+              <input type="checkbox" id="rewardSlowDownEnabled" checked>
+              <span>Enabled</span>
+            </label>
+          </div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>Cost</label>
+              <input type="number" id="rewardSlowDownCost" value="100">
+            </div>
+            <div class="form-group">
+              <label>Increment</label>
+              <input type="number" id="rewardSlowDownIncrement" value="0.1" step="0.05">
+            </div>
+            <div class="form-group">
+              <label>Cooldown (s)</label>
+              <input type="number" id="rewardSlowDownCooldown" value="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="reward-item">
+          <div class="reward-header">
+            <span class="reward-title">
+              <span class="reward-color" style="background:#FF00FF"></span>
+              🎲 Chaos
+            </span>
+            <label class="checkbox-group" style="padding:5px 10px;">
+              <input type="checkbox" id="rewardChaosEnabled" checked>
+              <span>Enabled</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cost</label>
+              <input type="number" id="rewardChaosCost" value="500">
+            </div>
+            <div class="form-group">
+              <label>Cooldown (s)</label>
+              <input type="number" id="rewardChaosCooldown" value="30">
+            </div>
+          </div>
+        </div>
+
+        <div class="reward-item">
+          <div class="reward-header">
+            <span class="reward-title">
+              <span class="reward-color" style="background:#00FF88"></span>
+              ✨ Reset
+            </span>
+            <label class="checkbox-group" style="padding:5px 10px;">
+              <input type="checkbox" id="rewardResetEnabled" checked>
+              <span>Enabled</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cost</label>
+              <input type="number" id="rewardResetCost" value="200">
+            </div>
+            <div class="form-group">
+              <label>Cooldown (s)</label>
+              <input type="number" id="rewardResetCooldown" value="60">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="saveRewardsConfig()">
+          Save Reward Settings
+        </button>
+      </div>
+
+      <!-- Game Settings -->
+      <div class="card">
+        <h2><span class="icon">⚙️</span> Game Settings</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Playrate</label>
+            <input type="number" id="gameMinPlayrate" value="0.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>Max Playrate</label>
+            <input type="number" id="gameMaxPlayrate" value="2.5" step="0.1">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:14px;margin-bottom:10px;">Global Cooldown</h3>
+        <label class="checkbox-group" style="margin-bottom:10px;">
+          <input type="checkbox" id="globalCooldownEnabled" checked>
+          <span>Enable cooldown between all actions</span>
+        </label>
+        <div class="form-group">
+          <label>Cooldown (seconds)</label>
+          <input type="number" id="globalCooldownSeconds" value="5">
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="font-size:14px;margin-bottom:10px;">Auto Reset</h3>
+        <label class="checkbox-group" style="margin-bottom:10px;">
+          <input type="checkbox" id="autoResetEnabled">
+          <span>Reset playrate after inactivity</span>
+        </label>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Delay (seconds)</label>
+            <input type="number" id="autoResetDelay" value="60">
+          </div>
+          <div class="form-group">
+            <label>Reset to</label>
+            <input type="number" id="autoResetValue" value="1.0" step="0.1">
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="saveGameSettings()">
+          Save Game Settings
+        </button>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <h2><span class="icon">📜</span> Recent Activity</h2>
+        <div class="history-list" id="historyList">
+          <p style="color:var(--text-dim);text-align:center;padding:20px;">
+            No activity yet. Enable game mode and wait for viewers!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let ws;
+    let config = {};
+
+    // Connect to WebSocket
+    function connectWS() {
+      ws = new WebSocket(`ws://${window.location.host}`);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        handleMessage(msg);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected, reconnecting...');
+        setTimeout(connectWS, 2000);
+      };
+    }
+
+    function handleMessage(msg) {
+      switch (msg.type) {
+        case 'init':
+          config = msg.data.config;
+          updateUI();
+          updateState(msg.data.state);
+          break;
+
+        case 'state':
+        case 'playrateChanged':
+          if (msg.data.rate !== undefined) {
+            document.getElementById('currentPlayrate').textContent = msg.data.rate.toFixed(2) + 'x';
+            document.getElementById('playrateSlider').value = msg.data.rate;
+          }
+          if (msg.data.game) {
+            updateState(msg.data);
+          }
+          break;
+
+        case 'actionProcessed':
+          addHistoryItem(msg.data);
+          showToast(`${msg.data.username}: ${msg.data.action}`, 'success');
+          break;
+
+        case 'gameToggled':
+          document.getElementById('gameEnabled').checked = msg.data.enabled;
+          updateGameToggle(msg.data.enabled);
+          break;
+
+        case 'configUpdated':
+          config = msg.data;
+          updateUI();
+          break;
+      }
+    }
+
+    function updateUI() {
+      // Twitch
+      document.getElementById('twitchClientId').value = config.twitch?.clientId || '';
+      document.getElementById('twitchClientSecret').value = config.twitch?.clientSecret || '';
+      document.getElementById('twitchChannel').value = config.twitch?.broadcasterName || '';
+
+      // Streamlabs
+      document.getElementById('streamlabsToken').value = config.streamlabs?.socketToken || '';
+
+      // REAPER
+      document.getElementById('reaperSendPort').value = config.reaper?.sendPort || 8000;
+      document.getElementById('reaperReceivePort').value = config.reaper?.receivePort || 9000;
+      document.getElementById('oscDevicePort').textContent = config.reaper?.receivePort || 9000;
+      document.getElementById('oscLocalPort').textContent = config.reaper?.sendPort || 8000;
+
+      // Game settings
+      document.getElementById('gameEnabled').checked = config.game?.enabled || false;
+      document.getElementById('gameMinPlayrate').value = config.game?.minPlayrate || 0.5;
+      document.getElementById('gameMaxPlayrate').value = config.game?.maxPlayrate || 2.5;
+      document.getElementById('minBound').textContent = (config.game?.minPlayrate || 0.5) + 'x';
+      document.getElementById('maxBound').textContent = (config.game?.maxPlayrate || 2.5) + 'x';
+
+      document.getElementById('globalCooldownEnabled').checked = config.game?.globalCooldown?.enabled ?? true;
+      document.getElementById('globalCooldownSeconds').value = config.game?.globalCooldown?.seconds || 5;
+      document.getElementById('autoResetEnabled').checked = config.game?.autoReset?.enabled || false;
+      document.getElementById('autoResetDelay').value = config.game?.autoReset?.delaySeconds || 60;
+      document.getElementById('autoResetValue').value = config.game?.autoReset?.resetTo || 1.0;
+
+      // Rewards
+      const rewards = config.rewards || {};
+      document.getElementById('rewardSpeedUpEnabled').checked = rewards.speedUp?.enabled ?? true;
+      document.getElementById('rewardSpeedUpCost').value = rewards.speedUp?.cost || 100;
+      document.getElementById('rewardSpeedUpIncrement').value = rewards.speedUp?.increment || 0.1;
+      document.getElementById('rewardSpeedUpCooldown').value = rewards.speedUp?.cooldownSeconds || 0;
+
+      document.getElementById('rewardSlowDownEnabled').checked = rewards.slowDown?.enabled ?? true;
+      document.getElementById('rewardSlowDownCost').value = rewards.slowDown?.cost || 100;
+      document.getElementById('rewardSlowDownIncrement').value = rewards.slowDown?.increment || 0.1;
+      document.getElementById('rewardSlowDownCooldown').value = rewards.slowDown?.cooldownSeconds || 0;
+
+      document.getElementById('rewardChaosEnabled').checked = rewards.chaos?.enabled ?? true;
+      document.getElementById('rewardChaosCost').value = rewards.chaos?.cost || 500;
+      document.getElementById('rewardChaosCooldown').value = rewards.chaos?.cooldownSeconds || 30;
+
+      document.getElementById('rewardResetEnabled').checked = rewards.reset?.enabled ?? true;
+      document.getElementById('rewardResetCost').value = rewards.reset?.cost || 200;
+      document.getElementById('rewardResetCooldown').value = rewards.reset?.cooldownSeconds || 60;
+
+      // Slider bounds
+      const slider = document.getElementById('playrateSlider');
+      slider.min = config.game?.minPlayrate || 0.5;
+      slider.max = config.game?.maxPlayrate || 2.5;
+
+      updateGameToggle(config.game?.enabled || false);
+    }
+
+    function updateState(state) {
+      // Update status badges
+      document.getElementById('reaperStatus').classList.toggle('connected', state.reaper?.connected);
+      document.getElementById('twitchStatus').classList.toggle('connected', state.twitch?.connected);
+      document.getElementById('streamlabsStatus').classList.toggle('connected', state.streamlabs?.connected);
+    }
+
+    function updateGameToggle(enabled) {
+      const text = document.getElementById('gameToggleText');
+      const status = document.getElementById('gameStatus');
+
+      if (enabled) {
+        text.textContent = 'ACTIVE';
+        status.textContent = 'Game mode is ON. Viewers can now mess with your playrate!';
+      } else {
+        text.textContent = 'ACTIVATE';
+        status.textContent = 'Enable to create channel point rewards and start accepting viewer interactions.';
+      }
+    }
+
+    // Event handlers
+    document.getElementById('gameEnabled').addEventListener('change', async (e) => {
+      const enabled = e.target.checked;
+      const response = await fetch('/api/game/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      const result = await response.json();
+      if (result.success) {
+        showToast(enabled ? 'Game mode activated!' : 'Game mode deactivated', 'success');
+      }
+    });
+
+    document.getElementById('playrateSlider').addEventListener('input', (e) => {
+      const rate = parseFloat(e.target.value);
+      document.getElementById('currentPlayrate').textContent = rate.toFixed(2) + 'x';
+    });
+
+    document.getElementById('playrateSlider').addEventListener('change', async (e) => {
+      const rate = parseFloat(e.target.value);
+      await fetch('/api/playrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rate })
+      });
+    });
+
+    async function triggerAction(action) {
+      const response = await fetch('/api/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, username: 'Manual' })
+      });
+      const result = await response.json();
+      if (result.success) {
+        document.getElementById('currentPlayrate').textContent = result.newRate.toFixed(2) + 'x';
+        document.getElementById('playrateSlider').value = result.newRate;
+      }
+    }
+
+    async function startTwitchAuth() {
+      await saveTwitchConfig();
+      const response = await fetch('/api/twitch/auth-url');
+      const { url } = await response.json();
+      window.open(url, '_blank', 'width=500,height=700');
+    }
+
+    async function saveTwitchConfig() {
+      const data = {
+        twitch: {
+          clientId: document.getElementById('twitchClientId').value,
+          clientSecret: document.getElementById('twitchClientSecret').value,
+          broadcasterName: document.getElementById('twitchChannel').value,
+          botName: document.getElementById('twitchChannel').value
+        }
+      };
+      await updateConfig(data);
+      showToast('Twitch config saved', 'success');
+    }
+
+    async function saveStreamlabsConfig() {
+      const data = {
+        streamlabs: {
+          socketToken: document.getElementById('streamlabsToken').value
+        }
+      };
+      await updateConfig(data);
+      showToast('Streamlabs config saved', 'success');
+    }
+
+    async function saveReaperConfig() {
+      const data = {
+        reaper: {
+          sendPort: parseInt(document.getElementById('reaperSendPort').value),
+          receivePort: parseInt(document.getElementById('reaperReceivePort').value)
+        }
+      };
+      await updateConfig(data);
+      document.getElementById('oscDevicePort').textContent = data.reaper.receivePort;
+      document.getElementById('oscLocalPort').textContent = data.reaper.sendPort;
+      showToast('REAPER config saved. Restart the bot to apply.', 'success');
+    }
+
+    async function saveRewardsConfig() {
+      const data = {
+        rewards: {
+          speedUp: {
+            enabled: document.getElementById('rewardSpeedUpEnabled').checked,
+            cost: parseInt(document.getElementById('rewardSpeedUpCost').value),
+            increment: parseFloat(document.getElementById('rewardSpeedUpIncrement').value),
+            cooldownSeconds: parseInt(document.getElementById('rewardSpeedUpCooldown').value)
+          },
+          slowDown: {
+            enabled: document.getElementById('rewardSlowDownEnabled').checked,
+            cost: parseInt(document.getElementById('rewardSlowDownCost').value),
+            increment: parseFloat(document.getElementById('rewardSlowDownIncrement').value),
+            cooldownSeconds: parseInt(document.getElementById('rewardSlowDownCooldown').value)
+          },
+          chaos: {
+            enabled: document.getElementById('rewardChaosEnabled').checked,
+            cost: parseInt(document.getElementById('rewardChaosCost').value),
+            cooldownSeconds: parseInt(document.getElementById('rewardChaosCooldown').value)
+          },
+          reset: {
+            enabled: document.getElementById('rewardResetEnabled').checked,
+            cost: parseInt(document.getElementById('rewardResetCost').value),
+            cooldownSeconds: parseInt(document.getElementById('rewardResetCooldown').value)
+          }
+        }
+      };
+      await updateConfig(data);
+      showToast('Reward settings saved', 'success');
+    }
+
+    async function saveGameSettings() {
+      const data = {
+        game: {
+          minPlayrate: parseFloat(document.getElementById('gameMinPlayrate').value),
+          maxPlayrate: parseFloat(document.getElementById('gameMaxPlayrate').value),
+          globalCooldown: {
+            enabled: document.getElementById('globalCooldownEnabled').checked,
+            seconds: parseInt(document.getElementById('globalCooldownSeconds').value)
+          },
+          autoReset: {
+            enabled: document.getElementById('autoResetEnabled').checked,
+            delaySeconds: parseInt(document.getElementById('autoResetDelay').value),
+            resetTo: parseFloat(document.getElementById('autoResetValue').value)
+          }
+        }
+      };
+      await updateConfig(data);
+
+      // Update slider bounds
+      const slider = document.getElementById('playrateSlider');
+      slider.min = data.game.minPlayrate;
+      slider.max = data.game.maxPlayrate;
+      document.getElementById('minBound').textContent = data.game.minPlayrate + 'x';
+      document.getElementById('maxBound').textContent = data.game.maxPlayrate + 'x';
+
+      showToast('Game settings saved', 'success');
+    }
+
+    async function updateConfig(data) {
+      await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+
+    function addHistoryItem(data) {
+      const list = document.getElementById('historyList');
+
+      // Remove empty message
+      if (list.querySelector('p')) {
+        list.innerHTML = '';
+      }
+
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div>
+          <span class="history-action ${data.action}">${data.action}</span>
+          <span style="color:var(--text-dim);margin-left:8px;">by ${data.username}</span>
+        </div>
+        <div>
+          <span style="font-weight:600;">${data.newRate?.toFixed(2) || '-'}x</span>
+          <span class="history-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `;
+
+      list.insertBefore(item, list.firstChild);
+
+      // Keep only last 20 items
+      while (list.children.length > 20) {
+        list.removeChild(list.lastChild);
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type + ' show';
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Load initial state
+    async function init() {
+      connectWS();
+
+      const response = await fetch('/api/state');
+      const state = await response.json();
+      updateState(state);
+
+      const configResponse = await fetch('/api/config');
+      config = await configResponse.json();
+      updateUI();
+    }
+
+    init();
+  </script>
+</body>
+</html>
