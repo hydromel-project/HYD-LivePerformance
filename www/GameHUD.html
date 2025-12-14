@@ -1367,6 +1367,217 @@
       transition: opacity 0.3s;
     }
     .copied-msg.show { opacity: 1; }
+
+    /* ============ MILESTONES & ACHIEVEMENTS ============ */
+    .milestone-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 1000;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: none;
+    }
+
+    .milestone-popup.active {
+      animation: milestoneAppear 2.5s ease-out forwards;
+    }
+
+    .milestone-popup .milestone-icon {
+      font-size: 80px;
+      margin-bottom: 10px;
+      animation: milestoneIconPulse 0.5s ease-in-out infinite alternate;
+    }
+
+    .milestone-popup .milestone-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 32px;
+      color: #fff;
+      text-shadow:
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 40px currentColor,
+        4px 4px 0 #000;
+      margin-bottom: 8px;
+    }
+
+    .milestone-popup .milestone-subtitle {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #aaa;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    /* Speed milestone colors - FAST */
+    .milestone-popup.speed-2x .milestone-title { color: #ffaa00; }
+    .milestone-popup.speed-3x .milestone-title { color: #ff6600; }
+    .milestone-popup.speed-4x .milestone-title { color: #ff0066; }
+    .milestone-popup.ludicrous .milestone-title {
+      color: #ff00ff;
+      animation: ludicrousText 0.1s linear infinite;
+    }
+
+    /* Speed milestone colors - SLOW */
+    .milestone-popup.slow-half .milestone-title { color: #66ddff; }
+    .milestone-popup.slow-quarter .milestone-title { color: #44aaff; }
+    .milestone-popup.frozen .milestone-title {
+      color: #aaeeff;
+      animation: frozenText 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes frozenText {
+      0% {
+        color: #aaeeff;
+        text-shadow: 0 0 20px #88ddff, 0 0 40px #44aaff, 4px 4px 0 #000;
+        transform: scale(1);
+      }
+      100% {
+        color: #ffffff;
+        text-shadow: 0 0 30px #aaeeff, 0 0 60px #66ccff, 4px 4px 0 #000;
+        transform: scale(1.02);
+      }
+    }
+
+    @keyframes milestoneAppear {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      15% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+      25% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      75% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    }
+
+    @keyframes milestoneIconPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.2); }
+    }
+
+    @keyframes ludicrousText {
+      0% { color: #ff00ff; text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff; }
+      25% { color: #00ffff; text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
+      50% { color: #ffff00; text-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00; }
+      75% { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+      100% { color: #ff00ff; text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff; }
+    }
+
+    /* Celebration particles burst */
+    .celebration-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      font-size: 24px;
+      animation: celebrationBurst 1.5s ease-out forwards;
+    }
+
+    @keyframes celebrationBurst {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(var(--rot));
+      }
+    }
+
+    /* Session stats display */
+    .session-stats {
+      position: fixed;
+      bottom: 80px;
+      left: 20px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .session-stats.visible {
+      opacity: 1;
+    }
+
+    .session-stats .stat-line {
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .session-stats .stat-icon {
+      font-size: 12px;
+    }
+
+    .session-stats .stat-value {
+      color: var(--neon-cyan);
+    }
+
+    .session-stats .stat-highlight {
+      color: var(--neon-pink);
+      animation: statPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes statPulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Ludicrous speed screen effect */
+    .ludicrous-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 500;
+      opacity: 0;
+      background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 0, 255, 0.1) 100%);
+      transition: opacity 0.3s;
+    }
+
+    .ludicrous-overlay.active {
+      opacity: 1;
+      animation: ludicrousScreen 0.15s linear infinite;
+    }
+
+    @keyframes ludicrousScreen {
+      0% { background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 0, 255, 0.15) 100%); }
+      33% { background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 255, 255, 0.15) 100%); }
+      66% { background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 255, 0, 0.15) 100%); }
+      100% { background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 0, 255, 0.15) 100%); }
+    }
+
+    /* Speed lines for ludicrous mode */
+    .speed-lines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 499;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .speed-lines.active {
+      opacity: 1;
+    }
+
+    .speed-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8), transparent);
+      animation: speedLineMove 0.3s linear infinite;
+    }
+
+    @keyframes speedLineMove {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100vw); }
+    }
   </style>
 </head>
 <body>
@@ -1592,6 +1803,37 @@
     <div class="countdown-number" id="countdownNumber">10</div>
     <div class="countdown-bar" id="countdownBar">
       <div class="countdown-bar-fill" id="countdownBarFill"></div>
+    </div>
+  </div>
+
+  <!-- Milestone Achievement Popup -->
+  <div class="milestone-popup" id="milestonePopup">
+    <div class="milestone-icon" id="milestoneIcon">🏆</div>
+    <div class="milestone-title" id="milestoneTitle">DOUBLE SPEED!</div>
+    <div class="milestone-subtitle" id="milestoneSubtitle">First time hitting 2x</div>
+  </div>
+
+  <!-- Ludicrous Speed Effects -->
+  <div class="ludicrous-overlay" id="ludicrousOverlay"></div>
+  <div class="speed-lines" id="speedLines"></div>
+
+  <!-- Session Stats -->
+  <div class="session-stats" id="sessionStats">
+    <div class="stat-line">
+      <span class="stat-icon">🎮</span>
+      <span>Changes: <span class="stat-value" id="statChanges">0</span></span>
+    </div>
+    <div class="stat-line">
+      <span class="stat-icon">🔥</span>
+      <span>Speed ups: <span class="stat-value" id="statSpeedUps">0</span></span>
+    </div>
+    <div class="stat-line">
+      <span class="stat-icon">🧊</span>
+      <span>Slow downs: <span class="stat-value" id="statSlowDowns">0</span></span>
+    </div>
+    <div class="stat-line">
+      <span class="stat-icon">⚡</span>
+      <span>Peak: <span class="stat-value stat-highlight" id="statPeak">1.00x</span></span>
     </div>
   </div>
 
@@ -2621,6 +2863,219 @@
       }
     }
 
+    // ============ MILESTONES & ACHIEVEMENTS ============
+    const milestonePopup = document.getElementById('milestonePopup');
+    const milestoneIcon = document.getElementById('milestoneIcon');
+    const milestoneTitle = document.getElementById('milestoneTitle');
+    const milestoneSubtitle = document.getElementById('milestoneSubtitle');
+    const ludicrousOverlay = document.getElementById('ludicrousOverlay');
+    const speedLinesContainer = document.getElementById('speedLines');
+    const sessionStatsEl = document.getElementById('sessionStats');
+
+    // Session tracking
+    const sessionStats = {
+      changes: 0,
+      speedUps: 0,
+      slowDowns: 0,
+      peakSpeed: 1.0,
+      lowestSpeed: 1.0,
+      milestonesHit: new Set(),  // Track which milestones achieved this session
+      ludicrousActive: false,
+      frozenActive: false
+    };
+
+    // Milestone definitions
+    const milestones = {
+      // Fast milestones
+      'speed-2x': { threshold: 2.0, icon: '⚡', title: 'DOUBLE SPEED!', subtitle: 'First time hitting 2x!' },
+      'speed-3x': { threshold: 3.0, icon: '🔥', title: 'TRIPLE THREAT!', subtitle: 'First time hitting 3x!' },
+      'speed-4x': { threshold: 4.0, icon: '💀', title: 'MAXIMUM OVERDRIVE!', subtitle: 'First time hitting 4x!' },
+      'ludicrous': { threshold: 3.5, icon: '🚀', title: 'LUDICROUS SPEED!', subtitle: "They've gone to plaid!" },
+      // Slow milestones
+      'slow-half': { threshold: 0.5, icon: '🐢', title: 'HALF SPEED!', subtitle: 'Taking it easy at 0.5x' },
+      'slow-quarter': { threshold: 0.25, icon: '🦥', title: 'SLOTH MODE!', subtitle: 'Crawling at 0.25x!' },
+      'frozen': { threshold: 0.3, icon: '🧊', title: 'FROZEN SOLID!', subtitle: 'Time nearly stands still...' }
+    };
+
+    const celebrationEmojis = {
+      fast: ['🎉', '🎊', '✨', '⭐', '🌟', '💫', '🔥', '⚡', '💥', '🎆'],
+      slow: ['❄️', '🧊', '💎', '✨', '🌨️', '⛄', '🐢', '🦥', '💤', '🌙']
+    };
+
+    function showMilestone(milestoneKey) {
+      if (sessionStats.milestonesHit.has(milestoneKey)) return;  // Already shown this session
+      sessionStats.milestonesHit.add(milestoneKey);
+
+      const milestone = milestones[milestoneKey];
+      if (!milestone) return;
+
+      // Update popup content
+      milestoneIcon.textContent = milestone.icon;
+      milestoneTitle.textContent = milestone.title;
+      milestoneSubtitle.textContent = milestone.subtitle;
+
+      // Set style class
+      milestonePopup.className = 'milestone-popup ' + milestoneKey;
+
+      // Trigger animation
+      milestonePopup.classList.remove('active');
+      void milestonePopup.offsetWidth;  // Force reflow
+      milestonePopup.classList.add('active');
+
+      // Spawn celebration particles (use slow emojis for slow milestones)
+      const isSlow = milestoneKey.startsWith('slow') || milestoneKey === 'frozen';
+      spawnCelebrationParticles(isSlow ? 'slow' : 'fast');
+
+      // Screen shake
+      triggerShake();
+
+      // Flash effect
+      triggerFlash();
+
+      // Remove active class after animation
+      setTimeout(() => {
+        milestonePopup.classList.remove('active');
+      }, 2500);
+    }
+
+    function spawnCelebrationParticles(type = 'fast') {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const particleCount = 20;
+      const emojis = celebrationEmojis[type] || celebrationEmojis.fast;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'celebration-particle';
+        particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // Random direction
+        const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+        const distance = 150 + Math.random() * 200;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance - 100;  // Bias upward
+        const rot = (Math.random() - 0.5) * 720;
+
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.setProperty('--tx', tx + 'px');
+        particle.style.setProperty('--ty', ty + 'px');
+        particle.style.setProperty('--rot', rot + 'deg');
+
+        document.body.appendChild(particle);
+
+        // Clean up after animation
+        setTimeout(() => particle.remove(), 1500);
+      }
+    }
+
+    function updateLudicrousMode(playrate) {
+      const isLudicrous = playrate >= 3.5;
+
+      if (isLudicrous && !sessionStats.ludicrousActive) {
+        // Entering ludicrous mode
+        sessionStats.ludicrousActive = true;
+        ludicrousOverlay.classList.add('active');
+        speedLinesContainer.classList.add('active');
+        createSpeedLines();
+
+        // Show milestone if first time
+        if (!sessionStats.milestonesHit.has('ludicrous')) {
+          showMilestone('ludicrous');
+        }
+      } else if (!isLudicrous && sessionStats.ludicrousActive) {
+        // Exiting ludicrous mode
+        sessionStats.ludicrousActive = false;
+        ludicrousOverlay.classList.remove('active');
+        speedLinesContainer.classList.remove('active');
+        clearSpeedLines();
+      }
+    }
+
+    function createSpeedLines() {
+      clearSpeedLines();
+      const lineCount = 15;
+
+      for (let i = 0; i < lineCount; i++) {
+        const line = document.createElement('div');
+        line.className = 'speed-line';
+        line.style.top = (Math.random() * 100) + '%';
+        line.style.width = (50 + Math.random() * 100) + 'px';
+        line.style.animationDelay = (Math.random() * 0.3) + 's';
+        line.style.animationDuration = (0.2 + Math.random() * 0.2) + 's';
+        speedLinesContainer.appendChild(line);
+      }
+    }
+
+    function clearSpeedLines() {
+      speedLinesContainer.innerHTML = '';
+    }
+
+    function checkMilestones(playrate) {
+      // Check FAST milestones (only trigger on first time hitting each)
+      if (playrate >= 4.0 && !sessionStats.milestonesHit.has('speed-4x')) {
+        showMilestone('speed-4x');
+      } else if (playrate >= 3.0 && playrate < 4.0 && !sessionStats.milestonesHit.has('speed-3x')) {
+        showMilestone('speed-3x');
+      } else if (playrate >= 2.0 && playrate < 3.0 && !sessionStats.milestonesHit.has('speed-2x')) {
+        showMilestone('speed-2x');
+      }
+
+      // Check SLOW milestones
+      if (playrate <= 0.25 && !sessionStats.milestonesHit.has('slow-quarter')) {
+        showMilestone('slow-quarter');
+      } else if (playrate <= 0.3 && playrate > 0.25 && !sessionStats.milestonesHit.has('frozen')) {
+        showMilestone('frozen');
+      } else if (playrate <= 0.5 && playrate > 0.3 && !sessionStats.milestonesHit.has('slow-half')) {
+        showMilestone('slow-half');
+      }
+
+      // Update ludicrous mode (fast) and frozen mode (slow)
+      updateLudicrousMode(playrate);
+      updateFrozenMode(playrate);
+    }
+
+    function updateFrozenMode(playrate) {
+      const isFrozen = playrate <= 0.3;
+
+      if (isFrozen && !sessionStats.frozenActive) {
+        sessionStats.frozenActive = true;
+        // Could add frozen screen effects here
+      } else if (!isFrozen && sessionStats.frozenActive) {
+        sessionStats.frozenActive = false;
+      }
+    }
+
+    function updateSessionStats(oldRate, newRate) {
+      if (Math.abs(newRate - oldRate) < 0.01) return;  // Ignore tiny changes
+
+      sessionStats.changes++;
+
+      if (newRate > oldRate) {
+        sessionStats.speedUps++;
+      } else {
+        sessionStats.slowDowns++;
+      }
+
+      if (newRate > sessionStats.peakSpeed) {
+        sessionStats.peakSpeed = newRate;
+      }
+      if (newRate < sessionStats.lowestSpeed) {
+        sessionStats.lowestSpeed = newRate;
+      }
+
+      // Update display
+      document.getElementById('statChanges').textContent = sessionStats.changes;
+      document.getElementById('statSpeedUps').textContent = sessionStats.speedUps;
+      document.getElementById('statSlowDowns').textContent = sessionStats.slowDowns;
+      document.getElementById('statPeak').textContent = sessionStats.peakSpeed.toFixed(2) + 'x';
+
+      // Show stats after first change
+      if (sessionStats.changes === 1) {
+        sessionStatsEl.classList.add('visible');
+      }
+    }
+
     // ============ AUTO-RESET COUNTDOWN ============
     const countdownOverlay = document.getElementById('countdownOverlay');
     const countdownNumber = document.getElementById('countdownNumber');
@@ -2866,6 +3321,10 @@
                 }, 300);
 
                 addToFeed(lastPlayrate, newPlayrate, null, null);
+
+                // Update session stats and check milestones
+                updateSessionStats(lastPlayrate, newPlayrate);
+                checkMilestones(newPlayrate);
               }
 
               lastPlayrate = newPlayrate;
@@ -3043,8 +3502,17 @@
 
             // Handle playrate changes from bot (fallback)
             if (msg.type === 'playrateChanged' && msg.data?.rate) {
+              const oldRate = currentPlayrate;
+              const newRate = msg.data.rate;
+
+              // Update session stats and check milestones
+              if (Math.abs(newRate - oldRate) >= 0.01) {
+                updateSessionStats(oldRate, newRate);
+                checkMilestones(newRate);
+              }
+
               // Update display immediately for responsiveness
-              currentPlayrate = msg.data.rate;
+              currentPlayrate = newRate;
               updateDisplay();
             }
           } catch (e) {}

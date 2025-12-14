@@ -2,8 +2,22 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.7">
-        <changelog><![CDATA[v1.0.7: Frost contour effect on text
+      <version name="1.0.9">
+        <changelog><![CDATA[v1.0.9: Slow speed milestones
+- 🐢 HALF SPEED! milestone at 0.5x
+- 🧊 FROZEN SOLID! milestone at 0.3x with icy pulse
+- 🦥 SLOTH MODE! milestone at 0.25x
+- Icy celebration emojis (❄️🧊💎🌨️⛄) for slow milestones
+- Track lowest speed in session stats
+
+v1.0.8: Milestones & Achievements
+- First time hitting 2x/3x/4x = special celebration popup
+- "LUDICROUS SPEED!" at 3.5x+ with rainbow effects
+- Speed lines and screen overlay at ludicrous speeds
+- Celebration particle burst with emoji confetti
+- Session stats: changes, speed ups, slow downs, peak speed
+
+v1.0.7: Frost contour effect on text
 - Icy outline/contour around text using text-stroke
 - Multi-directional shadow creates frosted border effect
 - Contour thickness scales with cold intensity (1px to 2.5px)
