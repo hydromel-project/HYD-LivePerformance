@@ -1578,6 +1578,185 @@
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100vw); }
     }
+
+    /* ============ COMBO SYSTEM ============ */
+    .combo-display {
+      position: fixed;
+      top: 50%;
+      right: 30px;
+      transform: translateY(-50%);
+      text-align: right;
+      font-family: 'Press Start 2P', monospace;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .combo-display.active {
+      opacity: 1;
+    }
+
+    .combo-count {
+      font-size: 48px;
+      color: #fff;
+      text-shadow:
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        3px 3px 0 #000;
+      line-height: 1;
+    }
+
+    .combo-label {
+      font-size: 14px;
+      color: #ffaa00;
+      text-shadow: 2px 2px 0 #000;
+      margin-top: 5px;
+    }
+
+    .combo-bonus {
+      font-size: 12px;
+      color: #00ff88;
+      text-shadow: 2px 2px 0 #000;
+      margin-top: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .combo-bonus.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Combo intensity colors */
+    .combo-display.combo-hot .combo-count { color: #ffaa00; }
+    .combo-display.combo-fire .combo-count { color: #ff6600; }
+    .combo-display.combo-blazing .combo-count {
+      color: #ff0066;
+      animation: comboBlaze 0.2s ease-in-out infinite alternate;
+    }
+    .combo-display.combo-legendary .combo-count {
+      animation: comboLegendary 0.15s linear infinite;
+    }
+
+    .combo-display.combo-ice .combo-count { color: #66ddff; }
+    .combo-display.combo-frozen .combo-count { color: #44aaff; }
+    .combo-display.combo-glacial .combo-count {
+      color: #aaeeff;
+      animation: comboGlacial 0.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes comboBlaze {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.05); filter: brightness(1.3); }
+    }
+
+    @keyframes comboLegendary {
+      0% { color: #ff00ff; text-shadow: 0 0 20px #ff00ff, 3px 3px 0 #000; }
+      25% { color: #ffff00; text-shadow: 0 0 20px #ffff00, 3px 3px 0 #000; }
+      50% { color: #00ffff; text-shadow: 0 0 20px #00ffff, 3px 3px 0 #000; }
+      75% { color: #ff0000; text-shadow: 0 0 20px #ff0000, 3px 3px 0 #000; }
+      100% { color: #ff00ff; text-shadow: 0 0 20px #ff00ff, 3px 3px 0 #000; }
+    }
+
+    @keyframes comboGlacial {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.03); filter: brightness(1.2); }
+    }
+
+    /* Combo popup notification */
+    .combo-popup {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 24px;
+      color: #fff;
+      text-shadow: 0 0 20px currentColor, 3px 3px 0 #000;
+      z-index: 1001;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .combo-popup.active {
+      animation: comboPopup 1.5s ease-out forwards;
+    }
+
+    .combo-popup.fire { color: #ff6600; }
+    .combo-popup.ice { color: #66ddff; }
+
+    @keyframes comboPopup {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -70%) scale(0.8); opacity: 0; }
+    }
+
+    /* Leaderboard */
+    .leaderboard {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.3s;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 180px;
+    }
+
+    .leaderboard.visible {
+      opacity: 1;
+    }
+
+    .leaderboard-title {
+      color: #ffaa00;
+      text-shadow: 1px 1px 0 #000;
+      margin-bottom: 8px;
+      text-align: center;
+      font-size: 10px;
+    }
+
+    .leaderboard-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .leaderboard-entry:last-child {
+      border-bottom: none;
+    }
+
+    .leaderboard-rank {
+      color: #888;
+      width: 20px;
+    }
+
+    .leaderboard-rank.gold { color: #ffd700; }
+    .leaderboard-rank.silver { color: #c0c0c0; }
+    .leaderboard-rank.bronze { color: #cd7f32; }
+
+    .leaderboard-name {
+      color: #fff;
+      flex: 1;
+      margin: 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .leaderboard-score {
+      color: var(--neon-cyan);
+    }
   </style>
 </head>
 <body>
@@ -1834,6 +2013,24 @@
     <div class="stat-line">
       <span class="stat-icon">⚡</span>
       <span>Peak: <span class="stat-value stat-highlight" id="statPeak">1.00x</span></span>
+    </div>
+  </div>
+
+  <!-- Combo Display -->
+  <div class="combo-display" id="comboDisplay">
+    <div class="combo-count" id="comboCount">5x</div>
+    <div class="combo-label" id="comboLabel">COMBO</div>
+    <div class="combo-bonus" id="comboBonus">+0.1x BOOST!</div>
+  </div>
+
+  <!-- Combo Popup -->
+  <div class="combo-popup" id="comboPopup">🔥 5x COMBO!</div>
+
+  <!-- Leaderboard -->
+  <div class="leaderboard" id="leaderboard">
+    <div class="leaderboard-title">🏆 TOP CONTRIBUTORS</div>
+    <div id="leaderboardEntries">
+      <!-- Entries will be added dynamically -->
     </div>
   </div>
 
@@ -2881,8 +3078,192 @@
       lowestSpeed: 1.0,
       milestonesHit: new Set(),  // Track which milestones achieved this session
       ludicrousActive: false,
-      frozenActive: false
+      frozenActive: false,
+      // Combo tracking
+      currentCombo: 0,
+      comboType: null,  // 'speedUp' or 'slowDown'
+      maxCombo: 0,
+      lastActionTime: 0,
+      comboTimeout: null
     };
+
+    // Leaderboard tracking
+    const leaderboard = new Map();  // username -> { contributions: number, combos: number, maxCombo: number }
+
+    // Combo elements
+    const comboDisplay = document.getElementById('comboDisplay');
+    const comboCount = document.getElementById('comboCount');
+    const comboLabel = document.getElementById('comboLabel');
+    const comboBonus = document.getElementById('comboBonus');
+    const comboPopup = document.getElementById('comboPopup');
+    const leaderboardEl = document.getElementById('leaderboard');
+    const leaderboardEntries = document.getElementById('leaderboardEntries');
+
+    // Combo thresholds for bonuses
+    const comboMilestones = [3, 5, 7, 10, 15, 20, 25];
+    const comboTimeout = 8000;  // Combo breaks after 8 seconds of inactivity
+
+    function updateCombo(direction, username) {
+      const now = Date.now();
+      const timeSinceLastAction = now - sessionStats.lastActionTime;
+
+      // Check if combo should reset (different direction or timeout)
+      if (sessionStats.comboType !== direction || timeSinceLastAction > comboTimeout) {
+        sessionStats.currentCombo = 0;
+        sessionStats.comboType = direction;
+      }
+
+      // Increment combo
+      sessionStats.currentCombo++;
+      sessionStats.lastActionTime = now;
+
+      // Track max combo
+      if (sessionStats.currentCombo > sessionStats.maxCombo) {
+        sessionStats.maxCombo = sessionStats.currentCombo;
+      }
+
+      // Update leaderboard
+      if (username) {
+        updateLeaderboard(username, sessionStats.currentCombo);
+      }
+
+      // Clear existing timeout
+      if (sessionStats.comboTimeout) {
+        clearTimeout(sessionStats.comboTimeout);
+      }
+
+      // Set new timeout to reset combo
+      sessionStats.comboTimeout = setTimeout(() => {
+        resetCombo();
+      }, comboTimeout);
+
+      // Update display
+      updateComboDisplay();
+
+      // Check for combo milestones
+      if (comboMilestones.includes(sessionStats.currentCombo)) {
+        showComboMilestone(sessionStats.currentCombo, direction);
+      }
+    }
+
+    function updateComboDisplay() {
+      const combo = sessionStats.currentCombo;
+
+      if (combo < 2) {
+        comboDisplay.classList.remove('active');
+        return;
+      }
+
+      comboDisplay.classList.add('active');
+      comboCount.textContent = combo + 'x';
+
+      // Update label based on type
+      const isFast = sessionStats.comboType === 'speedUp';
+      comboLabel.textContent = isFast ? '🔥 COMBO' : '🧊 COMBO';
+
+      // Update intensity class
+      comboDisplay.classList.remove('combo-hot', 'combo-fire', 'combo-blazing', 'combo-legendary',
+                                     'combo-ice', 'combo-frozen', 'combo-glacial');
+
+      if (isFast) {
+        if (combo >= 15) comboDisplay.classList.add('combo-legendary');
+        else if (combo >= 10) comboDisplay.classList.add('combo-blazing');
+        else if (combo >= 5) comboDisplay.classList.add('combo-fire');
+        else comboDisplay.classList.add('combo-hot');
+      } else {
+        if (combo >= 10) comboDisplay.classList.add('combo-glacial');
+        else if (combo >= 5) comboDisplay.classList.add('combo-frozen');
+        else comboDisplay.classList.add('combo-ice');
+      }
+
+      // Show bonus at milestones
+      if (comboMilestones.includes(combo)) {
+        const bonusAmount = Math.floor(combo / 5) * 0.1;
+        if (bonusAmount > 0) {
+          comboBonus.textContent = `+${bonusAmount.toFixed(1)}x BOOST!`;
+          comboBonus.classList.add('show');
+          setTimeout(() => comboBonus.classList.remove('show'), 2000);
+        }
+      }
+    }
+
+    function showComboMilestone(combo, direction) {
+      const isFast = direction === 'speedUp';
+      const emoji = isFast ? '🔥' : '🧊';
+
+      comboPopup.textContent = `${emoji} ${combo}x COMBO!`;
+      comboPopup.className = 'combo-popup ' + (isFast ? 'fire' : 'ice');
+
+      // Trigger animation
+      comboPopup.classList.remove('active');
+      void comboPopup.offsetWidth;
+      comboPopup.classList.add('active');
+
+      // Spawn particles
+      spawnCelebrationParticles(isFast ? 'fast' : 'slow');
+
+      // Screen shake for big combos
+      if (combo >= 5) {
+        triggerShake();
+      }
+
+      setTimeout(() => {
+        comboPopup.classList.remove('active');
+      }, 1500);
+    }
+
+    function resetCombo() {
+      sessionStats.currentCombo = 0;
+      sessionStats.comboType = null;
+      comboDisplay.classList.remove('active');
+    }
+
+    function updateLeaderboard(username, combo) {
+      if (!username) return;
+
+      if (!leaderboard.has(username)) {
+        leaderboard.set(username, { contributions: 0, combos: 0, maxCombo: 0 });
+      }
+
+      const entry = leaderboard.get(username);
+      entry.contributions++;
+      if (combo >= 3) entry.combos++;
+      if (combo > entry.maxCombo) entry.maxCombo = combo;
+
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      // Sort by contributions
+      const sorted = [...leaderboard.entries()]
+        .sort((a, b) => b[1].contributions - a[1].contributions)
+        .slice(0, 5);  // Top 5
+
+      if (sorted.length === 0) {
+        leaderboardEl.classList.remove('visible');
+        return;
+      }
+
+      leaderboardEl.classList.add('visible');
+
+      leaderboardEntries.innerHTML = sorted.map(([name, data], index) => {
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
+        return `
+          <div class="leaderboard-entry">
+            <span class="leaderboard-rank ${rankClass}">${rankIcon}</span>
+            <span class="leaderboard-name">${escapeHtml(name)}</span>
+            <span class="leaderboard-score">${data.contributions}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
     // Milestone definitions
     const milestones = {
@@ -3046,12 +3427,13 @@
       }
     }
 
-    function updateSessionStats(oldRate, newRate) {
+    function updateSessionStats(oldRate, newRate, username = null) {
       if (Math.abs(newRate - oldRate) < 0.01) return;  // Ignore tiny changes
 
       sessionStats.changes++;
 
-      if (newRate > oldRate) {
+      const isSpeedUp = newRate > oldRate;
+      if (isSpeedUp) {
         sessionStats.speedUps++;
       } else {
         sessionStats.slowDowns++;
@@ -3063,6 +3445,9 @@
       if (newRate < sessionStats.lowestSpeed) {
         sessionStats.lowestSpeed = newRate;
       }
+
+      // Update combo system
+      updateCombo(isSpeedUp ? 'speedUp' : 'slowDown', username);
 
       // Update display
       document.getElementById('statChanges').textContent = sessionStats.changes;
@@ -3428,6 +3813,10 @@
 
               // Add to feed with username and avatar
               addToFeed(oldRate, newRate, username, action, avatarUrl);
+
+              // Update session stats and combo with username
+              updateSessionStats(oldRate, newRate, username);
+              checkMilestones(newRate);
 
               // Store for REAPER sync
               pendingAction = { username, action, newRate, time: Date.now() };
