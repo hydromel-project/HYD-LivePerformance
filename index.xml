@@ -2,8 +2,16 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.9">
-        <changelog><![CDATA[v1.0.9: Slow speed milestones
+      <version name="1.0.10">
+        <changelog><![CDATA[v1.0.10: Combo/Streak System
+- Consecutive speed-ups or slow-downs build combos
+- Combo display with fire/ice themes
+- Milestone popups at 3x, 5x, 7x, 10x, 15x combos
+- Rainbow "legendary" effect at 15+ combo
+- Top 5 leaderboard tracking contributors
+- 8-second timeout resets combo
+
+v1.0.9: Slow speed milestones
 - 🐢 HALF SPEED! milestone at 0.5x
 - 🧊 FROZEN SOLID! milestone at 0.3x with icy pulse
 - 🦥 SLOTH MODE! milestone at 0.25x
