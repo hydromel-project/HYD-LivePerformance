@@ -346,6 +346,203 @@
       color: var(--danger-color);
     }
 
+    /* Requests panel */
+    .requests-panel {
+      width: 350px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+
+    .requests-panel.enabled {
+      border-color: var(--accent-color);
+    }
+
+    .requests-panel .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .requests-panel .panel-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .requests-toggle {
+      position: relative;
+      width: 40px;
+      height: 20px;
+      background: var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .requests-toggle.enabled {
+      background: var(--accent-color);
+    }
+
+    .requests-toggle::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+    }
+
+    .requests-toggle.enabled::after {
+      left: 22px;
+    }
+
+    .requests-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 5px;
+    }
+
+    .request-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 6px;
+      gap: 10px;
+      background: var(--bg-color);
+      margin-bottom: 5px;
+      transition: all 0.2s;
+    }
+
+    .request-item:hover {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .request-item .request-num {
+      font-weight: bold;
+      color: var(--accent-color);
+      min-width: 24px;
+      font-size: 0.9rem;
+    }
+
+    .request-item .request-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--border-color);
+      object-fit: cover;
+    }
+
+    .request-item .request-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .request-item .request-song {
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.9rem;
+    }
+
+    .request-item .request-meta {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 8px;
+    }
+
+    .request-item .request-user {
+      color: #9147ff;
+    }
+
+    .request-item .request-user.sub {
+      color: #ffb636;
+    }
+
+    .request-item .request-controls {
+      display: flex;
+      gap: 5px;
+    }
+
+    .request-item .request-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .request-item .complete-btn {
+      color: var(--accent-color);
+    }
+
+    .request-item .complete-btn:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .request-item .request-remove-btn {
+      color: var(--text-secondary);
+    }
+
+    .request-item .request-remove-btn:hover {
+      color: var(--danger-color);
+    }
+
+    .requests-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .requests-stats {
+      padding: 8px 10px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .requests-panel.error {
+      border-color: var(--danger-color) !important;
+    }
+
+    .bot-status {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 8px;
+    }
+
+    .bot-status.connected {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--accent-color);
+    }
+
+    .bot-status.disconnected {
+      background: rgba(255, 68, 68, 0.2);
+      color: var(--danger-color);
+    }
+
     /* Now Playing bar */
     .now-playing-bar {
       background: var(--card-bg);
@@ -520,12 +717,28 @@
         max-height: 300px;
       }
 
+      .requests-panel {
+        width: 100%;
+        max-height: 250px;
+      }
+
       .song-item .add-btn {
         opacity: 1;
       }
 
       .queue-item .remove-btn {
         opacity: 1;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .main-content {
+        gap: 15px;
+      }
+
+      .queue-panel,
+      .requests-panel {
+        width: 320px;
       }
     }
   </style>
@@ -578,6 +791,23 @@
       <div class="queue-panel">
         <div class="panel-header">Queue (<span id="queueCount">0</span>)</div>
         <div class="queue-list" id="queueList"></div>
+      </div>
+
+      <div class="requests-panel" id="requestsPanel">
+        <div class="panel-header">
+          <div class="panel-header-title">
+            <span>Requests (<span id="requestCount">0</span>)</span>
+            <span class="bot-status disconnected" id="botStatus">Bot Offline</span>
+          </div>
+          <div class="requests-toggle" id="requestsToggle" title="Enable/Disable Requests"></div>
+        </div>
+        <div class="requests-list" id="requestsList">
+          <div class="requests-empty">No song requests yet</div>
+        </div>
+        <div class="requests-stats" id="requestsStats">
+          <span>Total: <span id="statsTotalRequests">0</span></span>
+          <span>Played: <span id="statsCompleted">0</span></span>
+        </div>
       </div>
     </div>
 
@@ -637,6 +867,14 @@
     let lastQueueJson = '';
     let lastMasterActive = null;
 
+    // Requests state
+    let requestQueue = [];
+    let requestsEnabled = false;
+    let requestStats = { totalRequests: 0, totalCompleted: 0 };
+    let lastRequestsJson = '';
+    let botWs = null;
+    const BOT_WS_URL = 'ws://localhost:9030';
+
     // Elements - Control mode
     const searchInput = document.getElementById('searchInput');
     const songsList = document.getElementById('songsList');
@@ -654,6 +892,16 @@
     const viewerTitle = document.getElementById('viewerTitle');
     const viewerArtist = document.getElementById('viewerArtist');
     const viewerNextList = document.getElementById('viewerNextList');
+
+    // Elements - Requests
+    const requestsPanel = document.getElementById('requestsPanel');
+    const requestsToggle = document.getElementById('requestsToggle');
+    const requestsList = document.getElementById('requestsList');
+    const requestCount = document.getElementById('requestCount');
+    const statsTotalRequests = document.getElementById('statsTotalRequests');
+    const statsCompleted = document.getElementById('statsCompleted');
+    const botStatus = document.getElementById('botStatus');
+    let botConnected = false;
 
     // Send command to REAPER
     function sendCommand(cmd) {
@@ -870,6 +1118,219 @@
                 .replace(/"/g, '&quot;');
     }
 
+    // ============ BOT CONNECTION (for requests) ============
+
+    function updateBotStatus(connected) {
+      botConnected = connected;
+      if (botStatus) {
+        if (connected) {
+          botStatus.textContent = 'Bot Online';
+          botStatus.className = 'bot-status connected';
+        } else {
+          botStatus.textContent = 'Bot Offline';
+          botStatus.className = 'bot-status disconnected';
+        }
+      }
+    }
+
+    function connectToBot() {
+      if (botWs && botWs.readyState === WebSocket.OPEN) return;
+
+      try {
+        botWs = new WebSocket(BOT_WS_URL);
+
+        botWs.onopen = () => {
+          console.log('Connected to Playrate Bot');
+          updateBotStatus(true);
+          // Request current state
+          botWs.send(JSON.stringify({ type: 'getState' }));
+        };
+
+        botWs.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleBotMessage(msg);
+          } catch (e) {
+            console.warn('Bot message parse error:', e);
+          }
+        };
+
+        botWs.onclose = () => {
+          console.log('Bot connection closed, reconnecting...');
+          updateBotStatus(false);
+          setTimeout(connectToBot, 3000);
+        };
+
+        botWs.onerror = (err) => {
+          console.warn('Bot WebSocket error');
+          updateBotStatus(false);
+        };
+      } catch (e) {
+        console.warn('Could not connect to bot:', e.message);
+        updateBotStatus(false);
+        setTimeout(connectToBot, 5000);
+      }
+    }
+
+    function handleBotMessage(msg) {
+      switch (msg.type) {
+        case 'init':
+          if (msg.data.requestQueue) {
+            requestQueue = msg.data.requestQueue;
+            renderRequests();
+          }
+          if (msg.data.requestsEnabled !== undefined) {
+            requestsEnabled = msg.data.requestsEnabled;
+            updateRequestsToggle();
+          }
+          break;
+
+        case 'requestQueueUpdated':
+          requestQueue = msg.data.queue || [];
+          renderRequests();
+          break;
+
+        case 'requestAdded':
+        case 'requestRemoved':
+        case 'requestCompleted':
+          // Queue will be updated via requestQueueUpdated
+          break;
+
+        case 'requestsToggled':
+          requestsEnabled = msg.data.enabled;
+          updateRequestsToggle();
+          break;
+      }
+    }
+
+    // ============ REQUESTS RENDERING ============
+
+    function renderRequests() {
+      const newJson = JSON.stringify(requestQueue);
+      if (newJson === lastRequestsJson) return;
+      lastRequestsJson = newJson;
+
+      requestCount.textContent = requestQueue.length;
+
+      if (requestQueue.length === 0) {
+        requestsList.innerHTML = '<div class="requests-empty">No song requests yet<br><small>Viewers can use !request &lt;song&gt; in chat</small></div>';
+        return;
+      }
+
+      requestsList.innerHTML = requestQueue.map((req, i) => `
+        <div class="request-item" data-id="${req.id}">
+          <div class="request-num">#${req.pos}</div>
+          ${req.avatar
+            ? `<img class="request-avatar" src="${escapeHtml(req.avatar)}" alt="" onerror="this.style.display='none'">`
+            : '<div class="request-avatar"></div>'}
+          <div class="request-info">
+            <div class="request-song">${escapeHtml(req.title)}</div>
+            <div class="request-meta">
+              <span class="request-user ${req.sub ? 'sub' : ''}">${escapeHtml(req.user)}</span>
+              <span>${escapeHtml(req.artist)}</span>
+            </div>
+          </div>
+          <div class="request-controls">
+            <button class="request-btn complete-btn" onclick="completeRequest('${req.id}')" title="Mark as played">✓</button>
+            <button class="request-btn request-remove-btn" onclick="removeRequest('${req.id}')" title="Remove">×</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateRequestsToggle() {
+      if (requestsEnabled) {
+        requestsToggle.classList.add('enabled');
+        requestsPanel.classList.add('enabled');
+      } else {
+        requestsToggle.classList.remove('enabled');
+        requestsPanel.classList.remove('enabled');
+      }
+    }
+
+    // ============ REQUEST ACTIONS ============
+
+    function toggleRequests() {
+      // Check if bot is connected
+      if (!botConnected) {
+        // Still toggle locally for visual feedback, but warn user
+        requestsEnabled = !requestsEnabled;
+        updateRequestsToggle();
+        requestsPanel.style.animation = 'shake 0.3s';
+        setTimeout(() => requestsPanel.style.animation = '', 300);
+        console.warn('Bot not connected - toggle state is local only');
+        return;
+      }
+
+      // Optimistic UI update
+      const newState = !requestsEnabled;
+      requestsEnabled = newState;
+      updateRequestsToggle();
+
+      fetch('http://localhost:9030/api/requests/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: newState })
+      }).then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      }).then(data => {
+          // Confirm state from server
+          requestsEnabled = data.enabled;
+          updateRequestsToggle();
+        })
+        .catch(err => {
+          console.warn('Toggle requests error:', err);
+          // Revert on error
+          requestsEnabled = !newState;
+          updateRequestsToggle();
+          // Show error feedback
+          requestsPanel.style.animation = 'shake 0.3s';
+          setTimeout(() => requestsPanel.style.animation = '', 300);
+        });
+    }
+
+    function completeRequest(requestId) {
+      fetch(`http://localhost:9030/api/requests/${requestId}/complete`, {
+        method: 'POST'
+      }).then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Find the song and add it to our queue
+            const req = requestQueue.find(r => r.id === requestId);
+            if (req) {
+              // Add to REAPER queue
+              sendCommand('add:' + req.songId);
+            }
+          }
+        })
+        .catch(err => console.warn('Complete request error:', err));
+    }
+
+    function removeRequest(requestId) {
+      fetch(`http://localhost:9030/api/requests/${requestId}`, {
+        method: 'DELETE'
+      }).catch(err => console.warn('Remove request error:', err));
+    }
+
+    function loadRequestStats() {
+      fetch('http://localhost:9030/api/requests/stats')
+        .then(res => res.json())
+        .then(data => {
+          requestStats = data;
+          statsTotalRequests.textContent = data.totalRequests || 0;
+          statsCompleted.textContent = data.totalCompleted || 0;
+        })
+        .catch(() => {
+          // Bot not running, ignore
+        });
+    }
+
+    // Requests toggle click handler
+    if (requestsToggle) {
+      requestsToggle.addEventListener('click', toggleRequests);
+    }
+
     // Start REAPER communication
     wwr_start();
     wwr_req_recur("GET/PROJEXTSTATE/Playlist/data", 100);
@@ -925,6 +1386,14 @@
 
     // Initial load
     loadSongsIndex();
+
+    // Connect to bot for requests (only in control mode)
+    if (!isViewerMode) {
+      connectToBot();
+      loadRequestStats();
+      // Refresh stats periodically
+      setInterval(loadRequestStats, 30000);
+    }
   </script>
 </body>
 </html>

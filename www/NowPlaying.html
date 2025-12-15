@@ -704,10 +704,9 @@
 
     // State
     let displayActive = false, lastDisplayActive = false;
-    let title = '', artist = '', album = '', year = '', cover = '', lastCover = '';
+    let title = '', artist = '', album = '', year = '', cover = '', lastCover = '', lastTitle = '';
     let timeRemaining = 0, isVisible = false;
     let regionName = '', lastRegionName = '';
-    let playPos = 0, itemStart = 0, itemEnd = 0, wasWithinItem = false;
 
     // REAPER communication
     wwr_start();
@@ -737,37 +736,26 @@
     }
 
     function updateDisplay() {
-      const withinItem = itemEnd > 0 && playPos >= itemStart && playPos < itemEnd;
+      const hasContent = displayActive && (title || regionName);
+      const contentChanged = regionName !== lastRegionName || title !== lastTitle;
 
-      // Region change - fade out
-      if (lastRegionName !== '' && regionName !== lastRegionName) {
-        fadeOut();
+      // Simple logic: if we have content to show, show it
+      if (hasContent) {
+        if (!isVisible) {
+          show();
+        } else if (contentChanged) {
+          // Content changed while visible - update immediately
+          updateContent();
+        }
+      } else {
+        // No content - fade out
+        if (isVisible) {
+          fadeOut();
+        }
       }
 
-      // Left item - fade out
-      if (wasWithinItem && !withinItem) {
-        fadeOut();
-      }
-
-      // Entered item - show
-      if (displayActive && withinItem && !wasWithinItem) {
-        show();
-      }
-
-      // Just became active while within item
-      if (displayActive && withinItem && !lastDisplayActive && !isVisible) {
-        show();
-      }
-
-      // Became inactive - fade out
-      if (!displayActive && lastDisplayActive) {
-        fadeOut();
-      }
-
-      wasWithinItem = withinItem;
-
-      // Fade near end
-      if (displayActive && isVisible && timeRemaining > 0 && timeRemaining <= settings.fade) {
+      // Fade near end of item/region
+      if (hasContent && isVisible && timeRemaining > 0 && timeRemaining <= settings.fade) {
         const opacity = timeRemaining / settings.fade;
         nowPlayingEl.style.opacity = opacity;
         if (settings.layout === 'background') bgArt.style.opacity = opacity;
@@ -775,6 +763,7 @@
 
       lastDisplayActive = displayActive;
       lastRegionName = regionName;
+      lastTitle = title;
 
       if (isVisible) updateContent();
     }
@@ -809,17 +798,41 @@
       songYearEl.textContent = year || '';
 
       if (cover && cover !== lastCover) {
+        // Preload image before showing
         const imgUrl = cover + '?t=' + Date.now();
-        albumArtImg.src = imgUrl;
-        albumArtImg.style.display = 'block';
-        noArtIcon.style.display = 'none';
-        if (settings.layout === 'background') bgArtImg.src = imgUrl;
+        preloadImage(imgUrl, () => {
+          // Only show if this is still the current cover
+          if (cover === lastCover || imgUrl.startsWith(cover)) {
+            albumArtImg.src = imgUrl;
+            albumArtImg.style.display = 'block';
+            noArtIcon.style.display = 'none';
+            if (settings.layout === 'background') {
+              bgArtImg.src = imgUrl;
+              bgArt.classList.add('visible');
+            }
+          }
+        }, () => {
+          // Error loading - show placeholder
+          albumArtImg.style.display = 'none';
+          noArtIcon.style.display = 'flex';
+        });
         lastCover = cover;
       } else if (!cover) {
         albumArtImg.style.display = 'none';
         noArtIcon.style.display = 'flex';
+        if (settings.layout === 'background') {
+          bgArt.classList.remove('visible');
+        }
         lastCover = '';
       }
+    }
+
+    // Preload image and call callback when ready
+    function preloadImage(url, onLoad, onError) {
+      const img = new Image();
+      img.onload = onLoad;
+      img.onerror = onError || (() => {});
+      img.src = url;
     }
 
     albumArtImg.onerror = function() {

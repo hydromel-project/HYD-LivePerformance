@@ -1,5 +1,6 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
+const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const gameEngine = require('./game-engine');
@@ -7,6 +8,7 @@ const reaper = require('./reaper');
 const twitch = require('./twitch');
 const streamlabs = require('./streamlabs');
 const streamelements = require('./streamelements');
+const requests = require('./requests');
 
 class WebServer {
   constructor() {
@@ -14,10 +16,51 @@ class WebServer {
     this.server = null;
     this.wss = null;
     this.clients = new Set();
+    this.songsIndex = [];
+  }
+
+  /**
+   * Load songs index from REAPER www root
+   */
+  loadSongsIndex() {
+    // Try common locations for songs_index.json
+    const possiblePaths = [
+      path.join(process.env.APPDATA || '', 'REAPER', 'reaper_www_root', 'songs_index.json'),
+      path.join(__dirname, '..', '..', '..', 'reaper_www_root', 'songs_index.json'),
+      path.join(__dirname, '..', '..', 'www', 'songs_index.json')
+    ];
+
+    for (const indexPath of possiblePaths) {
+      try {
+        if (fs.existsSync(indexPath)) {
+          const data = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+          this.songsIndex = data.songs || [];
+          twitch.setSongsIndex(this.songsIndex);
+          console.log(`📚 Loaded ${this.songsIndex.length} songs from index`);
+          return true;
+        }
+      } catch (err) {
+        console.warn(`Could not load songs index from ${indexPath}:`, err.message);
+      }
+    }
+
+    console.warn('⚠️ Songs index not found - song requests will not work until index is created');
+    return false;
+  }
+
+  /**
+   * Reload songs index (called when index is updated)
+   */
+  reloadSongsIndex() {
+    this.loadSongsIndex();
+    this.broadcast({ type: 'songsIndexReloaded', data: { count: this.songsIndex.length } });
   }
 
   start() {
     const port = config.get('webPort');
+
+    // Load songs index for requests
+    this.loadSongsIndex();
 
     // Middleware
     this.app.use(express.json());
@@ -189,6 +232,106 @@ class WebServer {
     this.app.get('/api/history', (req, res) => {
       res.json(gameEngine.getHistory());
     });
+
+    // ============ SONG REQUESTS API ============
+
+    // Get request queue
+    this.app.get('/api/requests', (req, res) => {
+      res.json({
+        queue: requests.serializeForWeb(),
+        enabled: config.get('requests.enabled'),
+        config: config.get('requests')
+      });
+    });
+
+    // Get request statistics
+    this.app.get('/api/requests/stats', (req, res) => {
+      res.json(requests.getStats());
+    });
+
+    // Get request log
+    this.app.get('/api/requests/log', (req, res) => {
+      const count = parseInt(req.query.count) || 50;
+      res.json(requests.getRecentLog(count));
+    });
+
+    // Export full request log
+    this.app.get('/api/requests/log/export', (req, res) => {
+      res.json(requests.exportLog());
+    });
+
+    // Toggle requests enabled
+    this.app.post('/api/requests/toggle', (req, res) => {
+      const { enabled } = req.body;
+      config.set('requests.enabled', enabled);
+      this.broadcast({ type: 'requestsToggled', data: { enabled } });
+      res.json({ success: true, enabled });
+    });
+
+    // Add request manually (from web panel)
+    this.app.post('/api/requests/add', (req, res) => {
+      const { songId, username = 'Manual', userId = 'manual_' + Date.now() } = req.body;
+
+      // Find song in index
+      const song = this.songsIndex.find(s => s.id === songId);
+      if (!song) {
+        return res.status(404).json({ success: false, message: 'Song not found' });
+      }
+
+      const result = requests.addRequest(userId, username, song, { displayName: username });
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: requests.serializeForWeb() } });
+      res.json(result);
+    });
+
+    // Remove request
+    this.app.delete('/api/requests/:requestId', (req, res) => {
+      const { requestId } = req.params;
+      const result = requests.removeRequest(requestId, true, 'WebPanel');
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: requests.serializeForWeb() } });
+      res.json(result);
+    });
+
+    // Complete request (mark as played)
+    this.app.post('/api/requests/:requestId/complete', (req, res) => {
+      const { requestId } = req.params;
+      const completed = requests.completeRequest(requestId);
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: requests.serializeForWeb() } });
+      if (completed) {
+        res.json({ success: true, request: completed });
+      } else {
+        res.status(404).json({ success: false, message: 'Request not found' });
+      }
+    });
+
+    // Clear entire request queue
+    this.app.post('/api/requests/clear', (req, res) => {
+      const count = requests.clearQueue();
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: [] } });
+      res.json({ success: true, cleared: count });
+    });
+
+    // Reload songs index
+    this.app.post('/api/songs/reload', (req, res) => {
+      this.reloadSongsIndex();
+      res.json({ success: true, count: this.songsIndex.length });
+    });
+
+    // Search songs (for web autocomplete)
+    this.app.get('/api/songs/search', (req, res) => {
+      const query = (req.query.q || '').toLowerCase().trim();
+      if (!query) {
+        return res.json({ songs: [] });
+      }
+
+      const matches = this.songsIndex
+        .filter(s =>
+          s.t.toLowerCase().includes(query) ||
+          s.a.toLowerCase().includes(query)
+        )
+        .slice(0, 20);
+
+      res.json({ songs: matches });
+    });
   }
 
   setupWebSocket() {
@@ -203,7 +346,9 @@ class WebServer {
         type: 'init',
         data: {
           config: config.getAll(),
-          state: gameEngine.getState()
+          state: gameEngine.getState(),
+          requestQueue: requests.serializeForWeb(),
+          requestsEnabled: config.get('requests.enabled')
         }
       }));
 
@@ -330,6 +475,26 @@ class WebServer {
 
     twitch.on('rewardsRemoved', () => {
       this.broadcast({ type: 'rewardsRemoved' });
+    });
+
+    // Forward request events from Twitch
+    twitch.on('requestAdded', (request) => {
+      this.broadcast({ type: 'requestAdded', data: request });
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: requests.serializeForWeb() } });
+    });
+
+    twitch.on('requestRemoved', (request) => {
+      this.broadcast({ type: 'requestRemoved', data: request });
+      this.broadcast({ type: 'requestQueueUpdated', data: { queue: requests.serializeForWeb() } });
+    });
+
+    // Forward request events from requests module
+    requests.on('requestCompleted', (request) => {
+      this.broadcast({ type: 'requestCompleted', data: request });
+    });
+
+    requests.on('queueCleared', () => {
+      this.broadcast({ type: 'requestQueueCleared' });
     });
   }
 

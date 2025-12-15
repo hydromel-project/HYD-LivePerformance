@@ -2,8 +2,19 @@
 <index version="1" name="HYD-LivePerformance">
   <category name="HYD-LivePerformance">
     <reapack name="HYD-LivePerformanceServer.lua" type="script" author="hydromel-project">
-      <version name="1.0.10">
-        <changelog><![CDATA[v1.0.10: Combo/Streak System
+      <version name="1.0.11">
+        <changelog><![CDATA[v1.0.11: Song Request System
+- !request <song> chat command for viewers
+- Fuzzy song matching against library index
+- Request queue display in Playlist control panel
+- Users can edit requests without losing queue position
+- Configurable: sub-only, follower-only, cooldowns
+- Persistent statistics and full request logging
+- Top requesters and top songs tracking
+- Commands: !request, !sr, !queue, !cancel
+- Request enable/disable toggle in Playlist UI
+
+v1.0.10: Combo/Streak System
 - Consecutive speed-ups or slow-downs build combos
 - Combo display with fire/ice themes
 - Milestone popups at 3x, 5x, 7x, 10x, 15x combos
@@ -111,8 +122,18 @@ Song library indexer for Playlist system.]]></changelog>
       </version>
     </reapack>
     <reapack name="HYD-PlayrateBot" type="data" author="hydromel-project">
-      <version name="1.0.0">
-        <changelog><![CDATA[v1.0.0: Initial release
+      <version name="1.1.0">
+        <changelog><![CDATA[v1.1.0: Song Request System
+- !request <song> chat command for viewers
+- Fuzzy song matching against library index
+- Request queue management with persistent logging
+- Users can edit requests without losing queue position
+- Configurable: sub-only, follower-only, cooldowns
+- Top requesters and top songs statistics
+- Commands: !request, !sr, !queue, !cancel, !myrequest
+- Full request log export for analysis
+
+v1.0.0: Initial release
 - Twitch channel point rewards for playrate control
 - Streamlabs donation integration
 - StreamElements donation integration
@@ -132,6 +153,7 @@ To install: Run Install.cmd (or install.bat), then use desktop shortcut.]]></cha
         <source file="bot/src/config.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/config.js</source>
         <source file="bot/src/game-engine.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/game-engine.js</source>
         <source file="bot/src/reaper.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/reaper.js</source>
+        <source file="bot/src/requests.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/requests.js</source>
         <source file="bot/src/server.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/server.js</source>
         <source file="bot/src/streamelements.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamelements.js</source>
         <source file="bot/src/streamlabs.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamlabs.js</source>

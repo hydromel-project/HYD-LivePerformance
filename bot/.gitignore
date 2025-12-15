@@ -19,3 +19,7 @@ twitch_auth.json
 # Logs
 *.log
 npm-debug.log*
+
+# Request data (contains user info)
+requests_log.json
+requests_stats.json

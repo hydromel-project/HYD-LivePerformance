@@ -4,6 +4,7 @@ const { EventSubWsListener } = require('@twurple/eventsub-ws');
 const tmi = require('tmi.js');
 const config = require('./config');
 const gameEngine = require('./game-engine');
+const requests = require('./requests');
 const EventEmitter = require('events');
 
 class TwitchIntegration extends EventEmitter {
@@ -15,6 +16,15 @@ class TwitchIntegration extends EventEmitter {
     this.chatClient = null;
     this.connected = false;
     this.rewardsCreated = false;
+    this.songsIndex = [];  // Will be set by server when loaded
+  }
+
+  /**
+   * Set the songs index for request matching
+   */
+  setSongsIndex(songs) {
+    this.songsIndex = songs || [];
+    console.log(`   Songs index loaded: ${this.songsIndex.length} songs`);
   }
 
   /**
@@ -116,7 +126,169 @@ class TwitchIntegration extends EventEmitter {
       console.log('   Chat connected');
     });
 
+    // Handle chat messages for commands
+    this.chatClient.on('message', (channel, tags, message, self) => {
+      if (self) return;  // Ignore bot's own messages
+      this.handleChatMessage(channel, tags, message);
+    });
+
     await this.chatClient.connect();
+  }
+
+  /**
+   * Handle incoming chat message for commands
+   */
+  async handleChatMessage(channel, tags, message) {
+    const reqConfig = config.get('requests');
+    if (!reqConfig?.enabled) return;
+
+    const trimmedMsg = message.trim();
+    const cmd = trimmedMsg.split(' ')[0].toLowerCase();
+
+    // Check for request commands
+    const requestCommands = [reqConfig.command, ...(reqConfig.aliases || [])].map(c => c.toLowerCase());
+
+    if (requestCommands.includes(cmd)) {
+      await this.handleSongRequest(channel, tags, trimmedMsg);
+      return;
+    }
+
+    // Queue position check (!queue, !position, !myrequest)
+    if (['!queue', '!position', '!myrequest', '!song'].includes(cmd)) {
+      await this.handleQueueCheck(channel, tags);
+      return;
+    }
+
+    // Cancel request (!cancel, !cancelrequest)
+    if (['!cancel', '!cancelrequest'].includes(cmd)) {
+      await this.handleCancelRequest(channel, tags);
+      return;
+    }
+  }
+
+  /**
+   * Handle song request command
+   */
+  async handleSongRequest(channel, tags, message) {
+    const reqConfig = config.get('requests');
+    const username = tags.username;
+    const userId = tags['user-id'];
+    const displayName = tags['display-name'] || username;
+
+    // Extract song query (everything after the command)
+    const query = message.replace(/^!\S+\s*/, '').trim();
+
+    if (!query) {
+      // Show current request if no query
+      await this.handleQueueCheck(channel, tags);
+      return;
+    }
+
+    // Build user info
+    const userInfo = {
+      displayName,
+      isSubscriber: tags.subscriber || tags.badges?.subscriber,
+      isBroadcaster: tags.badges?.broadcaster,
+      isMod: tags.mod || tags.badges?.moderator,
+      avatarUrl: null
+    };
+
+    // Check user requirements
+    const checkResult = await requests.checkUserRequirements(userId, username, userInfo, this.apiClient);
+
+    if (!checkResult.allowed) {
+      this.sendChat(checkResult.reason);
+      return;
+    }
+
+    // Search for the song
+    const song = requests.searchSong(query, this.songsIndex);
+
+    if (!song) {
+      const msg = this.formatRequestMessage('notFound', { user: username, query });
+      this.sendChat(msg);
+      return;
+    }
+
+    // Try to fetch avatar
+    try {
+      const user = await this.apiClient.users.getUserById(userId);
+      if (user) {
+        userInfo.avatarUrl = user.profilePictureUrl;
+      }
+    } catch (err) {
+      // Ignore avatar fetch errors
+    }
+
+    // Add request
+    const result = requests.addRequest(userId, username, song, userInfo);
+
+    if (result.success) {
+      const msgType = result.edited ? 'requestEdited' : 'requestAdded';
+      const msg = this.formatRequestMessage(msgType, {
+        user: username,
+        title: song.t,
+        artist: song.a,
+        position: result.edited
+          ? requests.getUserPosition(userId)
+          : requests.getQueue().length
+      });
+      this.sendChat(msg);
+      this.emit('requestAdded', result.request);
+    } else {
+      this.sendChat(result.message);
+    }
+  }
+
+  /**
+   * Handle queue check command
+   */
+  async handleQueueCheck(channel, tags) {
+    const username = tags.username;
+    const userId = tags['user-id'];
+
+    const userRequest = requests.getUserRequest(userId);
+
+    if (userRequest) {
+      const position = requests.getUserPosition(userId);
+      const msg = this.formatRequestMessage('currentRequest', {
+        user: username,
+        title: userRequest.songTitle,
+        artist: userRequest.songArtist,
+        position
+      });
+      this.sendChat(msg);
+    } else {
+      const msg = this.formatRequestMessage('noRequest', { user: username });
+      this.sendChat(msg);
+    }
+  }
+
+  /**
+   * Handle cancel request command
+   */
+  async handleCancelRequest(channel, tags) {
+    const username = tags.username;
+    const userId = tags['user-id'];
+
+    const result = requests.removeRequest(userId);
+
+    if (result.success) {
+      const msg = this.formatRequestMessage('requestCancelled', { user: username });
+      this.sendChat(msg);
+      this.emit('requestRemoved', result.request);
+    } else {
+      const msg = this.formatRequestMessage('noRequest', { user: username });
+      this.sendChat(msg);
+    }
+  }
+
+  /**
+   * Format request-related chat message
+   */
+  formatRequestMessage(type, data) {
+    const template = config.get(`requests.messages.${type}`) || '';
+    return template.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? match);
   }
 
   /**

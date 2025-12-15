@@ -125,6 +125,47 @@ const defaultConfig = {
       { minAmount: 10, maxAmount: 24.99, action: 'chaos', message: '💰 {user} tipped ${amount} - CHAOS MODE!' },
       { minAmount: 25, maxAmount: null, action: 'reset', message: '💰 {user} tipped ${amount} - Reset!' }
     ]
+  },
+
+  // Song request settings
+  requests: {
+    enabled: false,
+
+    // Requirements
+    subOnly: false,           // Only subscribers can request
+    requireFollower: false,   // Must be a follower to request
+    requireActive: false,     // Must have chatted recently (future feature)
+
+    // Cooldowns and limits
+    userCooldownMinutes: 5,   // Minutes between requests per user
+    maxQueueSize: 50,         // Maximum requests in queue
+
+    // Edit behavior
+    allowEdit: true,          // Users can edit their request without losing spot
+
+    // Channel points (0 = free)
+    channelPointsCost: 0,
+
+    // Command settings
+    command: '!request',
+    aliases: ['!sr', '!songrequest'],
+
+    // Chat messages
+    messages: {
+      requestAdded: '🎵 @{user} Added "{title}" by {artist} to the queue (position #{position})',
+      requestEdited: '🎵 @{user} Updated request to "{title}" by {artist} (position #{position})',
+      notFound: '@{user} Could not find a song matching "{query}". Try being more specific!',
+      disabled: '@{user} Song requests are currently disabled.',
+      subOnly: '@{user} Song requests are subscriber-only.',
+      followerOnly: '@{user} You must follow the channel to request songs.',
+      cooldown: '@{user} Cooldown active. Try again in {minutes} minute(s).',
+      queueFull: '@{user} Request queue is full. Please try again later.',
+      currentRequest: '@{user} Your current request: "{title}" by {artist} (position #{position})',
+      noRequest: '@{user} You don\'t have a song in the queue.',
+      queuePosition: '@{user} "{title}" is at position #{position}',
+      queueEmpty: 'The request queue is empty! Use !request <song> to add one.',
+      requestCancelled: '@{user} Your request has been removed from the queue.'
+    }
   }
 };
 
