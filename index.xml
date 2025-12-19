@@ -89,10 +89,6 @@ v1.0.0: Initial release
 - Playlist queue management
 - OBS-ready web interfaces with settings panels]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-LivePerformanceServer.lua</source>
-        <source file="../../reaper_www_root/Teleprompter.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Teleprompter.html</source>
-        <source file="../../reaper_www_root/NowPlaying.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/NowPlaying.html</source>
-        <source file="../../reaper_www_root/Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
-        <source file="../../reaper_www_root/GameHUD.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/GameHUD.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Setup.lua" type="script" author="hydromel-project">
@@ -110,7 +106,6 @@ v1.0.1: Fixed configuration format
 v1.0.0: Initial release
 - Adds Live Performance Server to main toolbar]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-Setup.lua</source>
-        <source file="../../reaper_www_root/HYD-Setup.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/HYD-Setup.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Playlist_IndexSongs.lua" type="script" author="hydromel-project">
@@ -159,6 +154,23 @@ To install: Run Install.cmd (or install.bat), then use desktop shortcut.]]></cha
         <source file="bot/src/streamlabs.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamlabs.js</source>
         <source file="bot/src/twitch.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/twitch.js</source>
         <source file="bot/public/index.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/public/index.html</source>
+      </version>
+    </reapack>
+
+    <reapack name="HYD-WebInterfaces.html" type="webinterface" author="hydromel-project">
+      <version name="1.0.0">
+        <changelog><![CDATA[Web interfaces for HYD-LivePerformance
+
+- Teleprompter: Lyrics display with beat indicator
+- NowPlaying: Cover art and song info overlay
+- Playlist: Queue management panel
+- GameHUD: Gamified playrate display with fire/ice effects
+- HYD-Setup: Interactive setup guide]]></changelog>
+        <source file="Teleprompter.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Teleprompter.html</source>
+        <source file="NowPlaying.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/NowPlaying.html</source>
+        <source file="Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
+        <source file="GameHUD.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/GameHUD.html</source>
+        <source file="HYD-Setup.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/HYD-Setup.html</source>
       </version>
     </reapack>
   </category>
