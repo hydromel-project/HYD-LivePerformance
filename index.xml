@@ -89,10 +89,10 @@ v1.0.0: Initial release
 - Playlist queue management
 - OBS-ready web interfaces with settings panels]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-LivePerformanceServer.lua</source>
-        <source file="../www/Teleprompter.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Teleprompter.html</source>
-        <source file="../www/NowPlaying.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/NowPlaying.html</source>
-        <source file="../www/Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
-        <source file="../www/GameHUD.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/GameHUD.html</source>
+        <source file="../../reaper_www_root/Teleprompter.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Teleprompter.html</source>
+        <source file="../../reaper_www_root/NowPlaying.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/NowPlaying.html</source>
+        <source file="../../reaper_www_root/Playlist.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/Playlist.html</source>
+        <source file="../../reaper_www_root/GameHUD.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/GameHUD.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Setup.lua" type="script" author="hydromel-project">
@@ -110,7 +110,7 @@ v1.0.1: Fixed configuration format
 v1.0.0: Initial release
 - Adds Live Performance Server to main toolbar]]></changelog>
         <source main="main">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/Scripts/HYD-Setup.lua</source>
-        <source file="../www/HYD-Setup.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/HYD-Setup.html</source>
+        <source file="../../reaper_www_root/HYD-Setup.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/www/HYD-Setup.html</source>
       </version>
     </reapack>
     <reapack name="HYD-Playlist_IndexSongs.lua" type="script" author="hydromel-project">
