@@ -441,6 +441,11 @@
       <input type="range" id="setFade" min="0" max="30" step="1" value="5">
     </div>
 
+    <div class="settings-group">
+      <label>Overlap Transition: <span id="overlapValue">0.5</span>s</label>
+      <input type="range" id="setOverlap" min="0.2" max="3" step="0.1" value="0.5">
+    </div>
+
     <h3>Colors</h3>
     <div class="settings-row">
       <div class="settings-group">
@@ -514,6 +519,7 @@
       duration: 0.5,
       scrollAnim: false,
       fade: 5,
+      overlapTransition: 0.5,
       bgColor: '#1a1a1a',
       accentColor: '#00ff88',
       textColor: '#ffffff',
@@ -540,6 +546,7 @@
         textColor: urlParams.get('text') || stored.textColor || defaults.textColor,
         secondaryColor: urlParams.get('secondary') || stored.secondaryColor || defaults.secondaryColor,
         fontSize: parseInt(urlParams.get('size')) || stored.fontSize || defaults.fontSize,
+        overlapTransition: parseFloat(urlParams.get('overlap')) || stored.overlapTransition || defaults.overlapTransition,
         hideSettings: urlParams.get('hideSettings') === 'true'
       };
     }
@@ -571,6 +578,7 @@
       duration: document.getElementById('setDuration'),
       scrollAnim: document.getElementById('setScrollAnim'),
       fade: document.getElementById('setFade'),
+      overlapTransition: document.getElementById('setOverlap'),
       bgColor: document.getElementById('setBgColor'),
       accentColor: document.getElementById('setAccentColor'),
       textColor: document.getElementById('setTextColor'),
@@ -616,6 +624,7 @@
       inputs.duration.value = settings.duration;
       inputs.scrollAnim.checked = settings.scrollAnim;
       inputs.fade.value = settings.fade;
+      inputs.overlapTransition.value = settings.overlapTransition;
       inputs.bgColor.value = settings.bgColor;
       inputs.accentColor.value = settings.accentColor;
       inputs.textColor.value = settings.textColor;
@@ -624,6 +633,7 @@
 
       document.getElementById('durationValue').textContent = settings.duration;
       document.getElementById('fadeValue').textContent = settings.fade;
+      document.getElementById('overlapValue').textContent = settings.overlapTransition;
       document.getElementById('fontSizeValue').textContent = settings.fontSize;
     }
 
@@ -637,6 +647,7 @@
       settings.duration = parseFloat(inputs.duration.value);
       settings.scrollAnim = inputs.scrollAnim.checked;
       settings.fade = parseInt(inputs.fade.value);
+      settings.overlapTransition = parseFloat(inputs.overlapTransition.value);
       settings.bgColor = inputs.bgColor.value;
       settings.accentColor = inputs.accentColor.value;
       settings.textColor = inputs.textColor.value;
@@ -656,6 +667,7 @@
       p.set('dur', settings.duration);
       p.set('scroll', settings.scrollAnim);
       p.set('fade', settings.fade);
+      p.set('overlap', settings.overlapTransition);
       p.set('bg', settings.bgColor);
       p.set('accent', settings.accentColor);
       p.set('text', settings.textColor);
@@ -707,6 +719,8 @@
     let title = '', artist = '', album = '', year = '', cover = '', lastCover = '', lastTitle = '';
     let timeRemaining = 0, isVisible = false;
     let regionName = '', lastRegionName = '';
+    let playPos = 0, itemStart = 0, itemEnd = 0, lastItemStart = -1;
+    let pendingShow = false, imageReady = false, transitioning = false;
 
     // REAPER communication
     wwr_start();
@@ -736,20 +750,30 @@
     }
 
     function updateDisplay() {
-      const hasContent = displayActive && (title || regionName);
-      const contentChanged = regionName !== lastRegionName || title !== lastTitle;
+      // Check if cursor is within item bounds
+      const cursorInItem = itemEnd > 0 && playPos >= itemStart && playPos <= itemEnd;
+      const hasContent = displayActive && (title || regionName) && cursorInItem;
+      const itemChanged = itemStart !== lastItemStart && lastItemStart !== -1;
 
-      // Simple logic: if we have content to show, show it
+      // Only show if we have content AND cursor is inside the song item
       if (hasContent) {
-        if (!isVisible) {
-          show();
-        } else if (contentChanged) {
-          // Content changed while visible - update immediately
-          updateContent();
+        if (!isVisible && !pendingShow && !transitioning) {
+          // Start loading content, show when ready
+          lastItemStart = itemStart;
+          prepareShow();
+        } else if (itemChanged && isVisible && !transitioning) {
+          // Song changed while visible - crossfade transition
+          lastItemStart = itemStart;
+          crossfade();
+        } else if (!itemChanged && lastItemStart === -1) {
+          lastItemStart = itemStart;
         }
       } else {
         // No content - fade out
-        if (isVisible) {
+        pendingShow = false;
+        imageReady = false;
+        lastItemStart = -1;
+        if (isVisible && !transitioning) {
           fadeOut();
         }
       }
@@ -768,14 +792,77 @@
       if (isVisible) updateContent();
     }
 
+    function prepareShow() {
+      pendingShow = true;
+      imageReady = false;
+
+      // Update text content immediately (hidden)
+      songTitleEl.textContent = title || '--';
+      songArtistEl.textContent = artist || '--';
+      songAlbumEl.textContent = album || '--';
+      songYearEl.textContent = year || '';
+
+      if (cover) {
+        // Wait for cover art to load before showing
+        const imgUrl = cover + '?t=' + Date.now();
+        preloadImage(imgUrl, () => {
+          if (!pendingShow) return; // Cancelled
+          albumArtImg.src = imgUrl;
+          albumArtImg.style.display = 'block';
+          noArtIcon.style.display = 'none';
+          if (settings.layout === 'background') {
+            bgArtImg.src = imgUrl;
+          }
+          lastCover = cover;
+          imageReady = true;
+          show();
+        }, () => {
+          if (!pendingShow) return; // Cancelled
+          // Error loading - show with placeholder
+          albumArtImg.style.display = 'none';
+          noArtIcon.style.display = 'flex';
+          lastCover = '';
+          imageReady = true;
+          show();
+        });
+      } else {
+        // No cover - show immediately with placeholder
+        albumArtImg.style.display = 'none';
+        noArtIcon.style.display = 'flex';
+        lastCover = '';
+        imageReady = true;
+        show();
+      }
+    }
+
     function show() {
+      if (!pendingShow) return;
+      pendingShow = false;
       isVisible = true;
-      updateContent();
       nowPlayingEl.style.opacity = '';
       nowPlayingEl.classList.add('visible');
-      if (settings.layout === 'background' && cover) {
+      if (settings.layout === 'background' && cover && imageReady) {
         bgArt.classList.add('visible');
       }
+    }
+
+    function crossfade() {
+      transitioning = true;
+      // Fade out current with overlap transition duration
+      nowPlayingEl.style.transition = 'opacity ' + settings.overlapTransition + 's ease';
+      nowPlayingEl.classList.remove('visible');
+      if (settings.layout === 'background') {
+        bgArt.style.transition = 'opacity ' + settings.overlapTransition + 's ease';
+        bgArt.classList.remove('visible');
+      }
+      // After fade out, load new content and fade in
+      setTimeout(() => {
+        prepareShow();
+        transitioning = false;
+        // Reset to default transition
+        nowPlayingEl.style.transition = '';
+        bgArt.style.transition = '';
+      }, settings.overlapTransition * 1000);
     }
 
     function fadeOut() {

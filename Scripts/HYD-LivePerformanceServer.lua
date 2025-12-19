@@ -111,19 +111,25 @@ local function FindTrackByName(name)
   return nil
 end
 
--- Get item at position on track
+-- Get item at position on track (prefers newer/later-starting item when overlapping)
 local function GetItemAtPos(track, pos)
   if not track then return nil end
   local count = reaper.GetTrackNumMediaItems(track)
+  local best_item, best_pos, best_end = nil, 0, 0
   for i = 0, count - 1 do
     local item = reaper.GetTrackMediaItem(track, i)
     local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
     local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
     if pos >= item_pos and pos < item_pos + item_len then
-      return item, item_pos, item_pos + item_len
+      -- When overlapping, prefer the item with later start position (newer)
+      if not best_item or item_pos > best_pos then
+        best_item = item
+        best_pos = item_pos
+        best_end = item_pos + item_len
+      end
     end
   end
-  return nil, 0, 0
+  return best_item, best_pos, best_end
 end
 
 -- ============================================================================
@@ -134,6 +140,7 @@ local NowPlaying = {
   songs_track = nil,
   current_region_name = "",
   last_valid_region = "",
+  last_item_start = -1,  -- Track current item by start position
   display_active = false,
   was_playing = false,
 
@@ -302,9 +309,29 @@ function NowPlaying:Update(cur_pos, is_playing, region_start, region_end, region
   -- Poll cover extraction
   if self.extract_state == self.EXTRACT_COVER then self:PollCover() end
 
-  -- Extract song data if needed
-  if region_name ~= "" and self.extract_state == self.EXTRACT_IDLE then
-    self:ExtractSongData(cur_pos, region_end)
+  -- Check for item change and extract song data
+  local item = GetItemAtPos(self.songs_track, cur_pos)
+  if item then
+    local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local item_end = item_pos + item_len
+    
+    -- Detect item change (new song started)
+    if item_pos ~= self.last_item_start then
+      self:FlushCache()
+      self.last_item_start = item_pos
+    end
+    
+    -- Extract if needed
+    if self.extract_state == self.EXTRACT_IDLE then
+      self:ExtractSongData(cur_pos, region_end > 0 and region_end or item_end)
+    end
+  else
+    -- No item at position
+    if self.last_item_start ~= -1 then
+      self:FlushCache()
+      self.last_item_start = -1
+    end
   end
 
   -- Display state
