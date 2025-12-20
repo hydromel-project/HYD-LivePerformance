@@ -2034,9 +2034,564 @@
     </div>
   </div>
 
+  <!-- PixiJS for ridiculous effects -->
+  <canvas id="pixiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+
   <script src="main.js"></script>
   <script>
     const STORAGE_KEY = 'hyd_gamehud_settings';
+
+    // ============ PIXI.JS RIDICULOUS EFFECTS SYSTEM ============
+    let pixiApp = null;
+    let pixiEffects = null;
+
+    async function initPixiEffects() {
+      if (typeof PIXI === 'undefined') {
+        console.warn('PixiJS not loaded, skipping effects');
+        return;
+      }
+
+      const canvas = document.getElementById('pixiCanvas');
+
+      pixiApp = new PIXI.Application();
+      await pixiApp.init({
+        canvas: canvas,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundAlpha: 0,
+        antialias: true,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+      });
+
+      // Containers for different effect layers
+      const containers = {
+        background: new PIXI.Container(),
+        particles: new PIXI.Container(),
+        lightning: new PIXI.Container(),
+        explosions: new PIXI.Container(),
+        glitch: new PIXI.Container()
+      };
+
+      Object.values(containers).forEach(c => pixiApp.stage.addChild(c));
+
+      // Particle pools
+      const sparkPool = [];
+      const emberPool = [];
+      const snowPool = [];
+
+      // ============ LIGHTNING BOLT EFFECT ============
+      class LightningBolt {
+        constructor(startX, startY, endX, endY) {
+          this.graphics = new PIXI.Graphics();
+          this.life = 1;
+          this.segments = [];
+          this.generateSegments(startX, startY, endX, endY);
+          containers.lightning.addChild(this.graphics);
+        }
+
+        generateSegments(x1, y1, x2, y2, depth = 0) {
+          if (depth > 5) {
+            this.segments.push({ x1, y1, x2, y2, width: Math.max(1, 6 - depth) });
+            return;
+          }
+
+          const midX = (x1 + x2) / 2 + (Math.random() - 0.5) * 80 / (depth + 1);
+          const midY = (y1 + y2) / 2 + (Math.random() - 0.5) * 80 / (depth + 1);
+
+          this.generateSegments(x1, y1, midX, midY, depth + 1);
+          this.generateSegments(midX, midY, x2, y2, depth + 1);
+
+          // Random branches
+          if (Math.random() < 0.3 && depth < 3) {
+            const branchAngle = Math.atan2(y2 - y1, x2 - x1) + (Math.random() - 0.5) * Math.PI / 2;
+            const branchLen = 50 + Math.random() * 100;
+            const branchEndX = midX + Math.cos(branchAngle) * branchLen;
+            const branchEndY = midY + Math.sin(branchAngle) * branchLen;
+            this.generateSegments(midX, midY, branchEndX, branchEndY, depth + 2);
+          }
+        }
+
+        draw() {
+          this.graphics.clear();
+
+          // Outer glow
+          this.graphics.setStrokeStyle({ width: 12, color: 0x4444ff, alpha: this.life * 0.3 });
+          this.segments.forEach(seg => {
+            this.graphics.moveTo(seg.x1, seg.y1);
+            this.graphics.lineTo(seg.x2, seg.y2);
+          });
+          this.graphics.stroke();
+
+          // Middle glow
+          this.graphics.setStrokeStyle({ width: 6, color: 0x8888ff, alpha: this.life * 0.6 });
+          this.segments.forEach(seg => {
+            this.graphics.moveTo(seg.x1, seg.y1);
+            this.graphics.lineTo(seg.x2, seg.y2);
+          });
+          this.graphics.stroke();
+
+          // Core
+          this.graphics.setStrokeStyle({ width: 2, color: 0xffffff, alpha: this.life });
+          this.segments.forEach(seg => {
+            this.graphics.moveTo(seg.x1, seg.y1);
+            this.graphics.lineTo(seg.x2, seg.y2);
+          });
+          this.graphics.stroke();
+        }
+
+        update(delta) {
+          this.life -= 0.05 * delta;
+          this.draw();
+          return this.life > 0;
+        }
+
+        destroy() {
+          containers.lightning.removeChild(this.graphics);
+          this.graphics.destroy();
+        }
+      }
+
+      // ============ SPARK PARTICLE ============
+      class Spark {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.particles.addChild(this.graphics);
+        }
+
+        spawn(x, y, color, vx, vy) {
+          this.x = x;
+          this.y = y;
+          this.vx = vx || (Math.random() - 0.5) * 15;
+          this.vy = vy || -Math.random() * 10 - 5;
+          this.life = 1;
+          this.size = 2 + Math.random() * 4;
+          this.color = color || 0xffaa00;
+          this.active = true;
+          this.gravity = 0.3;
+          this.trail = [];
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.trail.push({ x: this.x, y: this.y, life: 0.5 });
+          if (this.trail.length > 8) this.trail.shift();
+
+          this.vy += this.gravity * delta;
+          this.x += this.vx * delta;
+          this.y += this.vy * delta;
+          this.life -= 0.02 * delta;
+
+          this.trail.forEach(t => t.life -= 0.1 * delta);
+
+          this.graphics.clear();
+
+          // Trail
+          this.trail.forEach((t, i) => {
+            if (t.life > 0) {
+              this.graphics.circle(t.x, t.y, this.size * t.life * 0.5);
+              this.graphics.fill({ color: this.color, alpha: t.life * this.life * 0.5 });
+            }
+          });
+
+          // Main spark
+          this.graphics.circle(this.x, this.y, this.size * this.life);
+          this.graphics.fill({ color: this.color, alpha: this.life });
+
+          // Core glow
+          this.graphics.circle(this.x, this.y, this.size * this.life * 0.5);
+          this.graphics.fill({ color: 0xffffff, alpha: this.life * 0.8 });
+
+          if (this.life <= 0 || this.y > window.innerHeight + 50) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ EXPLOSION EFFECT ============
+      class Explosion {
+        constructor(x, y, color, count = 50) {
+          this.sparks = [];
+          for (let i = 0; i < count; i++) {
+            let spark = sparkPool.find(s => !s.active);
+            if (!spark) {
+              spark = new Spark();
+              sparkPool.push(spark);
+            }
+            const angle = (Math.PI * 2 * i / count) + (Math.random() - 0.5) * 0.5;
+            const speed = 5 + Math.random() * 15;
+            spark.spawn(x, y, color, Math.cos(angle) * speed, Math.sin(angle) * speed);
+            spark.gravity = 0.1;
+            this.sparks.push(spark);
+          }
+
+          // Shockwave
+          this.ring = new PIXI.Graphics();
+          this.ringRadius = 0;
+          this.ringMaxRadius = 200;
+          this.ringLife = 1;
+          this.color = color;
+          containers.explosions.addChild(this.ring);
+          this.x = x;
+          this.y = y;
+        }
+
+        update(delta) {
+          this.ringRadius += 15 * delta;
+          this.ringLife -= 0.03 * delta;
+
+          this.ring.clear();
+          if (this.ringLife > 0) {
+            this.ring.circle(this.x, this.y, this.ringRadius);
+            this.ring.stroke({ width: 4 + this.ringLife * 8, color: this.color, alpha: this.ringLife * 0.8 });
+
+            // Inner ring
+            this.ring.circle(this.x, this.y, this.ringRadius * 0.7);
+            this.ring.stroke({ width: 2, color: 0xffffff, alpha: this.ringLife * 0.5 });
+          }
+
+          const active = this.sparks.some(s => s.active) || this.ringLife > 0;
+          if (!active) {
+            containers.explosions.removeChild(this.ring);
+            this.ring.destroy();
+          }
+          return active;
+        }
+      }
+
+      // ============ ELECTRIC ARC ============
+      class ElectricArc {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.points = [];
+          this.life = 0;
+          containers.lightning.addChild(this.graphics);
+        }
+
+        spawn(x1, y1, x2, y2) {
+          this.life = 1;
+          this.x1 = x1; this.y1 = y1;
+          this.x2 = x2; this.y2 = y2;
+        }
+
+        update(delta) {
+          if (this.life <= 0) return false;
+
+          this.graphics.clear();
+          this.life -= 0.08 * delta;
+
+          // Generate jagged line
+          const segments = 20;
+          let lastX = this.x1, lastY = this.y1;
+
+          // Outer glow
+          this.graphics.moveTo(this.x1, this.y1);
+          for (let i = 1; i <= segments; i++) {
+            const t = i / segments;
+            const x = this.x1 + (this.x2 - this.x1) * t + (Math.random() - 0.5) * 30 * (1 - t);
+            const y = this.y1 + (this.y2 - this.y1) * t + (Math.random() - 0.5) * 30;
+            this.graphics.lineTo(x, y);
+          }
+          this.graphics.stroke({ width: 8, color: 0x00aaff, alpha: this.life * 0.3 });
+
+          // Core
+          this.graphics.moveTo(this.x1, this.y1);
+          for (let i = 1; i <= segments; i++) {
+            const t = i / segments;
+            const x = this.x1 + (this.x2 - this.x1) * t + (Math.random() - 0.5) * 20;
+            const y = this.y1 + (this.y2 - this.y1) * t + (Math.random() - 0.5) * 20;
+            this.graphics.lineTo(x, y);
+          }
+          this.graphics.stroke({ width: 2, color: 0xffffff, alpha: this.life });
+
+          return this.life > 0;
+        }
+      }
+
+      // ============ CHROMATIC ABERRATION / GLITCH ============
+      let glitchIntensity = 0;
+      let glitchTimer = 0;
+      const glitchBars = [];
+
+      class GlitchBar {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.glitch.addChild(this.graphics);
+        }
+
+        spawn() {
+          this.y = Math.random() * window.innerHeight;
+          this.height = 2 + Math.random() * 20;
+          this.offset = (Math.random() - 0.5) * 50;
+          this.life = 0.1 + Math.random() * 0.2;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+          this.life -= 0.1 * delta;
+
+          this.graphics.clear();
+          if (this.life > 0) {
+            // RGB split effect bars
+            this.graphics.rect(0, this.y, window.innerWidth, this.height);
+            this.graphics.fill({ color: Math.random() > 0.5 ? 0xff0000 : 0x00ffff, alpha: 0.3 * this.life });
+          } else {
+            this.active = false;
+          }
+          return this.active;
+        }
+      }
+
+      // ============ AMBIENT SPARKS ============
+      class AmbientSpark {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.background.addChild(this.graphics);
+        }
+
+        spawn(type) {
+          this.x = Math.random() * window.innerWidth;
+          this.y = type === 'fire' ? window.innerHeight + 10 : -10;
+          this.vx = (Math.random() - 0.5) * 2;
+          this.vy = type === 'fire' ? -(1 + Math.random() * 3) : (1 + Math.random() * 2);
+          this.size = 1 + Math.random() * 3;
+          this.life = 1;
+          this.type = type;
+          this.wobble = Math.random() * Math.PI * 2;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.wobble += 0.1 * delta;
+          this.x += (this.vx + Math.sin(this.wobble) * 0.5) * delta;
+          this.y += this.vy * delta;
+          this.life -= 0.005 * delta;
+
+          this.graphics.clear();
+
+          if (this.type === 'fire') {
+            // Ember
+            this.graphics.circle(this.x, this.y, this.size);
+            this.graphics.fill({ color: 0xff4400, alpha: this.life * 0.8 });
+            this.graphics.circle(this.x, this.y, this.size * 0.5);
+            this.graphics.fill({ color: 0xffff00, alpha: this.life });
+          } else {
+            // Ice crystal
+            this.graphics.circle(this.x, this.y, this.size);
+            this.graphics.fill({ color: 0x88ddff, alpha: this.life * 0.6 });
+          }
+
+          if (this.life <= 0 ||
+              (this.type === 'fire' && this.y < -50) ||
+              (this.type === 'ice' && this.y > window.innerHeight + 50)) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // Pools for ambient sparks
+      const ambientSparkPool = [];
+      for (let i = 0; i < 100; i++) {
+        ambientSparkPool.push(new AmbientSpark());
+      }
+
+      // Glitch bars pool
+      for (let i = 0; i < 20; i++) {
+        glitchBars.push(new GlitchBar());
+      }
+
+      // Active effects tracking
+      const activeLightning = [];
+      const activeExplosions = [];
+      const activeArcs = [];
+      let ambientMode = 'none';
+      let ambientIntensity = 0;
+
+      // ============ MAIN UPDATE LOOP ============
+      pixiApp.ticker.add((ticker) => {
+        const delta = ticker.deltaTime;
+
+        // Update lightning
+        for (let i = activeLightning.length - 1; i >= 0; i--) {
+          if (!activeLightning[i].update(delta)) {
+            activeLightning[i].destroy();
+            activeLightning.splice(i, 1);
+          }
+        }
+
+        // Update explosions
+        for (let i = activeExplosions.length - 1; i >= 0; i--) {
+          if (!activeExplosions[i].update(delta)) {
+            activeExplosions.splice(i, 1);
+          }
+        }
+
+        // Update sparks
+        sparkPool.forEach(s => s.active && s.update(delta));
+
+        // Update arcs
+        for (let i = activeArcs.length - 1; i >= 0; i--) {
+          if (!activeArcs[i].update(delta)) {
+            activeArcs.splice(i, 1);
+          }
+        }
+
+        // Update glitch
+        if (glitchIntensity > 0) {
+          glitchTimer += delta;
+          if (glitchTimer > 2) {
+            const bar = glitchBars.find(b => !b.active);
+            if (bar) bar.spawn();
+            glitchTimer = 0;
+          }
+          glitchIntensity -= 0.01 * delta;
+        }
+        glitchBars.forEach(b => b.update(delta));
+
+        // Ambient particles
+        if (ambientMode !== 'none' && ambientIntensity > 0) {
+          if (Math.random() < ambientIntensity * 0.1) {
+            const spark = ambientSparkPool.find(s => !s.active);
+            if (spark) spark.spawn(ambientMode);
+          }
+        }
+        ambientSparkPool.forEach(s => s.active && s.update(delta));
+      });
+
+      // ============ PUBLIC API ============
+      pixiEffects = {
+        lightning: (fromX, fromY, toX, toY) => {
+          const bolt = new LightningBolt(
+            fromX ?? Math.random() * window.innerWidth,
+            fromY ?? 0,
+            toX ?? Math.random() * window.innerWidth,
+            toY ?? window.innerHeight
+          );
+          activeLightning.push(bolt);
+        },
+
+        lightningStorm: (count = 5) => {
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              pixiEffects.lightning();
+            }, i * 100);
+          }
+        },
+
+        explosion: (x, y, color = 0xff4400, count = 50) => {
+          const exp = new Explosion(
+            x ?? window.innerWidth / 2,
+            y ?? window.innerHeight / 2,
+            color,
+            count
+          );
+          activeExplosions.push(exp);
+        },
+
+        sparks: (x, y, color, count = 20) => {
+          for (let i = 0; i < count; i++) {
+            let spark = sparkPool.find(s => !s.active);
+            if (!spark) {
+              spark = new Spark();
+              sparkPool.push(spark);
+            }
+            spark.spawn(x, y, color);
+          }
+        },
+
+        electricArc: (x1, y1, x2, y2) => {
+          let arc = activeArcs.find(a => a.life <= 0);
+          if (!arc) {
+            arc = new ElectricArc();
+            activeArcs.push(arc);
+          }
+          arc.spawn(x1, y1, x2, y2);
+        },
+
+        glitch: (intensity = 1, duration = 500) => {
+          glitchIntensity = intensity;
+          setTimeout(() => { glitchIntensity = 0; }, duration);
+        },
+
+        setAmbient: (mode, intensity = 0.5) => {
+          ambientMode = mode; // 'fire', 'ice', or 'none'
+          ambientIntensity = intensity;
+        },
+
+        chaos: () => {
+          // Ultimate chaos effect!
+          pixiEffects.lightningStorm(8);
+          pixiEffects.glitch(1, 1000);
+
+          // Multiple explosions
+          for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+              pixiEffects.explosion(
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight,
+                [0xff0000, 0x00ff00, 0x0000ff, 0xff00ff, 0xffff00][i % 5],
+                30
+              );
+            }, i * 150);
+          }
+
+          // Electric arcs across screen
+          for (let i = 0; i < 10; i++) {
+            setTimeout(() => {
+              pixiEffects.electricArc(
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight
+              );
+            }, i * 50);
+          }
+        },
+
+        speedUp: () => {
+          pixiEffects.explosion(window.innerWidth / 2, window.innerHeight - 100, 0xff4400, 40);
+          pixiEffects.sparks(window.innerWidth / 2, window.innerHeight - 50, 0xff8800, 30);
+        },
+
+        slowDown: () => {
+          pixiEffects.explosion(window.innerWidth / 2, 100, 0x88ddff, 40);
+          pixiEffects.sparks(window.innerWidth / 2, 50, 0xaaeeff, 30);
+        },
+
+        reset: () => {
+          pixiEffects.explosion(window.innerWidth / 2, window.innerHeight / 2, 0x00ff88, 60);
+          pixiEffects.lightningStorm(3);
+        }
+      };
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        pixiApp.renderer.resize(window.innerWidth, window.innerHeight);
+      });
+
+      console.log('🎆 PixiJS Effects System initialized!');
+    }
+
+    // Initialize PixiJS when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPixiEffects);
+    } else {
+      initPixiEffects();
+    }
 
     // Default avatar SVG (properly encoded for use in src attribute)
     const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#333"/><circle cx="50" cy="40" r="20" fill="#666"/><ellipse cx="50" cy="85" rx="35" ry="25" fill="#666"/></svg>');
@@ -3034,6 +3589,9 @@
         const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
 
         startAmbientFire(intensity);
+
+        // PixiJS ambient fire embers
+        if (pixiEffects) pixiEffects.setAmbient('fire', intensity);
       }
       // Ice zone: playrate <= ice threshold
       else if (playrate <= settings.iceThreshold) {
@@ -3052,11 +3610,17 @@
         const intensity = Math.min(1, 0.1 + Math.pow(normalized, 0.7) * 0.9);
 
         startAmbientIce(intensity);
+
+        // PixiJS ambient ice crystals
+        if (pixiEffects) pixiEffects.setAmbient('ice', intensity);
       }
       // Normal zone: no effects
       else {
         stopAmbientFire();
         stopAmbientIce();
+
+        // Stop PixiJS ambient effects
+        if (pixiEffects) pixiEffects.setAmbient('none', 0);
       }
     }
 
@@ -3807,6 +4371,23 @@
                 playrateValue.classList.add('slow-down');
               }
 
+              // PixiJS ridiculous effects based on action
+              if (pixiEffects) {
+                if (action === 'chaos') {
+                  pixiEffects.chaos();
+                } else if (action === 'reset') {
+                  pixiEffects.reset();
+                } else if (action === 'speedUp') {
+                  pixiEffects.speedUp();
+                } else if (action === 'slowDown') {
+                  pixiEffects.slowDown();
+                } else if (newRate > oldRate) {
+                  pixiEffects.sparks(window.innerWidth / 2, window.innerHeight - 100, 0xff4400, 20);
+                } else {
+                  pixiEffects.sparks(window.innerWidth / 2, 100, 0x88ddff, 20);
+                }
+              }
+
               setTimeout(() => {
                 playrateValue.classList.remove('speed-up', 'slow-down');
               }, 300);
@@ -3885,6 +4466,22 @@
                   break;
                 case 'stopAmbient':
                   stopAmbientFire();
+                  break;
+                // PixiJS effects
+                case 'lightning':
+                  if (pixiEffects) pixiEffects.lightning();
+                  break;
+                case 'lightningStorm':
+                  if (pixiEffects) pixiEffects.lightningStorm(8);
+                  break;
+                case 'explosion':
+                  if (pixiEffects) pixiEffects.explosion();
+                  break;
+                case 'chaos':
+                  if (pixiEffects) pixiEffects.chaos();
+                  break;
+                case 'glitch':
+                  if (pixiEffects) pixiEffects.glitch(1, 1000);
                   break;
               }
             }
