@@ -1275,6 +1275,155 @@
       background: linear-gradient(90deg, var(--neon-red), var(--neon-yellow));
     }
 
+    /* ============ MEASURE-SYNC COUNTDOWN ============ */
+    .measure-sync-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      z-index: 350;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .measure-sync-overlay.active {
+      opacity: 1;
+    }
+
+    .measure-sync-warning {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+      color: var(--neon-orange);
+      text-shadow:
+        0 0 20px var(--neon-orange),
+        0 0 40px var(--neon-orange);
+      letter-spacing: 4px;
+      margin-bottom: 15px;
+      animation: measureSyncPulse 0.5s ease-in-out infinite;
+    }
+
+    .measure-sync-newrate {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 60px;
+      font-weight: 900;
+      color: var(--neon-pink);
+      text-shadow:
+        0 0 20px var(--neon-pink),
+        0 0 40px var(--neon-pink);
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .measure-sync-newrate.faster {
+      color: var(--fire-orange);
+      text-shadow:
+        0 0 20px var(--fire-orange),
+        0 0 40px var(--fire-orange);
+    }
+
+    .measure-sync-newrate.slower {
+      color: var(--ice-blue);
+      text-shadow:
+        0 0 20px var(--ice-blue),
+        0 0 40px var(--ice-blue);
+    }
+
+    .measure-sync-beats {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .beat-indicator {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--ui-dark);
+      border: 3px solid var(--neon-orange);
+      box-shadow: 0 0 10px var(--neon-orange);
+      transition: all 0.15s ease;
+    }
+
+    .beat-indicator.active {
+      background: var(--neon-orange);
+      box-shadow: 0 0 30px var(--neon-orange);
+      transform: scale(1.2);
+    }
+
+    .beat-indicator.passed {
+      background: var(--neon-green);
+      border-color: var(--neon-green);
+      box-shadow: 0 0 15px var(--neon-green);
+    }
+
+    .measure-sync-countdown-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 100px;
+      font-weight: 900;
+      color: var(--neon-yellow);
+      text-shadow:
+        0 0 30px var(--neon-yellow),
+        0 0 60px var(--neon-yellow),
+        0 0 90px var(--neon-orange);
+      line-height: 1;
+      animation: measureSyncBeatPop 0.3s ease-out;
+      margin-top: 20px;
+    }
+
+    @keyframes measureSyncPulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    @keyframes measureSyncBeatPop {
+      0% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Vortex building effect for measure-sync */
+    .measure-sync-vortex {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 400px;
+      height: 400px;
+      transform: translate(-50%, -50%);
+      border: 4px solid var(--neon-orange);
+      border-radius: 50%;
+      opacity: 0;
+      animation: vortexBuild 2s ease-in infinite;
+      pointer-events: none;
+      z-index: 340;
+    }
+
+    .measure-sync-vortex.active {
+      opacity: 1;
+    }
+
+    @keyframes vortexBuild {
+      0% {
+        width: 400px;
+        height: 400px;
+        opacity: 0;
+        border-width: 2px;
+      }
+      50% {
+        opacity: 0.8;
+      }
+      100% {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+        border-width: 8px;
+      }
+    }
+
     /* ============ THRESHOLD EFFECTS ============ */
     .effect-overlay {
       position: fixed;
@@ -1985,6 +2134,17 @@
     </div>
   </div>
 
+  <!-- Measure-Sync Speed Change Warning -->
+  <div class="measure-sync-overlay" id="measureSyncOverlay">
+    <div class="measure-sync-warning">⚡ INCOMING SPEED CHANGE ⚡</div>
+    <div class="measure-sync-newrate" id="measureSyncNewRate">1.5x</div>
+    <div class="measure-sync-countdown-text" id="measureSyncCountdown">4</div>
+    <div class="measure-sync-beats" id="measureSyncBeats">
+      <!-- Beat indicators will be added dynamically -->
+    </div>
+  </div>
+  <div class="measure-sync-vortex" id="measureSyncVortex"></div>
+
   <!-- Milestone Achievement Popup -->
   <div class="milestone-popup" id="milestonePopup">
     <div class="milestone-icon" id="milestoneIcon">🏆</div>
@@ -2068,8 +2228,16 @@
       // Containers for different effect layers
       const containers = {
         background: new PIXI.Container(),
+        stars: new PIXI.Container(),      // Hyperspace stars
+        matrix: new PIXI.Container(),     // Matrix rain
+        smoke: new PIXI.Container(),      // Smoke trails
+        meteors: new PIXI.Container(),    // Meteor shower
+        vortex: new PIXI.Container(),     // Spiral vortex
         particles: new PIXI.Container(),
+        confetti: new PIXI.Container(),   // Confetti cannon
         lightning: new PIXI.Container(),
+        lasers: new PIXI.Container(),     // Laser scans
+        disco: new PIXI.Container(),      // Disco lights
         explosions: new PIXI.Container(),
         glitch: new PIXI.Container()
       };
@@ -2403,6 +2571,448 @@
         }
       }
 
+      // ============ HYPERSPACE STAR ============
+      class HyperspaceStar {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.stars.addChild(this.graphics);
+        }
+
+        spawn() {
+          const cx = window.innerWidth / 2;
+          const cy = window.innerHeight / 2;
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 20 + Math.random() * 50;
+          this.x = cx + Math.cos(angle) * dist;
+          this.y = cy + Math.sin(angle) * dist;
+          this.angle = angle;
+          this.speed = 5 + Math.random() * 10;
+          this.length = 2;
+          this.size = 1 + Math.random() * 2;
+          this.life = 1;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.speed *= 1.05;
+          this.length = Math.min(this.length * 1.1, 100);
+
+          const oldX = this.x;
+          const oldY = this.y;
+          this.x += Math.cos(this.angle) * this.speed * delta;
+          this.y += Math.sin(this.angle) * this.speed * delta;
+
+          this.graphics.clear();
+
+          // Star trail
+          this.graphics.moveTo(oldX, oldY);
+          this.graphics.lineTo(this.x, this.y);
+          this.graphics.stroke({ width: this.size, color: 0xffffff, alpha: this.life });
+
+          // Bright head
+          this.graphics.circle(this.x, this.y, this.size);
+          this.graphics.fill({ color: 0xaaccff, alpha: this.life });
+
+          if (this.x < -50 || this.x > window.innerWidth + 50 ||
+              this.y < -50 || this.y > window.innerHeight + 50) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ CONFETTI PIECE ============
+      class Confetti {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.confetti.addChild(this.graphics);
+        }
+
+        spawn(x, y) {
+          this.x = x;
+          this.y = y;
+          this.vx = (Math.random() - 0.5) * 20;
+          this.vy = -10 - Math.random() * 15;
+          this.rotation = Math.random() * Math.PI * 2;
+          this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+          this.width = 8 + Math.random() * 8;
+          this.height = 4 + Math.random() * 4;
+          this.color = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0xff0088][Math.floor(Math.random() * 8)];
+          this.life = 1;
+          this.flutter = Math.random() * Math.PI * 2;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.flutter += 0.2 * delta;
+          this.vy += 0.3 * delta; // gravity
+          this.vx += Math.sin(this.flutter) * 0.5 * delta; // flutter
+          this.x += this.vx * delta;
+          this.y += this.vy * delta;
+          this.rotation += this.rotationSpeed * delta;
+          this.life -= 0.008 * delta;
+
+          this.graphics.clear();
+          this.graphics.rect(-this.width/2, -this.height/2, this.width, this.height);
+          this.graphics.fill({ color: this.color, alpha: this.life });
+          this.graphics.position.set(this.x, this.y);
+          this.graphics.rotation = this.rotation;
+
+          if (this.y > window.innerHeight + 50 || this.life <= 0) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ METEOR ============
+      class Meteor {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          this.trail = [];
+          containers.meteors.addChild(this.graphics);
+        }
+
+        spawn() {
+          this.x = -50 + Math.random() * (window.innerWidth + 100);
+          this.y = -100;
+          this.vx = 3 + Math.random() * 5;
+          this.vy = 8 + Math.random() * 8;
+          this.size = 10 + Math.random() * 20;
+          this.life = 1;
+          this.trail = [];
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.trail.push({ x: this.x, y: this.y, size: this.size, life: 1 });
+          if (this.trail.length > 20) this.trail.shift();
+
+          this.x += this.vx * delta;
+          this.y += this.vy * delta;
+
+          this.graphics.clear();
+
+          // Fiery trail
+          this.trail.forEach((t, i) => {
+            t.life -= 0.1 * delta;
+            if (t.life > 0) {
+              const trailSize = t.size * t.life * 0.5;
+              // Outer fire
+              this.graphics.circle(t.x, t.y, trailSize * 1.5);
+              this.graphics.fill({ color: 0xff4400, alpha: t.life * 0.4 });
+              // Inner fire
+              this.graphics.circle(t.x, t.y, trailSize);
+              this.graphics.fill({ color: 0xff8800, alpha: t.life * 0.6 });
+              // Core
+              this.graphics.circle(t.x, t.y, trailSize * 0.5);
+              this.graphics.fill({ color: 0xffff00, alpha: t.life * 0.8 });
+            }
+          });
+
+          // Main meteor body
+          this.graphics.circle(this.x, this.y, this.size);
+          this.graphics.fill({ color: 0x885500 });
+          this.graphics.circle(this.x, this.y, this.size * 0.7);
+          this.graphics.fill({ color: 0xaa7744 });
+          // Hot leading edge
+          this.graphics.circle(this.x - this.size * 0.3, this.y - this.size * 0.3, this.size * 0.4);
+          this.graphics.fill({ color: 0xffcc00, alpha: 0.8 });
+
+          if (this.y > window.innerHeight + 100) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ SPIRAL VORTEX PARTICLE ============
+      class VortexParticle {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.vortex.addChild(this.graphics);
+        }
+
+        spawn(inward = true) {
+          const cx = window.innerWidth / 2;
+          const cy = window.innerHeight / 2;
+          this.inward = inward;
+
+          if (inward) {
+            this.angle = Math.random() * Math.PI * 2;
+            this.radius = 300 + Math.random() * 200;
+          } else {
+            this.angle = Math.random() * Math.PI * 2;
+            this.radius = 10 + Math.random() * 50;
+          }
+
+          this.angularSpeed = 0.05 + Math.random() * 0.05;
+          this.radialSpeed = inward ? 3 + Math.random() * 2 : 5 + Math.random() * 3;
+          this.size = 2 + Math.random() * 4;
+          this.color = [0xff00ff, 0x00ffff, 0xff8800, 0x8800ff][Math.floor(Math.random() * 4)];
+          this.life = 1;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.angle += this.angularSpeed * delta;
+
+          if (this.inward) {
+            this.radius -= this.radialSpeed * delta;
+            if (this.radius < 10) {
+              this.active = false;
+              this.graphics.clear();
+              return false;
+            }
+          } else {
+            this.radius += this.radialSpeed * delta;
+            this.life -= 0.015 * delta;
+          }
+
+          const cx = window.innerWidth / 2;
+          const cy = window.innerHeight / 2;
+          this.x = cx + Math.cos(this.angle) * this.radius;
+          this.y = cy + Math.sin(this.angle) * this.radius;
+
+          this.graphics.clear();
+          this.graphics.circle(this.x, this.y, this.size * this.life);
+          this.graphics.fill({ color: this.color, alpha: this.life * 0.8 });
+          // Glow
+          this.graphics.circle(this.x, this.y, this.size * this.life * 2);
+          this.graphics.fill({ color: this.color, alpha: this.life * 0.3 });
+
+          if (this.life <= 0 || this.radius > 600) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ MATRIX RAIN CHARACTER ============
+      class MatrixChar {
+        constructor() {
+          this.text = new PIXI.Text({ text: '', style: { fontFamily: 'monospace', fontSize: 16, fill: 0x00ff00 }});
+          this.active = false;
+          containers.matrix.addChild(this.text);
+        }
+
+        spawn(column) {
+          const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+          this.x = column * 20;
+          this.y = -20;
+          this.speed = 3 + Math.random() * 5;
+          this.changeTimer = 0;
+          this.changeInterval = 3 + Math.random() * 5;
+          this.char = chars[Math.floor(Math.random() * chars.length)];
+          this.text.text = this.char;
+          this.text.position.set(this.x, this.y);
+          this.text.alpha = 0.8 + Math.random() * 0.2;
+          this.life = 1;
+          this.active = true;
+          this.chars = chars;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.y += this.speed * delta;
+          this.changeTimer += delta;
+
+          if (this.changeTimer > this.changeInterval) {
+            this.text.text = this.chars[Math.floor(Math.random() * this.chars.length)];
+            this.changeTimer = 0;
+          }
+
+          this.text.position.set(this.x, this.y);
+          this.life -= 0.005 * delta;
+          this.text.alpha = this.life;
+
+          if (this.y > window.innerHeight + 20 || this.life <= 0) {
+            this.active = false;
+            this.text.alpha = 0;
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ LASER BEAM ============
+      class LaserBeam {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.lasers.addChild(this.graphics);
+        }
+
+        spawn(horizontal = true) {
+          this.horizontal = horizontal;
+          this.position = horizontal ? -10 : -10;
+          this.speed = 15 + Math.random() * 10;
+          this.thickness = 2 + Math.random() * 4;
+          this.color = [0xff0000, 0x00ff00, 0x00ffff, 0xff00ff][Math.floor(Math.random() * 4)];
+          this.life = 1;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.position += this.speed * delta;
+          this.graphics.clear();
+
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+
+          if (this.horizontal) {
+            // Horizontal sweep
+            // Glow
+            this.graphics.rect(0, this.position - this.thickness * 3, w, this.thickness * 6);
+            this.graphics.fill({ color: this.color, alpha: 0.2 });
+            // Core
+            this.graphics.rect(0, this.position - this.thickness/2, w, this.thickness);
+            this.graphics.fill({ color: this.color, alpha: 0.8 });
+            // Bright center
+            this.graphics.rect(0, this.position - 1, w, 2);
+            this.graphics.fill({ color: 0xffffff, alpha: 0.9 });
+
+            if (this.position > h + 20) {
+              this.active = false;
+              this.graphics.clear();
+            }
+          } else {
+            // Vertical sweep
+            this.graphics.rect(this.position - this.thickness * 3, 0, this.thickness * 6, h);
+            this.graphics.fill({ color: this.color, alpha: 0.2 });
+            this.graphics.rect(this.position - this.thickness/2, 0, this.thickness, h);
+            this.graphics.fill({ color: this.color, alpha: 0.8 });
+            this.graphics.rect(this.position - 1, 0, 2, h);
+            this.graphics.fill({ color: 0xffffff, alpha: 0.9 });
+
+            if (this.position > w + 20) {
+              this.active = false;
+              this.graphics.clear();
+            }
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ DISCO LIGHT ============
+      class DiscoLight {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.disco.addChild(this.graphics);
+        }
+
+        spawn() {
+          this.x = Math.random() * window.innerWidth;
+          this.y = Math.random() * window.innerHeight;
+          this.radius = 50 + Math.random() * 100;
+          this.color = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff][Math.floor(Math.random() * 6)];
+          this.rotation = Math.random() * Math.PI * 2;
+          this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+          this.pulsePhase = Math.random() * Math.PI * 2;
+          this.life = 1;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.rotation += this.rotationSpeed * delta;
+          this.pulsePhase += 0.1 * delta;
+          this.life -= 0.01 * delta;
+
+          const pulse = 0.5 + Math.sin(this.pulsePhase) * 0.3;
+          const r = this.radius * pulse;
+
+          this.graphics.clear();
+          // Outer glow
+          this.graphics.circle(this.x, this.y, r * 1.5);
+          this.graphics.fill({ color: this.color, alpha: this.life * 0.2 });
+          // Main spot
+          this.graphics.circle(this.x, this.y, r);
+          this.graphics.fill({ color: this.color, alpha: this.life * 0.4 });
+          // Bright center
+          this.graphics.circle(this.x, this.y, r * 0.5);
+          this.graphics.fill({ color: 0xffffff, alpha: this.life * 0.6 });
+
+          if (this.life <= 0) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
+      // ============ SMOKE CLOUD ============
+      class SmokeCloud {
+        constructor() {
+          this.graphics = new PIXI.Graphics();
+          this.active = false;
+          containers.smoke.addChild(this.graphics);
+        }
+
+        spawn(x, y) {
+          this.x = x;
+          this.y = y;
+          this.vx = (Math.random() - 0.5) * 2;
+          this.vy = -0.5 - Math.random() * 1;
+          this.size = 20 + Math.random() * 30;
+          this.growthRate = 0.5 + Math.random() * 0.5;
+          this.life = 1;
+          this.active = true;
+        }
+
+        update(delta) {
+          if (!this.active) return false;
+
+          this.x += this.vx * delta;
+          this.y += this.vy * delta;
+          this.size += this.growthRate * delta;
+          this.life -= 0.008 * delta;
+
+          this.graphics.clear();
+          // Multiple overlapping circles for cloud effect
+          for (let i = 0; i < 5; i++) {
+            const offsetX = (Math.random() - 0.5) * this.size * 0.5;
+            const offsetY = (Math.random() - 0.5) * this.size * 0.5;
+            this.graphics.circle(this.x + offsetX, this.y + offsetY, this.size * (0.5 + Math.random() * 0.3));
+            this.graphics.fill({ color: 0x444444, alpha: this.life * 0.15 });
+          }
+
+          if (this.life <= 0) {
+            this.active = false;
+            this.graphics.clear();
+          }
+
+          return this.active;
+        }
+      }
+
       // Pools for ambient sparks
       const ambientSparkPool = [];
       for (let i = 0; i < 100; i++) {
@@ -2414,12 +3024,59 @@
         glitchBars.push(new GlitchBar());
       }
 
+      // NEW EFFECT POOLS
+      const hyperspaceStarPool = [];
+      for (let i = 0; i < 200; i++) {
+        hyperspaceStarPool.push(new HyperspaceStar());
+      }
+
+      const confettiPool = [];
+      for (let i = 0; i < 150; i++) {
+        confettiPool.push(new Confetti());
+      }
+
+      const meteorPool = [];
+      for (let i = 0; i < 20; i++) {
+        meteorPool.push(new Meteor());
+      }
+
+      const vortexPool = [];
+      for (let i = 0; i < 100; i++) {
+        vortexPool.push(new VortexParticle());
+      }
+
+      const matrixCharPool = [];
+      for (let i = 0; i < 200; i++) {
+        matrixCharPool.push(new MatrixChar());
+      }
+
+      const laserPool = [];
+      for (let i = 0; i < 10; i++) {
+        laserPool.push(new LaserBeam());
+      }
+
+      const discoLightPool = [];
+      for (let i = 0; i < 20; i++) {
+        discoLightPool.push(new DiscoLight());
+      }
+
+      const smokePool = [];
+      for (let i = 0; i < 50; i++) {
+        smokePool.push(new SmokeCloud());
+      }
+
       // Active effects tracking
       const activeLightning = [];
       const activeExplosions = [];
       const activeArcs = [];
       let ambientMode = 'none';
       let ambientIntensity = 0;
+
+      // NEW EFFECT STATE
+      let hyperspaceActive = false;
+      let matrixActive = false;
+      let discoActive = false;
+      let nuclearFlashActive = false;
 
       // ============ MAIN UPDATE LOOP ============
       pixiApp.ticker.add((ticker) => {
@@ -2470,6 +3127,49 @@
           }
         }
         ambientSparkPool.forEach(s => s.active && s.update(delta));
+
+        // Update hyperspace stars
+        if (hyperspaceActive) {
+          if (Math.random() < 0.5) {
+            const star = hyperspaceStarPool.find(s => !s.active);
+            if (star) star.spawn();
+          }
+        }
+        hyperspaceStarPool.forEach(s => s.active && s.update(delta));
+
+        // Update confetti
+        confettiPool.forEach(c => c.active && c.update(delta));
+
+        // Update meteors
+        meteorPool.forEach(m => m.active && m.update(delta));
+
+        // Update vortex particles
+        vortexPool.forEach(v => v.active && v.update(delta));
+
+        // Update matrix rain
+        if (matrixActive) {
+          const columns = Math.floor(window.innerWidth / 20);
+          if (Math.random() < 0.3) {
+            const char = matrixCharPool.find(c => !c.active);
+            if (char) char.spawn(Math.floor(Math.random() * columns));
+          }
+        }
+        matrixCharPool.forEach(c => c.active && c.update(delta));
+
+        // Update lasers
+        laserPool.forEach(l => l.active && l.update(delta));
+
+        // Update disco lights
+        if (discoActive) {
+          if (Math.random() < 0.1) {
+            const light = discoLightPool.find(l => !l.active);
+            if (light) light.spawn();
+          }
+        }
+        discoLightPool.forEach(l => l.active && l.update(delta));
+
+        // Update smoke
+        smokePool.forEach(s => s.active && s.update(delta));
       });
 
       // ============ PUBLIC API ============
@@ -2560,21 +3260,290 @@
               );
             }, i * 50);
           }
+
+          // NEW: Add vortex + laser + smoke + warp for extra chaos!
+          pixiEffects.vortex(true, 30);
+          pixiEffects.laserScan(true, 2);
+          pixiEffects.smokeTrail(window.innerWidth / 2, window.innerHeight / 2, 5);
+          pixiEffects.screenWarp(1500);
         },
 
-        speedUp: () => {
+        speedUp: (intensity = 1) => {
           pixiEffects.explosion(window.innerWidth / 2, window.innerHeight - 100, 0xff4400, 40);
           pixiEffects.sparks(window.innerWidth / 2, window.innerHeight - 50, 0xff8800, 30);
+
+          // Extreme speed-up: meteors + smoke!
+          if (intensity >= 1.8) {
+            pixiEffects.meteorShower(3);
+            pixiEffects.smokeTrail(window.innerWidth / 2, window.innerHeight - 50, 3);
+          }
+
+          // LUDICROUS speed: HYPERSPACE!
+          if (intensity >= 2.5) {
+            pixiEffects.hyperspace(2000);
+            pixiEffects.laserScan(true, 2);
+          }
         },
 
-        slowDown: () => {
+        slowDown: (intensity = 1) => {
           pixiEffects.explosion(window.innerWidth / 2, 100, 0x88ddff, 40);
           pixiEffects.sparks(window.innerWidth / 2, 50, 0xaaeeff, 30);
+
+          // Extreme slow-down: matrix rain effect for that "time slowing" feel
+          if (intensity <= 0.5) {
+            pixiEffects.matrixRain(2000);
+          }
         },
 
         reset: () => {
           pixiEffects.explosion(window.innerWidth / 2, window.innerHeight / 2, 0x00ff88, 60);
           pixiEffects.lightningStorm(3);
+          pixiEffects.confetti(); // Celebration on reset!
+        },
+
+        // ============ NEW RIDICULOUS EFFECTS ============
+
+        hyperspace: (duration = 3000) => {
+          // Jump to hyperspace - stars flying past camera!
+          hyperspaceActive = true;
+          setTimeout(() => { hyperspaceActive = false; }, duration);
+        },
+
+        meteorShower: (count = 5) => {
+          // FLAMING SPACE ROCKS!
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              const meteor = meteorPool.find(m => !m.active);
+              if (meteor) meteor.spawn();
+            }, i * 300);
+          }
+        },
+
+        confetti: (x, y, count = 100) => {
+          // CELEBRATION TIME!
+          const spawnX = x ?? window.innerWidth / 2;
+          const spawnY = y ?? window.innerHeight / 2;
+          for (let i = 0; i < count; i++) {
+            const c = confettiPool.find(p => !p.active);
+            if (c) c.spawn(spawnX + (Math.random() - 0.5) * 200, spawnY);
+          }
+        },
+
+        vortex: (inward = true, count = 50) => {
+          // PORTAL TO ANOTHER DIMENSION!
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              const v = vortexPool.find(p => !p.active);
+              if (v) v.spawn(inward);
+            }, i * 30);
+          }
+        },
+
+        matrixRain: (duration = 5000) => {
+          // DIGITAL RAIN - WAKE UP NEO!
+          matrixActive = true;
+          setTimeout(() => { matrixActive = false; }, duration);
+        },
+
+        laserScan: (horizontal = true, count = 3) => {
+          // SCI-FI LASER SWEEPS!
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              const laser = laserPool.find(l => !l.active);
+              if (laser) laser.spawn(i % 2 === 0 ? horizontal : !horizontal);
+            }, i * 200);
+          }
+        },
+
+        discoMode: (duration = 5000) => {
+          // PARTY TIME!
+          discoActive = true;
+          setTimeout(() => { discoActive = false; }, duration);
+        },
+
+        nuclearFlash: () => {
+          // THE BIG ONE!
+          const flash = new PIXI.Graphics();
+          containers.glitch.addChild(flash);
+
+          let intensity = 1;
+          const flashUpdate = () => {
+            flash.clear();
+            flash.rect(0, 0, window.innerWidth, window.innerHeight);
+            flash.fill({ color: 0xffffff, alpha: intensity });
+            intensity -= 0.02;
+            if (intensity > 0) {
+              requestAnimationFrame(flashUpdate);
+            } else {
+              containers.glitch.removeChild(flash);
+              flash.destroy();
+            }
+          };
+          flashUpdate();
+
+          // Shockwave rings
+          for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+              pixiEffects.explosion(
+                window.innerWidth / 2,
+                window.innerHeight / 2,
+                0xffff00,
+                80
+              );
+            }, i * 100);
+          }
+
+          // Screen shake via glitch
+          pixiEffects.glitch(1.5, 1500);
+        },
+
+        smokeTrail: (x, y, count = 5) => {
+          // LINGERING SMOKE!
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              const smoke = smokePool.find(s => !s.active);
+              if (smoke) smoke.spawn(
+                x + (Math.random() - 0.5) * 50,
+                y + (Math.random() - 0.5) * 50
+              );
+            }, i * 100);
+          }
+        },
+
+        ultraChaos: () => {
+          // THE ULTIMATE CHAOS - ALL EFFECTS AT ONCE!
+          console.log('🔥🔥🔥 ULTRA CHAOS ACTIVATED! 🔥🔥🔥');
+
+          // Lightning storm
+          pixiEffects.lightningStorm(10);
+
+          // Multiple explosions
+          for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+              pixiEffects.explosion(
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight,
+                [0xff0000, 0x00ff00, 0x0000ff, 0xff00ff, 0xffff00, 0x00ffff, 0xff8800, 0x8800ff][i % 8],
+                50
+              );
+            }, i * 100);
+          }
+
+          // Electric arcs everywhere
+          for (let i = 0; i < 15; i++) {
+            setTimeout(() => {
+              pixiEffects.electricArc(
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight,
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight
+              );
+            }, i * 50);
+          }
+
+          // GLITCH IT ALL!
+          pixiEffects.glitch(2, 2000);
+
+          // Hyperspace stars
+          pixiEffects.hyperspace(3000);
+
+          // Meteor shower
+          pixiEffects.meteorShower(8);
+
+          // Confetti explosion
+          pixiEffects.confetti(window.innerWidth / 2, window.innerHeight / 2, 150);
+
+          // Vortex portal - both inward and outward!
+          pixiEffects.vortex(true, 50);
+          setTimeout(() => pixiEffects.vortex(false, 50), 500);
+
+          // Matrix rain
+          pixiEffects.matrixRain(4000);
+
+          // Laser grid
+          pixiEffects.laserScan(true, 5);
+          setTimeout(() => pixiEffects.laserScan(false, 5), 300);
+
+          // Disco mode
+          pixiEffects.discoMode(4000);
+
+          // Nuclear flash at the end!
+          setTimeout(() => pixiEffects.nuclearFlash(), 1000);
+
+          // Smoke everywhere
+          for (let i = 0; i < 10; i++) {
+            pixiEffects.smokeTrail(
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerHeight,
+              3
+            );
+          }
+
+          // Screen warp for maximum disorientation!
+          pixiEffects.screenWarp(2000);
+        },
+
+        screenWarp: (duration = 1000) => {
+          // FISH-EYE / WAVE DISTORTION EFFECT!
+          // Create a radial gradient for displacement
+          const size = Math.max(window.innerWidth, window.innerHeight);
+          const displacementSprite = new PIXI.Graphics();
+
+          // Create displacement map pattern
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+
+          // Create radial gradient for fish-eye effect
+          const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+          gradient.addColorStop(0, 'rgb(128, 128, 128)');
+          gradient.addColorStop(0.5, 'rgb(200, 128, 128)');
+          gradient.addColorStop(1, 'rgb(128, 128, 128)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, 512, 512);
+
+          const texture = PIXI.Texture.from(canvas);
+          const sprite = new PIXI.Sprite(texture);
+          sprite.anchor.set(0.5);
+          sprite.position.set(window.innerWidth / 2, window.innerHeight / 2);
+
+          // Create displacement filter
+          const displacementFilter = new PIXI.DisplacementFilter({
+            sprite: sprite,
+            scale: 0
+          });
+
+          pixiApp.stage.addChild(sprite);
+          sprite.visible = false; // Hide the sprite itself
+          pixiApp.stage.filters = [displacementFilter];
+
+          let time = 0;
+          const startTime = Date.now();
+          const warpUpdate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = elapsed / duration;
+
+            if (progress < 1) {
+              // Pulsing wave effect
+              time += 0.1;
+              const intensity = Math.sin(progress * Math.PI) * 50;
+              displacementFilter.scale.x = Math.sin(time) * intensity;
+              displacementFilter.scale.y = Math.cos(time * 0.8) * intensity;
+
+              // Rotate the displacement
+              sprite.rotation += 0.02;
+
+              requestAnimationFrame(warpUpdate);
+            } else {
+              // Clean up
+              pixiApp.stage.filters = [];
+              pixiApp.stage.removeChild(sprite);
+              sprite.destroy();
+              texture.destroy();
+            }
+          };
+          warpUpdate();
         }
       };
 
@@ -2583,7 +3552,11 @@
         pixiApp.renderer.resize(window.innerWidth, window.innerHeight);
       });
 
-      console.log('🎆 PixiJS Effects System initialized!');
+      console.log('🎆 PixiJS Effects System initialized with 20+ RIDICULOUS effects!');
+      console.log('🚀 Available: lightning, explosion, sparks, electricArc, glitch, chaos');
+      console.log('🌟 NEW: hyperspace, meteorShower, confetti, vortex, matrixRain');
+      console.log('🎸 NEW: laserScan, discoMode, nuclearFlash, smokeTrail, screenWarp');
+      console.log('🔥 ULTIMATE: pixiEffects.ultraChaos() - ALL EFFECTS AT ONCE!');
     }
 
     // Initialize PixiJS when DOM is ready
@@ -4089,6 +5062,111 @@
       }
     }
 
+    // ============ MEASURE-SYNC COUNTDOWN ============
+    const measureSyncOverlay = document.getElementById('measureSyncOverlay');
+    const measureSyncNewRate = document.getElementById('measureSyncNewRate');
+    const measureSyncCountdown = document.getElementById('measureSyncCountdown');
+    const measureSyncBeats = document.getElementById('measureSyncBeats');
+    const measureSyncVortex = document.getElementById('measureSyncVortex');
+
+    let measureSyncState = {
+      active: false,
+      newRate: 1.0,
+      totalBeats: 4,
+      beatsRemaining: 0,
+      lastBeat: -1
+    };
+
+    function showMeasureSyncWarning(newRate, beatsRemaining) {
+      measureSyncState.active = true;
+      measureSyncState.newRate = newRate;
+      measureSyncState.totalBeats = beatsRemaining;
+      measureSyncState.beatsRemaining = beatsRemaining;
+      measureSyncState.lastBeat = beatsRemaining;
+
+      // Update display
+      measureSyncNewRate.textContent = newRate.toFixed(2) + 'x';
+      measureSyncNewRate.classList.remove('faster', 'slower');
+      if (newRate > currentPlayrate) {
+        measureSyncNewRate.classList.add('faster');
+      } else if (newRate < currentPlayrate) {
+        measureSyncNewRate.classList.add('slower');
+      }
+
+      measureSyncCountdown.textContent = beatsRemaining;
+
+      // Create beat indicators
+      measureSyncBeats.innerHTML = '';
+      for (let i = 0; i < beatsRemaining; i++) {
+        const beat = document.createElement('div');
+        beat.className = 'beat-indicator';
+        beat.dataset.beat = i;
+        measureSyncBeats.appendChild(beat);
+      }
+
+      // Show overlay and vortex
+      measureSyncOverlay.classList.add('active');
+      measureSyncVortex.classList.add('active');
+
+      // Trigger PixiJS vortex effect
+      if (pixiEffects && pixiEffects.vortex) {
+        pixiEffects.vortex();
+      }
+    }
+
+    function updateMeasureSyncCountdown(beatsRemaining, currentBeat) {
+      if (!measureSyncState.active) return;
+
+      measureSyncState.beatsRemaining = beatsRemaining;
+
+      // Update countdown text with animation
+      if (beatsRemaining !== measureSyncState.lastBeat) {
+        measureSyncCountdown.textContent = Math.max(0, beatsRemaining);
+        measureSyncCountdown.style.animation = 'none';
+        measureSyncCountdown.offsetHeight; // Force reflow
+        measureSyncCountdown.style.animation = 'measureSyncBeatPop 0.3s ease-out';
+        measureSyncState.lastBeat = beatsRemaining;
+
+        // Update beat indicators
+        const beatsPassed = measureSyncState.totalBeats - beatsRemaining;
+        const indicators = measureSyncBeats.querySelectorAll('.beat-indicator');
+        indicators.forEach((ind, i) => {
+          ind.classList.remove('active', 'passed');
+          if (i < beatsPassed) {
+            ind.classList.add('passed');
+          } else if (i === beatsPassed) {
+            ind.classList.add('active');
+          }
+        });
+
+        // Screen shake on each beat
+        triggerShake();
+      }
+    }
+
+    function hideMeasureSyncWarning() {
+      measureSyncState.active = false;
+      measureSyncOverlay.classList.remove('active');
+      measureSyncVortex.classList.remove('active');
+    }
+
+    function onSpeedChangeExecuted(newRate) {
+      hideMeasureSyncWarning();
+
+      // Big effects when change executes
+      triggerFlash();
+      triggerShake();
+
+      if (pixiEffects) {
+        if (newRate > currentPlayrate) {
+          pixiEffects.speedUp();
+        } else {
+          pixiEffects.slowDown();
+        }
+        pixiEffects.explosion();
+      }
+    }
+
     function addToFeed(oldRate, newRate, username, action, avatarUrl) {
       const diff = newRate - oldRate;
       if (Math.abs(diff) < 0.01 && !username) return;
@@ -4483,7 +5561,47 @@
                 case 'glitch':
                   if (pixiEffects) pixiEffects.glitch(1, 1000);
                   break;
+                // Measure-sync test effects
+                case 'measureSyncTest':
+                  showMeasureSyncWarning(1.5, 4);
+                  break;
+                case 'measureSyncHide':
+                  hideMeasureSyncWarning();
+                  break;
               }
+            }
+
+            // ============ MEASURE-SYNC HANDLERS ============
+
+            // Speed change queued (measure-sync mode)
+            if (msg.type === 'speedChangeQueued' && msg.data) {
+              const { newRate, warningBeats } = msg.data;
+              console.log('Speed change queued:', newRate, 'in', warningBeats, 'beats');
+              showMeasureSyncWarning(newRate, warningBeats || 4);
+            }
+
+            // Measure-sync countdown update
+            if (msg.type === 'measureSyncUpdate' && msg.data) {
+              const { countdown, hasPending, pendingRate, isExecuting } = msg.data;
+              if (hasPending && !isExecuting) {
+                updateMeasureSyncCountdown(countdown, msg.data.beat);
+              } else if (!hasPending && measureSyncState.active) {
+                // Change was executed or cancelled
+                hideMeasureSyncWarning();
+              }
+            }
+
+            // Speed change executed (measure-sync mode)
+            if (msg.type === 'speedChangeExecuted' && msg.data) {
+              const { newRate } = msg.data;
+              console.log('Speed change executed:', newRate);
+              onSpeedChangeExecuted(newRate);
+            }
+
+            // Speed change cancelled
+            if (msg.type === 'speedChangeCancelled') {
+              console.log('Speed change cancelled');
+              hideMeasureSyncWarning();
             }
 
             // Handle playrate changes from bot (fallback)

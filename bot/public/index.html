@@ -981,6 +981,51 @@
                   </div>
                 </div>
 
+                <!-- Measure Sync Mode -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="bi bi-music-note-beamed me-2"></i>Measure Sync Mode
+                      <span class="badge bg-info ms-2">Experimental</span>
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-secondary small mb-3">
+                      When enabled, speed changes wait for the end of the current measure, then stop,
+                      play a metronome pre-count, and resume at the new speed. Avoids pitch-shifting artifacts
+                      and gives you warning before chaos!
+                    </p>
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input" type="checkbox" id="measureSyncEnabled">
+                      <label class="form-check-label" for="measureSyncEnabled">Enable measure-synced speed changes</label>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-sm-6">
+                        <label class="form-label">Warning Beats</label>
+                        <input type="number" class="form-control" id="measureSyncWarningBeats" value="4" min="1" max="16">
+                        <div class="form-text">Beats of countdown before change (1-16)</div>
+                      </div>
+                      <div class="col-sm-6">
+                        <label class="form-label">Pre-count Bars</label>
+                        <input type="number" class="form-control" id="measureSyncPreCountBars" value="1" min="0" max="4">
+                        <div class="form-text">Metronome pre-count bars after stop (0-4)</div>
+                      </div>
+                    </div>
+                    <div class="form-check form-switch mt-3">
+                      <input class="form-check-input" type="checkbox" id="measureSyncShowVisual" checked>
+                      <label class="form-check-label" for="measureSyncShowVisual">Show visual countdown on GameHUD</label>
+                    </div>
+                    <div id="measureSyncStatus" class="alert alert-secondary mt-3 mb-0 small">
+                      <i class="bi bi-hourglass me-2"></i>
+                      <strong>ReaScript Status:</strong> <span id="measureSyncStatusText">Checking...</span>
+                    </div>
+                    <div class="alert alert-info mt-2 mb-0 small">
+                      <i class="bi bi-info-circle me-2"></i>
+                      <strong>Setup:</strong> In REAPER: Actions → Show action list → search "HYD MeasureSync" → run as background script
+                    </div>
+                  </div>
+                </div>
+
                 <button class="btn btn-accent btn-lg w-100" onclick="saveGameSettings()">
                   <i class="bi bi-check-lg me-2"></i>Save Game Settings
                 </button>
@@ -1067,6 +1112,15 @@
       const configResponse = await fetch('/api/config');
       config = await configResponse.json();
       updateUI();
+
+      // Periodically refresh state for measure-sync status
+      setInterval(async () => {
+        try {
+          const stateResponse = await fetch('/api/state');
+          const currentState = await stateResponse.json();
+          updateMeasureSyncStatus(currentState.reaper?.measureSync);
+        } catch (e) { /* ignore */ }
+      }, 2000);
     }
 
     // WebSocket
@@ -1144,6 +1198,12 @@
       document.getElementById('autoResetDelay').value = config.game?.autoReset?.delaySeconds || 60;
       document.getElementById('autoResetValue').value = config.game?.autoReset?.resetTo || 1.0;
 
+      // Measure Sync
+      document.getElementById('measureSyncEnabled').checked = config.game?.measureSync?.enabled || false;
+      document.getElementById('measureSyncWarningBeats').value = config.game?.measureSync?.warningBeats || 4;
+      document.getElementById('measureSyncPreCountBars').value = config.game?.measureSync?.preCountBars || 1;
+      document.getElementById('measureSyncShowVisual').checked = config.game?.measureSync?.showVisualCountdown ?? true;
+
       document.getElementById('proportionalScalingEnabled').checked = config.game?.proportionalScaling?.enabled ?? true;
       document.getElementById('proportionalReferenceBpm').value = config.game?.proportionalScaling?.referenceBpm || 120;
       updateScaledIncrement();
@@ -1205,6 +1265,32 @@
       if (state.game?.currentBpm) {
         currentBpm = state.game.currentBpm;
         updateScaledIncrement();
+      }
+
+      // Update measure-sync status
+      updateMeasureSyncStatus(state.reaper?.measureSync);
+    }
+
+    function updateMeasureSyncStatus(measureSync) {
+      const statusEl = document.getElementById('measureSyncStatus');
+      const textEl = document.getElementById('measureSyncStatusText');
+      if (!statusEl || !textEl) return;
+
+      if (measureSync?.enabled) {
+        statusEl.classList.remove('alert-secondary', 'alert-danger');
+        statusEl.classList.add('alert-success');
+        statusEl.querySelector('i').className = 'bi bi-check-circle me-2';
+        textEl.textContent = 'Running and enabled';
+      } else if (measureSync) {
+        statusEl.classList.remove('alert-secondary', 'alert-success');
+        statusEl.classList.add('alert-warning');
+        statusEl.querySelector('i').className = 'bi bi-pause-circle me-2';
+        textEl.textContent = 'Detected but disabled';
+      } else {
+        statusEl.classList.remove('alert-success', 'alert-warning');
+        statusEl.classList.add('alert-secondary');
+        statusEl.querySelector('i').className = 'bi bi-question-circle me-2';
+        textEl.textContent = 'Not detected - start the ReaScript';
       }
     }
 
@@ -1356,7 +1442,13 @@
           maxPlayrate: parseFloat(document.getElementById('gameMaxPlayrate').value),
           proportionalScaling: { enabled: document.getElementById('proportionalScalingEnabled').checked, referenceBpm: parseInt(document.getElementById('proportionalReferenceBpm').value) },
           globalCooldown: { enabled: document.getElementById('globalCooldownEnabled').checked, seconds: parseInt(document.getElementById('globalCooldownSeconds').value) },
-          autoReset: { enabled: document.getElementById('autoResetEnabled').checked, delaySeconds: parseInt(document.getElementById('autoResetDelay').value), resetTo: parseFloat(document.getElementById('autoResetValue').value) }
+          autoReset: { enabled: document.getElementById('autoResetEnabled').checked, delaySeconds: parseInt(document.getElementById('autoResetDelay').value), resetTo: parseFloat(document.getElementById('autoResetValue').value) },
+          measureSync: {
+            enabled: document.getElementById('measureSyncEnabled').checked,
+            warningBeats: parseInt(document.getElementById('measureSyncWarningBeats').value),
+            preCountBars: parseInt(document.getElementById('measureSyncPreCountBars').value),
+            showVisualCountdown: document.getElementById('measureSyncShowVisual').checked
+          }
         }
       });
       const slider = document.getElementById('playrateSlider');

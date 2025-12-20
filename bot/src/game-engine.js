@@ -226,16 +226,44 @@ class GameEngine extends EventEmitter {
 
     // Apply proportional scaling based on current BPM
     const scaledIncrement = reaper.getScaledIncrement(increment);
-    const newRate = reaper.adjustPlayrate(scaledIncrement);
+    const currentRate = reaper.getPlayrate();
+    const newRate = Math.round((currentRate + scaledIncrement) * 100) / 100;
+
+    // Check if measure-sync mode is enabled
+    const measureSyncConfig = config.get('game.measureSync') || {};
+    if (measureSyncConfig.enabled && reaper.isMeasureSyncEnabled()) {
+      // Queue the change instead of immediate execution
+      reaper.queueSpeedChange(
+        newRate,
+        measureSyncConfig.warningBeats || 4,
+        measureSyncConfig.preCountBars || 1
+      );
+
+      return {
+        success: true,
+        action: 'speedUp',
+        newRate: newRate,
+        queued: true,
+        warningBeats: measureSyncConfig.warningBeats || 4,
+        baseIncrement: increment,
+        scaledIncrement: scaledIncrement,
+        bpm: reaper.getBpm(),
+        message: this.formatMessage('speedUpQueued', { user: username, rate: newRate.toFixed(2) }) ||
+                 `Speed change to ${newRate.toFixed(2)}x queued - incoming!`
+      };
+    }
+
+    // Immediate execution
+    const actualNewRate = reaper.adjustPlayrate(scaledIncrement);
 
     return {
       success: true,
       action: 'speedUp',
-      newRate: newRate,
+      newRate: actualNewRate,
       baseIncrement: increment,
       scaledIncrement: scaledIncrement,
       bpm: reaper.getBpm(),
-      message: this.formatMessage('speedUp', { user: username, rate: newRate.toFixed(2) })
+      message: this.formatMessage('speedUp', { user: username, rate: actualNewRate.toFixed(2) })
     };
   }
 
@@ -250,30 +278,109 @@ class GameEngine extends EventEmitter {
 
     // Apply proportional scaling based on current BPM
     const scaledIncrement = reaper.getScaledIncrement(increment);
-    const newRate = reaper.adjustPlayrate(-scaledIncrement);
+    const currentRate = reaper.getPlayrate();
+    const newRate = Math.round((currentRate - scaledIncrement) * 100) / 100;
+
+    // Check if measure-sync mode is enabled
+    const measureSyncConfig = config.get('game.measureSync') || {};
+    if (measureSyncConfig.enabled && reaper.isMeasureSyncEnabled()) {
+      // Queue the change instead of immediate execution
+      reaper.queueSpeedChange(
+        newRate,
+        measureSyncConfig.warningBeats || 4,
+        measureSyncConfig.preCountBars || 1
+      );
+
+      return {
+        success: true,
+        action: 'slowDown',
+        newRate: newRate,
+        queued: true,
+        warningBeats: measureSyncConfig.warningBeats || 4,
+        baseIncrement: increment,
+        scaledIncrement: scaledIncrement,
+        bpm: reaper.getBpm(),
+        message: this.formatMessage('slowDownQueued', { user: username, rate: newRate.toFixed(2) }) ||
+                 `Speed change to ${newRate.toFixed(2)}x queued - incoming!`
+      };
+    }
+
+    // Immediate execution
+    const actualNewRate = reaper.adjustPlayrate(-scaledIncrement);
 
     return {
       success: true,
       action: 'slowDown',
-      newRate: newRate,
+      newRate: actualNewRate,
       baseIncrement: increment,
       scaledIncrement: scaledIncrement,
       bpm: reaper.getBpm(),
-      message: this.formatMessage('slowDown', { user: username, rate: newRate.toFixed(2) })
+      message: this.formatMessage('slowDown', { user: username, rate: actualNewRate.toFixed(2) })
     };
   }
 
   chaos(username) {
-    const newRate = reaper.setRandomPlayrate();
+    const gameConfig = config.get('game');
+    const min = gameConfig.minPlayrate;
+    const max = gameConfig.maxPlayrate;
+    const newRate = Math.round((min + Math.random() * (max - min)) * 100) / 100;
+
+    // Check if measure-sync mode is enabled
+    const measureSyncConfig = config.get('game.measureSync') || {};
+    if (measureSyncConfig.enabled && reaper.isMeasureSyncEnabled()) {
+      // Queue the change instead of immediate execution
+      reaper.queueSpeedChange(
+        newRate,
+        measureSyncConfig.warningBeats || 4,
+        measureSyncConfig.preCountBars || 1
+      );
+
+      return {
+        success: true,
+        action: 'chaos',
+        newRate: newRate,
+        queued: true,
+        warningBeats: measureSyncConfig.warningBeats || 4,
+        message: this.formatMessage('chaosQueued', { user: username, rate: newRate.toFixed(2) }) ||
+                 `CHAOS incoming! ${newRate.toFixed(2)}x in ${measureSyncConfig.warningBeats || 4} beats!`
+      };
+    }
+
+    // Immediate execution
+    const actualNewRate = reaper.setRandomPlayrate();
     return {
       success: true,
       action: 'chaos',
-      newRate: newRate,
-      message: this.formatMessage('chaos', { user: username, rate: newRate.toFixed(2) })
+      newRate: actualNewRate,
+      message: this.formatMessage('chaos', { user: username, rate: actualNewRate.toFixed(2) })
     };
   }
 
   reset(username) {
+    const defaultRate = config.get('game.defaultPlayrate') || 1.0;
+
+    // Check if measure-sync mode is enabled
+    const measureSyncConfig = config.get('game.measureSync') || {};
+    if (measureSyncConfig.enabled && reaper.isMeasureSyncEnabled()) {
+      // Queue the change instead of immediate execution
+      reaper.queueSpeedChange(
+        defaultRate,
+        measureSyncConfig.warningBeats || 4,
+        measureSyncConfig.preCountBars || 1
+      );
+
+      return {
+        success: true,
+        action: 'reset',
+        newRate: defaultRate,
+        queued: true,
+        warningBeats: measureSyncConfig.warningBeats || 4,
+        message: this.formatMessage('resetQueued', { user: username, rate: defaultRate.toFixed(2) }) ||
+                 `Reset to ${defaultRate.toFixed(2)}x incoming!`
+      };
+    }
+
+    // Immediate execution
     const newRate = reaper.resetPlayrate();
     return {
       success: true,
@@ -393,6 +500,7 @@ class GameEngine extends EventEmitter {
    */
   getState() {
     const scalingConfig = config.get('game.proportionalScaling') || {};
+    const measureSyncConfig = config.get('game.measureSync') || {};
 
     return {
       enabled: this.isEnabled(),
@@ -407,6 +515,12 @@ class GameEngine extends EventEmitter {
       proportionalScaling: {
         enabled: scalingConfig.enabled ?? false,
         referenceBpm: scalingConfig.referenceBpm || 120
+      },
+      measureSync: {
+        enabled: measureSyncConfig.enabled ?? false,
+        warningBeats: measureSyncConfig.warningBeats || 4,
+        preCountBars: measureSyncConfig.preCountBars || 1,
+        ...reaper.getMeasureSyncState()
       },
       history: this.actionHistory.slice(0, 10)
     };

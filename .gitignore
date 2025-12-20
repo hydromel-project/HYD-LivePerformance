@@ -109,3 +109,6 @@ temp/
 *.tmp
 *.temp
 *.cache
+
+# Measure-sync runtime files
+measureSync_*.json

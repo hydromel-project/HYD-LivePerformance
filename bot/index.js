@@ -5,6 +5,7 @@
  * Allows viewers to mess with your playrate using channel points and donations!
  */
 
+const path = require('path');
 const config = require('./src/config');
 const server = require('./src/server');
 const reaper = require('./src/reaper');
@@ -28,6 +29,16 @@ async function start() {
   console.log('');
   console.log('Connecting to services...');
   reaper.connect();
+
+  // Initialize measure-sync paths (REAPER resource path is 3 levels up from bot/)
+  const reaperResourcePath = path.join(__dirname, '..', '..', '..');
+  reaper.initMeasureSyncPaths(reaperResourcePath);
+
+  // Enable measure-sync if configured
+  const measureSyncConfig = config.get('game.measureSync');
+  if (measureSyncConfig && measureSyncConfig.enabled) {
+    reaper.enableMeasureSync();
+  }
 
   // Connect to Twitch (if configured)
   await twitch.connect();

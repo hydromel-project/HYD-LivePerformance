@@ -61,6 +61,14 @@ const defaultConfig = {
       seconds: 5
     },
 
+    // Measure-sync mode: Wait for measure end before changing speed
+    measureSync: {
+      enabled: false,           // Toggle measure-sync mode
+      warningBeats: 4,          // Beats of warning before change (1-8)
+      preCountBars: 1,          // Metronome pre-count bars (1-2)
+      showVisualCountdown: true // Show countdown on GameHUD
+    },
+
     // Chat announcements
     announcements: {
       enabled: true,
@@ -71,7 +79,12 @@ const defaultConfig = {
       setPlayrate: '🎛️ {user} commanded {rate}x! So it shall be done. 🤘',
       maxReached: '💀 WE\'RE ALREADY BLASTING AT MAXIMUM OVERDRIVE! Even Dragonforce can\'t shred faster than this!',
       minReached: '🪦 Any slower and we\'re playing funeral doom! The tempo has been buried alive.',
-      cooldownActive: '⏳ Chill for {seconds}s, moshpit needs to recover! Even metalheads need a breather between breakdowns.'
+      cooldownActive: '⏳ Chill for {seconds}s, moshpit needs to recover! Even metalheads need a breather between breakdowns.',
+      // Measure-sync queued announcements
+      speedUpQueued: '⏳🔥 {user} queued {rate}x — INCOMING SPEED UP! Brace yourselves! 🤘',
+      slowDownQueued: '⏳🧊 {user} queued {rate}x — INCOMING SLOWDOWN! Doom approaches... 🎸',
+      chaosQueued: '⏳🎲 {user} summoned CHAOS at {rate}x — THE STORM IS COMING! 💀',
+      resetQueued: '⏳⚡ {user} called for order at {rate}x — Reset incoming... ✨'
     }
   },
 

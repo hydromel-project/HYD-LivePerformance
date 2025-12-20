@@ -97,7 +97,23 @@ class WebServer {
 
     // Update config
     this.app.put('/api/config', (req, res) => {
+      // Check if measureSync.enabled is changing
+      const oldMeasureSyncEnabled = config.get('game.measureSync.enabled') || false;
+
       config.update(req.body);
+
+      // Handle measureSync enable/disable
+      const newMeasureSyncEnabled = config.get('game.measureSync.enabled') || false;
+      if (newMeasureSyncEnabled !== oldMeasureSyncEnabled) {
+        if (newMeasureSyncEnabled) {
+          reaper.enableMeasureSync();
+          console.log('📐 Measure-sync enabled via config');
+        } else {
+          reaper.disableMeasureSync();
+          console.log('📐 Measure-sync disabled via config');
+        }
+      }
+
       this.broadcast({ type: 'configUpdated', data: config.getAll() });
       res.json({ success: true });
     });
@@ -111,7 +127,8 @@ class WebServer {
         streamelements: streamelements.getStatus(),
         reaper: {
           connected: reaper.connected,
-          playrate: reaper.getPlayrate()
+          playrate: reaper.getPlayrate(),
+          measureSync: reaper.getMeasureSyncState()
         }
       });
     });
@@ -466,6 +483,23 @@ class WebServer {
     // Forward REAPER events
     reaper.on('playrateChanged', (rate) => {
       this.broadcast({ type: 'playrateChanged', data: { rate } });
+    });
+
+    // Forward measure-sync events
+    reaper.on('speedChangeQueued', (data) => {
+      this.broadcast({ type: 'speedChangeQueued', data });
+    });
+
+    reaper.on('speedChangeExecuted', (data) => {
+      this.broadcast({ type: 'speedChangeExecuted', data });
+    });
+
+    reaper.on('speedChangeCancelled', () => {
+      this.broadcast({ type: 'speedChangeCancelled' });
+    });
+
+    reaper.on('measureSyncUpdate', (data) => {
+      this.broadcast({ type: 'measureSyncUpdate', data });
     });
 
     // Forward Twitch events
