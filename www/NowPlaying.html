@@ -288,12 +288,6 @@
       color: var(--secondary-color);
     }
 
-    .song-year {
-      font-size: calc(1rem * var(--font-size));
-      color: var(--secondary-color);
-      margin-top: 8px;
-    }
-
     /* Progress Bar */
     .progress-container {
       display: flex;
@@ -549,7 +543,6 @@
       <div class="song-title" id="songTitle">--</div>
       <div class="song-artist" id="songArtist">--</div>
       <div class="song-album" id="songAlbum">--</div>
-      <div class="song-year" id="songYear"></div>
       <div class="progress-container" id="progressContainer">
         <span class="progress-time elapsed" id="timeElapsed">0:00</span>
         <div class="progress-bar">
@@ -620,7 +613,6 @@
     const songTitleEl = document.getElementById('songTitle');
     const songArtistEl = document.getElementById('songArtist');
     const songAlbumEl = document.getElementById('songAlbum');
-    const songYearEl = document.getElementById('songYear');
     const progressFill = document.getElementById('progressFill');
     const timeElapsedEl = document.getElementById('timeElapsed');
     const timeRemainingEl = document.getElementById('timeRemaining');
@@ -677,7 +669,6 @@
 
       // Visibility
       songAlbumEl.style.display = settings.showAlbum ? '' : 'none';
-      songYearEl.style.display = settings.showYear ? '' : 'none';
       albumArtEl.style.display = settings.showCover ? '' : 'none';
 
       if (settings.hideSettings) {
@@ -870,8 +861,8 @@
       // Update text content immediately (hidden)
       songTitleEl.textContent = title || '--';
       songArtistEl.textContent = artist || '--';
-      songAlbumEl.textContent = album || '--';
-      songYearEl.textContent = year || '';
+      const showYear = settings.showYear && year;
+      songAlbumEl.textContent = album && showYear ? `${album} - ${year}` : (album || (showYear ? year : '') || '--');
 
       if (cover) {
         // Wait for cover art to load before showing
@@ -971,8 +962,8 @@
     function updateContent() {
       songTitleEl.textContent = title || '--';
       songArtistEl.textContent = artist || '--';
-      songAlbumEl.textContent = album || '--';
-      songYearEl.textContent = year || '';
+      const showYear = settings.showYear && year;
+      songAlbumEl.textContent = album && showYear ? `${album} - ${year}` : (album || (showYear ? year : '') || '--');
 
       // Update progress bar based on song item position
       updateProgress();
