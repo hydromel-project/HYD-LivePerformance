@@ -292,20 +292,26 @@
     .progress-container {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 20px;
       width: 100%;
+      opacity: 0.9;
     }
 
     .progress-time {
-      font-size: calc(0.9rem * var(--font-size));
+      font-size: calc(0.75rem * var(--font-size));
       color: var(--secondary-color);
       font-variant-numeric: tabular-nums;
-      min-width: 45px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      min-width: 40px;
+      opacity: 0.8;
     }
 
     .progress-time.elapsed {
       text-align: right;
+      color: var(--text-color);
+      opacity: 0.9;
     }
 
     .progress-time.remaining {
@@ -314,26 +320,72 @@
 
     .progress-bar {
       flex: 1;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-      overflow: hidden;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: visible;
       position: relative;
     }
 
     .progress-fill {
       height: 100%;
-      background: var(--accent-color);
-      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent-color), var(--accent-color));
+      border-radius: 2px;
       width: 0%;
-      transition: width 0.1s linear;
-      box-shadow: 0 0 8px var(--accent-color);
+      transition: width 0.15s linear;
+      position: relative;
     }
 
-    /* Hide progress bar in minimal layout */
+    /* Playhead dot */
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--accent-color), 0 0 12px rgba(0, 255, 136, 0.3);
+    }
+
+    /* Layout-specific progress bar adjustments */
+    .layout-horizontal .progress-container {
+      margin-top: 18px;
+    }
+
+    .layout-vertical .progress-container {
+      margin-top: 16px;
+      max-width: 280px;
+    }
+
+    .layout-vertical .progress-time {
+      font-size: calc(0.7rem * var(--font-size));
+    }
+
+    .layout-background .progress-container {
+      margin-top: 20px;
+      padding: 0 4px;
+    }
+
+    .layout-background .progress-bar {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
     .layout-minimal .progress-container {
-      max-width: 300px;
-      margin: 16px auto 0;
+      max-width: 320px;
+      margin: 14px auto 0;
+    }
+
+    .layout-minimal .progress-bar {
+      height: 3px;
+    }
+
+    .layout-minimal .progress-fill::after {
+      width: 6px;
+      height: 6px;
+      right: -3px;
     }
 
     /* Animation classes */
