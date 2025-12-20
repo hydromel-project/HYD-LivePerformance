@@ -392,6 +392,7 @@ class ReaperOSC extends EventEmitter {
     let lastStatusTime = Date.now();
     let reaScriptRunning = false;
     let hadPendingChange = false;
+    let precountStarted = false;  // Track if we've started precount
 
     this.measureSync.pollInterval = setInterval(() => {
       const status = this.readMeasureSyncStatus();
@@ -437,14 +438,42 @@ class ReaperOSC extends EventEmitter {
             hasPending: status.hasPending,
             pendingRate: status.pendingRate,
             isExecuting: status.isExecuting,
+            waitingForPrecount: status.waitingForPrecount,
             playrate: status.playrate,
             totalBeats: status.totalBeats || 0
           });
         }
 
+        // Detect when ReaScript is waiting for precount (stopped and ready)
+        // Emit startPrecount event for GameHUD to play audio clicks
+        if (status.waitingForPrecount && !precountStarted) {
+          precountStarted = true;
+          const newRate = status.newRate || 1.0;
+          const precountBars = status.precountBars || 1;
+          const beatsInMeasure = status.beatsInMeasure || 4;
+          const totalPrecountBeats = precountBars * beatsInMeasure;
+
+          // Calculate effective BPM at the new playrate
+          const baseBpm = this.currentBpm || 120;
+          const effectiveBpm = baseBpm * newRate;
+
+          console.log(`📐 Starting GameHUD precount: ${totalPrecountBeats} beats at ${effectiveBpm.toFixed(1)} BPM (${newRate}x)`);
+
+          this.emit('startPrecount', {
+            effectiveBpm: effectiveBpm,
+            beats: totalPrecountBeats,
+            newRate: newRate
+          });
+        }
+
+        // Reset precount flag when not waiting anymore
+        if (!status.waitingForPrecount && precountStarted) {
+          precountStarted = false;
+        }
+
         // Detect when change was executed:
         // We had a pending change, and now ReaScript reports no pending change
-        if (hadPendingChange && !status.hasPending && !status.isExecuting) {
+        if (hadPendingChange && !status.hasPending && !status.isExecuting && !status.waitingForPrecount) {
           if (this.measureSync.pendingChange) {
             const executedRate = this.measureSync.pendingChange.newRate;
             this.measureSync.pendingChange = null;
@@ -471,6 +500,14 @@ class ReaperOSC extends EventEmitter {
         }
       }
     }, 50); // Poll every 50ms for responsiveness
+  }
+
+  /**
+   * Signal ReaScript to start playback (called after GameHUD precount completes)
+   */
+  triggerPlaybackStart() {
+    console.log('📐 Triggering playback start after precount');
+    this.sendMeasureSyncCommand({ action: 'startPlayback' });
   }
 
   /**

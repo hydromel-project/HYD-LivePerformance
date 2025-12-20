@@ -5062,6 +5062,182 @@
       }
     }
 
+    // ============ AUDIO PRECOUNT SYSTEM ============
+    // Web Audio API for generating metronome clicks at the new tempo
+    let audioContext = null;
+    let precountState = {
+      active: false,
+      bpm: 120,
+      beatsTotal: 4,
+      beatsRemaining: 0,
+      intervalId: null,
+      newRate: 1.0
+    };
+
+    // Initialize AudioContext on first user interaction (required by browsers)
+    function initAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('AudioContext initialized');
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      return audioContext;
+    }
+
+    // Generate a click sound using Web Audio API
+    function playClick(isDownbeat = false) {
+      const ctx = initAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+
+      // Create oscillator for the click
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      // Higher pitch for downbeat, lower for regular beats
+      osc.frequency.value = isDownbeat ? 1200 : 800;
+      osc.type = 'sine';
+
+      // Sharp attack, quick decay for click sound
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(isDownbeat ? 0.8 : 0.5, now + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.1);
+    }
+
+    // Start audio precount - plays clicks at the new tempo
+    function startAudioPrecount(effectiveBpm, beats, newRate) {
+      // Stop any existing precount
+      stopAudioPrecount();
+
+      precountState.active = true;
+      precountState.bpm = effectiveBpm;
+      precountState.beatsTotal = beats;
+      precountState.beatsRemaining = beats;
+      precountState.newRate = newRate;
+
+      console.log(`Starting audio precount: ${beats} beats at ${effectiveBpm} BPM (new rate: ${newRate}x)`);
+
+      // Show the precount overlay with special styling
+      showPrecountOverlay(newRate, beats);
+
+      // Calculate interval between beats (in ms)
+      const beatInterval = (60 / effectiveBpm) * 1000;
+
+      // Play first beat immediately (downbeat)
+      playClick(true);
+      updatePrecountDisplay(precountState.beatsRemaining);
+      precountState.beatsRemaining--;
+
+      // Schedule remaining beats
+      precountState.intervalId = setInterval(() => {
+        if (precountState.beatsRemaining <= 0) {
+          // Precount complete
+          stopAudioPrecount();
+          onPrecountComplete();
+          return;
+        }
+
+        // Play click (downbeat on beat 1 after first)
+        const isDownbeat = precountState.beatsRemaining === precountState.beatsTotal;
+        playClick(isDownbeat);
+
+        // Update visual display
+        updatePrecountDisplay(precountState.beatsRemaining);
+
+        precountState.beatsRemaining--;
+      }, beatInterval);
+    }
+
+    function stopAudioPrecount() {
+      if (precountState.intervalId) {
+        clearInterval(precountState.intervalId);
+        precountState.intervalId = null;
+      }
+      precountState.active = false;
+      hidePrecountOverlay();
+    }
+
+    function showPrecountOverlay(newRate, beats) {
+      // Reuse measure sync overlay but with different messaging
+      measureSyncOverlay.querySelector('.measure-sync-warning').textContent = '🎵 GET READY 🎵';
+      measureSyncNewRate.textContent = newRate.toFixed(2) + 'x';
+      measureSyncNewRate.classList.remove('faster', 'slower');
+      if (newRate > currentPlayrate) {
+        measureSyncNewRate.classList.add('faster');
+      } else if (newRate < currentPlayrate) {
+        measureSyncNewRate.classList.add('slower');
+      }
+
+      measureSyncCountdown.textContent = beats;
+
+      // Create beat indicators
+      measureSyncBeats.innerHTML = '';
+      for (let i = 0; i < beats; i++) {
+        const beat = document.createElement('div');
+        beat.className = 'beat-indicator';
+        beat.dataset.beat = i;
+        measureSyncBeats.appendChild(beat);
+      }
+
+      measureSyncOverlay.classList.add('active');
+      measureSyncOverlay.classList.add('precount-mode');
+    }
+
+    function hidePrecountOverlay() {
+      measureSyncOverlay.classList.remove('active');
+      measureSyncOverlay.classList.remove('precount-mode');
+      // Restore default text
+      measureSyncOverlay.querySelector('.measure-sync-warning').textContent = '⚡ INCOMING SPEED CHANGE ⚡';
+    }
+
+    function updatePrecountDisplay(beatsRemaining) {
+      measureSyncCountdown.textContent = beatsRemaining;
+      measureSyncCountdown.style.animation = 'none';
+      measureSyncCountdown.offsetHeight; // Force reflow
+      measureSyncCountdown.style.animation = 'measureSyncBeatPop 0.3s ease-out';
+
+      // Update beat indicators
+      const beatsPassed = precountState.beatsTotal - beatsRemaining;
+      const indicators = measureSyncBeats.querySelectorAll('.beat-indicator');
+      indicators.forEach((ind, i) => {
+        ind.classList.remove('active', 'passed');
+        if (i < beatsPassed) {
+          ind.classList.add('passed');
+        } else if (i === beatsPassed) {
+          ind.classList.add('active');
+        }
+      });
+
+      // Screen shake on each beat
+      triggerShake();
+    }
+
+    function onPrecountComplete() {
+      console.log('Precount complete, signaling bot');
+      hidePrecountOverlay();
+
+      // Notify bot that precount is done
+      if (botWs && botWs.readyState === WebSocket.OPEN) {
+        botWs.send(JSON.stringify({ type: 'precountComplete' }));
+      }
+
+      // Trigger visual effects for the speed change
+      onSpeedChangeExecuted(precountState.newRate);
+    }
+
+    // Initialize audio on first click (browser requirement)
+    document.addEventListener('click', () => initAudioContext(), { once: true });
+    document.addEventListener('keydown', () => initAudioContext(), { once: true });
+
     // ============ MEASURE-SYNC COUNTDOWN ============
     const measureSyncOverlay = document.getElementById('measureSyncOverlay');
     const measureSyncNewRate = document.getElementById('measureSyncNewRate');
@@ -5602,6 +5778,14 @@
             if (msg.type === 'speedChangeCancelled') {
               console.log('Speed change cancelled');
               hideMeasureSyncWarning();
+            }
+
+            // ============ AUDIO PRECOUNT HANDLER ============
+            // Bot signals to start audio precount (replaces REAPER's count-in)
+            if (msg.type === 'startPrecount' && msg.data) {
+              const { effectiveBpm, beats, newRate } = msg.data;
+              console.log('Starting audio precount:', effectiveBpm, 'BPM,', beats, 'beats, new rate:', newRate);
+              startAudioPrecount(effectiveBpm, beats, newRate);
             }
 
             // Handle playrate changes from bot (fallback)

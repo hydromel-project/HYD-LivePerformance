@@ -1,6 +1,6 @@
 --[[
 @description HYD Measure Sync
-@version 1.3.0
+@version 1.4.0
 @author hydromel-project
 @about
   # HYD Measure Sync
@@ -51,9 +51,10 @@ local state = {
   waiting_for_measure_end = false,  -- True when countdown done, waiting for measure boundary
   trigger_measure = -1,  -- The measure we're waiting to end
   -- Execution state machine
-  exec_phase = nil,  -- nil, "stopped", "ready_to_play"
+  exec_phase = nil,  -- nil, "stopped", "waiting_for_precount"
   exec_precount_bars = 0,
-  exec_stop_time = 0  -- Time when we stopped, for delay calculation
+  exec_new_rate = 0,  -- The new rate that was set
+  waiting_for_precount = false  -- True when stopped and waiting for GameHUD precount to complete
 }
 
 -- ============================================================================
@@ -150,7 +151,7 @@ local function build_status_json()
   local current_playrate = reaper.Master_GetPlayRate(0)
 
   return string.format(
-    '{"enabled":%s,"measure":%d,"beat":%.2f,"beatsInMeasure":%d,"countdown":%d,"hasPending":%s,"pendingRate":%.2f,"isExecuting":%s,"waitingForMeasure":%s,"playState":%d,"playrate":%.3f,"totalBeats":%d}',
+    '{"enabled":%s,"measure":%d,"beat":%.2f,"beatsInMeasure":%d,"countdown":%d,"hasPending":%s,"pendingRate":%.2f,"isExecuting":%s,"waitingForMeasure":%s,"waitingForPrecount":%s,"precountBars":%d,"newRate":%.3f,"playState":%d,"playrate":%.3f,"totalBeats":%d}',
     state.enabled and "true" or "false",
     math.floor(state.current_measure),
     state.current_beat,
@@ -160,6 +161,9 @@ local function build_status_json()
     pending and pending.newRate or 0,
     state.is_executing and "true" or "false",
     state.waiting_for_measure_end and "true" or "false",
+    state.waiting_for_precount and "true" or "false",
+    state.exec_precount_bars,
+    state.exec_new_rate,
     reaper.GetPlayState(),
     current_playrate,
     pending and pending.totalBeats or 0
@@ -272,65 +276,32 @@ local function execute_speed_change_stop()
   state.waiting_for_measure_end = false
   state.trigger_measure = -1
 
-  -- Set up for phase 2 (wait 300ms then play)
-  state.exec_phase = "stopped"
+  -- Set up to wait for GameHUD precount to complete
+  -- Bot will detect waitingForPrecount=true and trigger GameHUD audio precount
+  -- When GameHUD finishes, bot will send startPlayback command
+  state.exec_phase = "waiting_for_precount"
   state.exec_precount_bars = precount_bars
-  state.exec_stop_time = reaper.time_precise()
+  state.exec_new_rate = new_rate
+  state.waiting_for_precount = true
 
-  log("Waiting 300ms before starting playback with precount...")
+  log("Stopped and waiting for GameHUD audio precount...")
+  log(string.format("Bot should start precount: %d bars at new rate %.2fx", precount_bars, new_rate))
 end
 
--- Phase 2: Enable count-in and start playback
+-- Phase 2: Start playback (called after GameHUD audio precount completes)
 local function execute_speed_change_play()
-  log("Starting playback phase...")
+  log("Starting playback after GameHUD precount...")
 
-  -- Enable pre-count (count-in) if configured
-  if state.exec_precount_bars > 0 then
-    -- 1. Configure count-in length using SWS extension
-    -- This sets the actual number of bars for the count-in
-    local sws_configured = configure_countin(state.exec_precount_bars)
-
-    -- 2. Enable count-in before playback (action 40495)
-    local count_in_state = reaper.GetToggleCommandState(40495)
-    if count_in_state ~= 1 then
-      reaper.Main_OnCommand(40495, 0)
-      log("Enabled count-in before playback (action 40495)")
-    else
-      log("Count-in already enabled")
-    end
-
-    -- 3. Enable metronome DURING the play count-in (action 41745)
-    -- This is separate from the main metronome toggle!
-    local metro_countin_state = reaper.GetToggleCommandState(41745)
-    if metro_countin_state ~= 1 then
-      reaper.Main_OnCommand(41745, 0)
-      log("Enabled metronome during play count-in (action 41745)")
-    else
-      log("Metronome during count-in already enabled")
-    end
-
-    -- 4. Also enable the main metronome to make sure it's audible
-    local main_metro_state = reaper.GetToggleCommandState(40364)  -- Toggle metronome
-    if main_metro_state ~= 1 then
-      reaper.Main_OnCommand(40364, 0)
-      log("Enabled main metronome (action 40364)")
-    else
-      log("Main metronome already enabled")
-    end
-
-    if not sws_configured then
-      log("WARNING: SWS not available - count-in length must be set manually")
-      log("Go to: Options > Metronome/Pre-roll settings > Count-in before playback")
-    end
-  end
-
-  -- Start playback (will play precount first if enabled)
+  -- GameHUD has already played the audio precount, just start playback now
+  -- No need for REAPER's count-in since GameHUD handled it
   reaper.Main_OnCommand(1007, 0)  -- Transport: Play
-  log("Playback started with count-in!")
+  log(string.format("Playback started at %.2fx!", state.exec_new_rate))
 
   -- Reset execution state
   state.exec_phase = nil
   state.exec_precount_bars = 0
+  state.exec_new_rate = 0
+  state.waiting_for_precount = false
   state.is_executing = false
 
   -- Reset beat tracking
@@ -413,6 +384,15 @@ local function process_commands()
     if state.pending_change then
       log("Executing pending change immediately")
       execute_speed_change()
+    end
+
+  elseif cmd.action == "startPlayback" then
+    -- Bot signals that GameHUD audio precount is complete, start playback now
+    if state.waiting_for_precount then
+      log("Received startPlayback - GameHUD precount complete")
+      execute_speed_change_play()
+    else
+      log("Received startPlayback but not waiting for precount, ignoring")
     end
   end
 end
@@ -500,15 +480,8 @@ end
 local function Main()
   local current_time = reaper.time_precise()
 
-  -- Handle execution state machine (waiting to start playback)
-  if state.exec_phase == "stopped" then
-    local elapsed = current_time - state.exec_stop_time
-    if elapsed >= 0.3 then  -- Wait 300ms
-      -- Done waiting, start playback
-      log(string.format("Waited %.0fms, now starting playback", elapsed * 1000))
-      execute_speed_change_play()
-    end
-  end
+  -- No delay-based execution anymore - we wait for bot's startPlayback command
+  -- which comes after GameHUD finishes audio precount
 
   -- Poll position at high frequency
   if current_time - last_poll_time >= POLL_INTERVAL then
@@ -516,8 +489,8 @@ local function Main()
 
     local is_playing = update_position()
 
-    -- Update countdown if we have a pending change (and not currently executing)
-    if state.enabled and state.pending_change and not state.exec_phase then
+    -- Update countdown if we have a pending change (and not waiting for precount)
+    if state.enabled and state.pending_change and not state.waiting_for_precount then
       update_countdown(is_playing)
     end
 
@@ -535,19 +508,10 @@ local function Main()
 end
 
 local function Init()
-  log("Starting HYD Measure Sync v1.3.0")
+  log("Starting HYD Measure Sync v1.4.0")
   log("Command file: " .. command_file)
   log("Status file: " .. status_file)
-
-  -- Check for SWS extension
-  if has_sws() then
-    log("SWS extension detected - count-in length can be set programmatically")
-  else
-    log("WARNING: SWS extension NOT detected!")
-    log("Install SWS from https://www.sws-extension.org/ for automatic count-in configuration")
-    log("Without SWS, you must manually set count-in length in:")
-    log("  Options > Metronome/Pre-roll settings > Count-in before playback")
-  end
+  log("Audio precount is now handled by GameHUD (Web Audio API)")
 
   -- Clean up any old command file
   delete_file(command_file)

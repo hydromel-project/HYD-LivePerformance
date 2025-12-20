@@ -411,6 +411,12 @@ class WebServer {
         }
         break;
 
+      case 'precountComplete':
+        // GameHUD signals that audio precount is complete, tell REAPER to start playback
+        console.log('📐 GameHUD precount complete, triggering playback');
+        reaper.triggerPlaybackStart();
+        break;
+
       // ============ TEST COMMANDS ============
 
       case 'testAction':
@@ -500,6 +506,12 @@ class WebServer {
 
     reaper.on('measureSyncUpdate', (data) => {
       this.broadcast({ type: 'measureSyncUpdate', data });
+    });
+
+    // Forward startPrecount to GameHUD for audio clicks
+    reaper.on('startPrecount', (data) => {
+      console.log('📐 Broadcasting startPrecount to GameHUD:', data);
+      this.broadcast({ type: 'startPrecount', data });
     });
 
     // Forward Twitch events
