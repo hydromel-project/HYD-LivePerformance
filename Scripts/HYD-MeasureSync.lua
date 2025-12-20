@@ -1,6 +1,6 @@
 --[[
 @description HYD Measure Sync
-@version 1.1.0
+@version 1.2.0
 @author hydromel-project
 @about
   # HYD Measure Sync
@@ -47,7 +47,13 @@ local state = {
   current_beat = 0,
   beats_in_measure = 4,
   is_executing = false,
-  last_playrate = 1.0
+  last_playrate = 1.0,
+  waiting_for_measure_end = false,  -- True when countdown done, waiting for measure boundary
+  trigger_measure = -1,  -- The measure we're waiting to end
+  -- Execution state machine
+  exec_phase = nil,  -- nil, "stopped", "ready_to_play"
+  exec_precount_bars = 0,
+  exec_stop_time = 0  -- Time when we stopped, for delay calculation
 }
 
 -- ============================================================================
@@ -107,7 +113,7 @@ local function build_status_json()
   local current_playrate = reaper.Master_GetPlayRate(0)
 
   return string.format(
-    '{"enabled":%s,"measure":%d,"beat":%.2f,"beatsInMeasure":%d,"countdown":%d,"hasPending":%s,"pendingRate":%.2f,"isExecuting":%s,"playState":%d,"playrate":%.3f,"totalBeats":%d}',
+    '{"enabled":%s,"measure":%d,"beat":%.2f,"beatsInMeasure":%d,"countdown":%d,"hasPending":%s,"pendingRate":%.2f,"isExecuting":%s,"waitingForMeasure":%s,"playState":%d,"playrate":%.3f,"totalBeats":%d}',
     state.enabled and "true" or "false",
     math.floor(state.current_measure),
     state.current_beat,
@@ -116,6 +122,7 @@ local function build_status_json()
     pending and "true" or "false",
     pending and pending.newRate or 0,
     state.is_executing and "true" or "false",
+    state.waiting_for_measure_end and "true" or "false",
     reaper.GetPlayState(),
     current_playrate,
     pending and pending.totalBeats or 0
@@ -172,7 +179,8 @@ end
 -- SPEED CHANGE EXECUTION
 -- ============================================================================
 
-local function execute_speed_change()
+-- Phase 1: Stop playback and prepare
+local function execute_speed_change_stop()
   if not state.pending_change then return end
 
   state.is_executing = true
@@ -181,60 +189,95 @@ local function execute_speed_change()
 
   log(string.format("Executing speed change to %.2fx", new_rate))
 
-  -- Step 1: Stop playback
-  reaper.Main_OnCommand(1016, 0)  -- Transport: Stop
+  -- Step 1: Get current play position and calculate target measure BEFORE stopping
+  local play_pos = reaper.GetPlayPosition()
+  local beat_in_measure, measures = reaper.TimeMap2_timeToBeats(0, play_pos)
+  local current_measure = math.floor(measures)
 
-  -- Small delay to ensure stop is processed
-  -- (handled by defer, state.is_executing prevents re-entry)
+  -- We want to start at the beginning of the current measure (we just crossed into it)
+  local target_measure = current_measure
+  local target_time = get_measure_start_time(target_measure)
 
-  -- Step 2: Set new playrate using CSurf_OnPlayRateChange
-  -- This function takes the absolute playrate value
+  log(string.format("Play position: %.2f, Current measure: %d, Target: measure %d",
+    play_pos, current_measure, target_measure))
+
+  -- Step 2: Stop playback using direct API call
+  reaper.OnStopButton()
+
+  -- Verify stop worked
+  local play_state = reaper.GetPlayState()
+  log(string.format("Stop command sent. Play state now: %d (0=stopped, 1=playing)", play_state))
+
+  -- If still playing, try harder
+  if (play_state & 1) == 1 then
+    log("Still playing! Trying Main_OnCommand stop...")
+    reaper.Main_OnCommand(1016, 0)
+    play_state = reaper.GetPlayState()
+    log(string.format("Play state after second stop: %d", play_state))
+  end
+
+  -- Step 3: Set new playrate
   reaper.CSurf_OnPlayRateChange(new_rate)
   state.last_playrate = new_rate
-
   log(string.format("Playrate set to %.2fx", new_rate))
 
-  -- Step 3: Get next measure start position and seek there
-  local cur_pos = reaper.GetCursorPosition()
-  local beat_in_measure, measures = reaper.TimeMap2_timeToBeats(0, cur_pos)
-  local next_measure = math.floor(measures) + 1
-
-  -- Get the time of the next measure start
-  local next_measure_time = get_measure_start_time(next_measure)
-
-  if next_measure_time then
-    -- Seek to next measure
-    reaper.SetEditCurPos(next_measure_time, false, false)
-    log(string.format("Seeked to measure %d at time %.2f", next_measure, next_measure_time))
+  -- Step 4: Move cursor AND playhead to target measure start
+  if target_time then
+    reaper.SetEditCurPos(target_time, false, true)
+    log(string.format("Cursor and playhead set to measure %d at time %.3f", target_measure, target_time))
   else
-    log("Warning: Could not get next measure time, staying at current position")
+    log("Warning: Could not get target measure time")
   end
-
-  -- Step 4: Enable pre-count if configured
-  if precount_bars > 0 then
-    -- Check current count-in state
-    local count_in_state = reaper.GetToggleCommandState(40495)
-    if count_in_state ~= 1 then
-      reaper.Main_OnCommand(40495, 0)  -- Toggle count-in on
-      log("Enabled count-in")
-    end
-
-    -- Note: Count-in length is set in REAPER preferences
-    -- We can't easily change it programmatically without project manipulation
-  end
-
-  -- Step 5: Start playback
-  reaper.Main_OnCommand(1007, 0)  -- Transport: Play
-  log("Playback started")
 
   -- Clear pending change
   state.pending_change = nil
   state.countdown_beats = 0
+  state.waiting_for_measure_end = false
+  state.trigger_measure = -1
+
+  -- Set up for phase 2 (wait 300ms then play)
+  state.exec_phase = "stopped"
+  state.exec_precount_bars = precount_bars
+  state.exec_stop_time = reaper.time_precise()
+
+  log("Waiting 300ms before starting playback with precount...")
+end
+
+-- Phase 2: Enable count-in and start playback
+local function execute_speed_change_play()
+  log("Starting playback phase...")
+
+  -- Enable pre-count (count-in) if configured
+  if state.exec_precount_bars > 0 then
+    local count_in_state = reaper.GetToggleCommandState(40495)
+    if count_in_state ~= 1 then
+      reaper.Main_OnCommand(40495, 0)  -- Toggle count-in on
+      log("Enabled count-in for precount")
+    else
+      log("Count-in already enabled")
+    end
+  end
+
+  -- Start playback (will play precount first if enabled)
+  reaper.Main_OnCommand(1007, 0)  -- Transport: Play
+  log("Playback started with precount!")
+
+  -- Reset execution state
+  state.exec_phase = nil
+  state.exec_precount_bars = 0
   state.is_executing = false
 
   -- Reset beat tracking
   last_beat_int = -1
   last_measure_int = -1
+end
+
+-- Legacy wrapper for immediate execution (used by executeNow command)
+local function execute_speed_change()
+  execute_speed_change_stop()
+  -- For immediate execution, skip the wait and play now
+  state.exec_phase = nil
+  execute_speed_change_play()
 end
 
 -- ============================================================================
@@ -262,9 +305,17 @@ local function process_commands()
     state.enabled = false
     state.pending_change = nil
     state.countdown_beats = 0
+    state.waiting_for_measure_end = false
+    state.trigger_measure = -1
     log("Measure-sync DISABLED")
 
   elseif cmd.action == "queue" and cmd.newRate then
+    -- Auto-enable when queue is received
+    if not state.enabled then
+      state.enabled = true
+      log("Auto-enabled measure-sync (queue received)")
+    end
+
     local warning_beats = cmd.warningBeats or 4
     state.pending_change = {
       newRate = cmd.newRate,
@@ -274,6 +325,8 @@ local function process_commands()
       queuedAt = reaper.time_precise()
     }
     state.countdown_beats = warning_beats
+    state.waiting_for_measure_end = false
+    state.trigger_measure = -1
 
     -- Reset beat tracking to ensure we catch the next beat
     last_beat_int = -1
@@ -287,6 +340,8 @@ local function process_commands()
     end
     state.pending_change = nil
     state.countdown_beats = 0
+    state.waiting_for_measure_end = false
+    state.trigger_measure = -1
 
   elseif cmd.action == "executeNow" then
     if state.pending_change then
@@ -310,15 +365,33 @@ local function update_countdown(is_playing)
 
   -- Detect beat change (new beat started)
   local beat_changed = false
+  local measure_changed = false
 
   if measure_int ~= last_measure_int then
-    -- Measure changed - definitely a beat change
+    -- Measure changed
+    measure_changed = true
     beat_changed = true
   elseif beat_int ~= last_beat_int then
     -- Same measure but different beat
     beat_changed = true
   end
 
+  -- If we're waiting for measure end, check for measure boundary
+  if state.waiting_for_measure_end then
+    if measure_changed and measure_int > state.trigger_measure then
+      log(string.format("Measure boundary reached! (measure %d -> %d)", state.trigger_measure, measure_int))
+      execute_speed_change_stop()  -- Start the stop phase, play will happen after delay
+      return
+    end
+    -- Still waiting, update tracking
+    if beat_changed then
+      last_measure_int = measure_int
+      last_beat_int = beat_int
+    end
+    return
+  end
+
+  -- Normal countdown phase
   if beat_changed then
     last_measure_int = measure_int
     last_beat_int = beat_int
@@ -330,11 +403,11 @@ local function update_countdown(is_playing)
         state.countdown_beats, measure_int, beat_int))
     end
 
-    -- Check if we should execute
-    -- Execute when countdown reaches 0 AND we're at the start of a beat
-    if state.countdown_beats <= 0 then
-      log("Countdown complete, executing speed change")
-      execute_speed_change()
+    -- When countdown complete, start waiting for measure end
+    if state.countdown_beats <= 0 and not state.waiting_for_measure_end then
+      state.waiting_for_measure_end = true
+      state.trigger_measure = measure_int
+      log(string.format("Countdown complete! Waiting for measure %d to end...", measure_int))
     end
   end
 end
@@ -361,14 +434,24 @@ end
 local function Main()
   local current_time = reaper.time_precise()
 
+  -- Handle execution state machine (waiting to start playback)
+  if state.exec_phase == "stopped" then
+    local elapsed = current_time - state.exec_stop_time
+    if elapsed >= 0.3 then  -- Wait 300ms
+      -- Done waiting, start playback
+      log(string.format("Waited %.0fms, now starting playback", elapsed * 1000))
+      execute_speed_change_play()
+    end
+  end
+
   -- Poll position at high frequency
   if current_time - last_poll_time >= POLL_INTERVAL then
     last_poll_time = current_time
 
     local is_playing = update_position()
 
-    -- Update countdown if we have a pending change
-    if state.enabled and state.pending_change then
+    -- Update countdown if we have a pending change (and not currently executing)
+    if state.enabled and state.pending_change and not state.exec_phase then
       update_countdown(is_playing)
     end
 
@@ -386,7 +469,7 @@ local function Main()
 end
 
 local function Init()
-  log("Starting HYD Measure Sync v1.1.0")
+  log("Starting HYD Measure Sync v1.2.0")
   log("Command file: " .. command_file)
   log("Status file: " .. status_file)
 
