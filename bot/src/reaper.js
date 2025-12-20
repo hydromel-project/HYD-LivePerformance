@@ -449,15 +449,21 @@ class ReaperOSC extends EventEmitter {
         if (status.waitingForPrecount && !precountStarted) {
           precountStarted = true;
           const newRate = status.newRate || 1.0;
-          const precountBars = status.precountBars || 1;
+          const basePrecountBars = status.precountBars || 1;
           const beatsInMeasure = status.beatsInMeasure || 4;
-          const totalPrecountBeats = precountBars * beatsInMeasure;
+
+          // Scale precount bars based on playrate to maintain consistent preparation TIME
+          // At faster speeds, beats go by quicker, so we need more of them
+          // Formula: scaledBars = ceil(baseBars * newRate)
+          // At 1.0x: 1 bar, at 1.5x: 2 bars, at 2.0x: 2 bars, at 2.5x: 3 bars
+          const scaledPrecountBars = Math.ceil(basePrecountBars * newRate);
+          const totalPrecountBeats = scaledPrecountBars * beatsInMeasure;
 
           // Calculate effective BPM at the new playrate
           const baseBpm = this.currentBpm || 120;
           const effectiveBpm = baseBpm * newRate;
 
-          console.log(`📐 Starting GameHUD precount: ${totalPrecountBeats} beats at ${effectiveBpm.toFixed(1)} BPM (${newRate}x)`);
+          console.log(`📐 Starting GameHUD precount: ${scaledPrecountBars} bars (${totalPrecountBeats} beats) at ${effectiveBpm.toFixed(1)} BPM (${newRate}x)`);
 
           this.emit('startPrecount', {
             effectiveBpm: effectiveBpm,
