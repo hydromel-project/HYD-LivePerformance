@@ -1,6 +1,6 @@
 --[[
 @description HYD Measure Sync
-@version 1.2.0
+@version 1.3.0
 @author hydromel-project
 @about
   # HYD Measure Sync
@@ -92,6 +92,43 @@ local function delete_file(path)
   if file_exists(path) then
     os.remove(path)
   end
+end
+
+-- Check if SWS extension is installed
+local function has_sws()
+  return reaper.SNM_GetIntConfigVar ~= nil
+end
+
+-- Configure count-in length using SWS extension
+-- preroll config var is a bitfield, prerollmeas is the length in measures
+local function configure_countin(bars)
+  if not has_sws() then
+    log("WARNING: SWS extension not installed - cannot set count-in length programmatically")
+    log("Please install SWS from https://www.sws-extension.org/")
+    return false
+  end
+
+  -- Get current preroll settings
+  local current_preroll = reaper.SNM_GetIntConfigVar("preroll", 0)
+  local current_prerollmeas = reaper.SNM_GetDoubleConfigVar("prerollmeas", 0)
+
+  log(string.format("Current preroll settings: bitfield=%d, measures=%.2f", current_preroll, current_prerollmeas))
+
+  -- Set the count-in length in measures
+  -- prerollmeas is the number of measures for count-in
+  reaper.SNM_SetDoubleConfigVar("prerollmeas", bars)
+
+  -- The preroll bitfield controls various options:
+  -- Bit 0 (1): Enable pre-roll before recording
+  -- Bit 1 (2): Enable count-in before playback
+  -- Bit 2 (4): Enable count-in before recording
+  -- We want bit 1 (count-in before playback) enabled
+  local new_preroll = current_preroll | 2  -- Set bit 1 (count-in before playback)
+  reaper.SNM_SetIntConfigVar("preroll", new_preroll)
+
+  log(string.format("Set count-in: %d bars, preroll bitfield: %d -> %d", bars, current_preroll, new_preroll))
+
+  return true
 end
 
 -- Simple JSON parser for our specific format
@@ -249,18 +286,47 @@ local function execute_speed_change_play()
 
   -- Enable pre-count (count-in) if configured
   if state.exec_precount_bars > 0 then
+    -- 1. Configure count-in length using SWS extension
+    -- This sets the actual number of bars for the count-in
+    local sws_configured = configure_countin(state.exec_precount_bars)
+
+    -- 2. Enable count-in before playback (action 40495)
     local count_in_state = reaper.GetToggleCommandState(40495)
     if count_in_state ~= 1 then
-      reaper.Main_OnCommand(40495, 0)  -- Toggle count-in on
-      log("Enabled count-in for precount")
+      reaper.Main_OnCommand(40495, 0)
+      log("Enabled count-in before playback (action 40495)")
     else
       log("Count-in already enabled")
+    end
+
+    -- 3. Enable metronome DURING the play count-in (action 41745)
+    -- This is separate from the main metronome toggle!
+    local metro_countin_state = reaper.GetToggleCommandState(41745)
+    if metro_countin_state ~= 1 then
+      reaper.Main_OnCommand(41745, 0)
+      log("Enabled metronome during play count-in (action 41745)")
+    else
+      log("Metronome during count-in already enabled")
+    end
+
+    -- 4. Also enable the main metronome to make sure it's audible
+    local main_metro_state = reaper.GetToggleCommandState(40364)  -- Toggle metronome
+    if main_metro_state ~= 1 then
+      reaper.Main_OnCommand(40364, 0)
+      log("Enabled main metronome (action 40364)")
+    else
+      log("Main metronome already enabled")
+    end
+
+    if not sws_configured then
+      log("WARNING: SWS not available - count-in length must be set manually")
+      log("Go to: Options > Metronome/Pre-roll settings > Count-in before playback")
     end
   end
 
   -- Start playback (will play precount first if enabled)
   reaper.Main_OnCommand(1007, 0)  -- Transport: Play
-  log("Playback started with precount!")
+  log("Playback started with count-in!")
 
   -- Reset execution state
   state.exec_phase = nil
@@ -469,9 +535,19 @@ local function Main()
 end
 
 local function Init()
-  log("Starting HYD Measure Sync v1.2.0")
+  log("Starting HYD Measure Sync v1.3.0")
   log("Command file: " .. command_file)
   log("Status file: " .. status_file)
+
+  -- Check for SWS extension
+  if has_sws() then
+    log("SWS extension detected - count-in length can be set programmatically")
+  else
+    log("WARNING: SWS extension NOT detected!")
+    log("Install SWS from https://www.sws-extension.org/ for automatic count-in configuration")
+    log("Without SWS, you must manually set count-in length in:")
+    log("  Options > Metronome/Pre-roll settings > Count-in before playback")
+  end
 
   -- Clean up any old command file
   delete_file(command_file)
