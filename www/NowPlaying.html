@@ -294,6 +294,54 @@
       margin-top: 8px;
     }
 
+    /* Progress Bar */
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      width: 100%;
+    }
+
+    .progress-time {
+      font-size: calc(0.9rem * var(--font-size));
+      color: var(--secondary-color);
+      font-variant-numeric: tabular-nums;
+      min-width: 45px;
+    }
+
+    .progress-time.elapsed {
+      text-align: right;
+    }
+
+    .progress-time.remaining {
+      text-align: left;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-color);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    /* Hide progress bar in minimal layout */
+    .layout-minimal .progress-container {
+      max-width: 300px;
+      margin: 16px auto 0;
+    }
+
     /* Animation classes */
     .anim-fade .now-playing { transition: opacity var(--transition-duration) ease; }
 
@@ -502,6 +550,13 @@
       <div class="song-artist" id="songArtist">--</div>
       <div class="song-album" id="songAlbum">--</div>
       <div class="song-year" id="songYear"></div>
+      <div class="progress-container" id="progressContainer">
+        <span class="progress-time elapsed" id="timeElapsed">0:00</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-time remaining" id="timeRemaining">0:00</span>
+      </div>
     </div>
   </div>
 
@@ -566,6 +621,22 @@
     const songArtistEl = document.getElementById('songArtist');
     const songAlbumEl = document.getElementById('songAlbum');
     const songYearEl = document.getElementById('songYear');
+    const progressFill = document.getElementById('progressFill');
+    const timeElapsedEl = document.getElementById('timeElapsed');
+    const timeRemainingEl = document.getElementById('timeRemaining');
+
+    // Format seconds to M:SS or H:MM:SS
+    function formatTime(seconds) {
+      if (!seconds || seconds < 0) return '0:00';
+      const s = Math.floor(seconds);
+      const hours = Math.floor(s / 3600);
+      const mins = Math.floor((s % 3600) / 60);
+      const secs = s % 60;
+      if (hours > 0) {
+        return hours + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      }
+      return mins + ':' + String(secs).padStart(2, '0');
+    }
 
     // Settings inputs
     const inputs = {
@@ -878,11 +949,33 @@
       }, settings.duration * 1000);
     }
 
+    function updateProgress() {
+      // Calculate elapsed and remaining time based on song item bounds
+      const duration = itemEnd - itemStart;
+      if (duration <= 0 || !isVisible) {
+        progressFill.style.width = '0%';
+        timeElapsedEl.textContent = '0:00';
+        timeRemainingEl.textContent = '0:00';
+        return;
+      }
+
+      const elapsed = Math.max(0, playPos - itemStart);
+      const remaining = Math.max(0, itemEnd - playPos);
+      const progress = Math.min(100, Math.max(0, (elapsed / duration) * 100));
+
+      progressFill.style.width = progress + '%';
+      timeElapsedEl.textContent = formatTime(elapsed);
+      timeRemainingEl.textContent = '-' + formatTime(remaining);
+    }
+
     function updateContent() {
       songTitleEl.textContent = title || '--';
       songArtistEl.textContent = artist || '--';
       songAlbumEl.textContent = album || '--';
       songYearEl.textContent = year || '';
+
+      // Update progress bar based on song item position
+      updateProgress();
 
       if (cover && cover !== lastCover) {
         // Preload image before showing
