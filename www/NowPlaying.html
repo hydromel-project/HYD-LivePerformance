@@ -390,6 +390,111 @@
       right: -3px;
     }
 
+    /* Album wrapper for progress positioning */
+    .album-wrapper {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    /* Progress Bar Positions */
+    /* Below song info (default) - progress is moved to song-info via JS */
+    .progress-info .album-wrapper .progress-container {
+      display: none;
+    }
+    .progress-info .song-info {
+      position: relative;
+    }
+    .progress-info .song-info .progress-container {
+      margin-top: 20px;
+      width: 260px;
+    }
+
+    /* Above album art */
+    .progress-above .album-wrapper .progress-container {
+      order: -1;
+      margin: 0 0 10px 0;
+    }
+
+    /* Below album art */
+    .progress-below .album-wrapper .progress-container {
+      margin: 10px 0 0 0;
+    }
+
+    /* Left of album art (vertical bar) */
+    .progress-left .album-wrapper {
+      flex-direction: row;
+      align-items: stretch;
+    }
+    .progress-left .album-wrapper .progress-container {
+      order: -1;
+      flex-direction: column-reverse;
+      width: auto;
+      height: auto;
+      margin: 0 10px 0 0;
+      gap: 6px;
+    }
+    .progress-left .progress-bar {
+      width: 4px;
+      height: 100%;
+      min-height: 100px;
+      flex: 1;
+    }
+    .progress-left .progress-fill {
+      width: 100%;
+      height: 0%;
+      transition: height 0.15s linear;
+    }
+    .progress-left .progress-fill::after {
+      right: 50%;
+      top: auto;
+      bottom: -4px;
+      transform: translateX(50%);
+    }
+    .progress-left .progress-time {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      min-width: auto;
+      text-align: center;
+      font-size: calc(0.65rem * var(--font-size));
+    }
+
+    /* Right of album art (vertical bar) */
+    .progress-right .album-wrapper {
+      flex-direction: row;
+      align-items: stretch;
+    }
+    .progress-right .album-wrapper .progress-container {
+      flex-direction: column;
+      width: auto;
+      height: auto;
+      margin: 0 0 0 10px;
+      gap: 6px;
+    }
+    .progress-right .progress-bar {
+      width: 4px;
+      height: 100%;
+      min-height: 100px;
+      flex: 1;
+    }
+    .progress-right .progress-fill {
+      width: 100%;
+      height: 0%;
+      transition: height 0.15s linear;
+    }
+    .progress-right .progress-fill::after {
+      right: 50%;
+      top: auto;
+      bottom: -4px;
+      transform: translateX(50%);
+    }
+    .progress-right .progress-time {
+      writing-mode: vertical-rl;
+      min-width: auto;
+      text-align: center;
+      font-size: calc(0.65rem * var(--font-size));
+    }
+
     /* Animation classes */
     .anim-fade .now-playing { transition: opacity var(--transition-duration) ease; }
 
@@ -508,6 +613,17 @@
       </label>
     </div>
 
+    <div class="settings-group">
+      <label>Progress Bar Position</label>
+      <select id="setProgressPosition">
+        <option value="info">Below Song Info</option>
+        <option value="above">Above Album Art</option>
+        <option value="below">Below Album Art</option>
+        <option value="left">Left of Album Art</option>
+        <option value="right">Right of Album Art</option>
+      </select>
+    </div>
+
     <h3>Animation</h3>
     <div class="settings-group">
       <label>Transition Type</label>
@@ -589,21 +705,23 @@
   </div>
 
   <div class="now-playing" id="nowPlaying">
-    <div class="album-art" id="albumArt">
-      <img id="albumArtImg" src="" alt="Album Art" style="display: none;">
-      <span class="no-art" id="noArtIcon">&#9835;</span>
-    </div>
-    <div class="song-info">
-      <div class="song-title" id="songTitle">--</div>
-      <div class="song-artist" id="songArtist">--</div>
-      <div class="song-album" id="songAlbum">--</div>
-      <div class="progress-container" id="progressContainer">
+    <div class="album-wrapper" id="albumWrapper">
+      <div class="album-art" id="albumArt">
+        <img id="albumArtImg" src="" alt="Album Art" style="display: none;">
+        <span class="no-art" id="noArtIcon">&#9835;</span>
+      </div>
+      <div class="progress-container album-progress" id="progressContainer">
         <span class="progress-time elapsed" id="timeElapsed">0:00</span>
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
         </div>
         <span class="progress-time remaining" id="timeRemaining">0:00</span>
       </div>
+    </div>
+    <div class="song-info">
+      <div class="song-title" id="songTitle">--</div>
+      <div class="song-artist" id="songArtist">--</div>
+      <div class="song-album" id="songAlbum">--</div>
     </div>
   </div>
 
@@ -617,6 +735,7 @@
       showAlbum: true,
       showYear: true,
       showCover: true,
+      progressPosition: 'info',
       animation: 'fade',
       duration: 0.5,
       scrollAnim: false,
@@ -639,6 +758,7 @@
         showAlbum: urlParams.has('album') ? urlParams.get('album') !== 'false' : (stored.showAlbum ?? defaults.showAlbum),
         showYear: urlParams.has('year') ? urlParams.get('year') !== 'false' : (stored.showYear ?? defaults.showYear),
         showCover: urlParams.has('cover') ? urlParams.get('cover') !== 'false' : (stored.showCover ?? defaults.showCover),
+        progressPosition: urlParams.get('progress') || stored.progressPosition || defaults.progressPosition,
         animation: urlParams.get('anim') || stored.animation || defaults.animation,
         duration: parseFloat(urlParams.get('dur')) || stored.duration || defaults.duration,
         scrollAnim: urlParams.has('scroll') ? urlParams.get('scroll') === 'true' : (stored.scrollAnim ?? defaults.scrollAnim),
@@ -667,6 +787,9 @@
     const songTitleEl = document.getElementById('songTitle');
     const songArtistEl = document.getElementById('songArtist');
     const songAlbumEl = document.getElementById('songAlbum');
+    const songInfoEl = document.querySelector('.song-info');
+    const albumWrapper = document.getElementById('albumWrapper');
+    const progressContainer = document.getElementById('progressContainer');
     const progressFill = document.getElementById('progressFill');
     const timeElapsedEl = document.getElementById('timeElapsed');
     const timeRemainingEl = document.getElementById('timeRemaining');
@@ -691,6 +814,7 @@
       showAlbum: document.getElementById('setShowAlbum'),
       showYear: document.getElementById('setShowYear'),
       showCover: document.getElementById('setShowCover'),
+      progressPosition: document.getElementById('setProgressPosition'),
       animation: document.getElementById('setAnimation'),
       duration: document.getElementById('setDuration'),
       scrollAnim: document.getElementById('setScrollAnim'),
@@ -713,10 +837,18 @@
       root.style.setProperty('--transition-duration', settings.duration + 's');
 
       // Layout
-      document.body.className = document.body.className.replace(/layout-\w+/g, '').replace(/anim-[\w-]+/g, '');
+      document.body.className = document.body.className.replace(/layout-\w+/g, '').replace(/anim-[\w-]+/g, '').replace(/progress-\w+/g, '');
       document.body.classList.add('layout-' + settings.layout);
       document.body.classList.add('anim-' + settings.animation);
+      document.body.classList.add('progress-' + settings.progressPosition);
       document.body.classList.toggle('transparent-bg', settings.transparent);
+
+      // Progress bar position - move to appropriate container
+      if (settings.progressPosition === 'info') {
+        songInfoEl.appendChild(progressContainer);
+      } else {
+        albumWrapper.appendChild(progressContainer);
+      }
 
       // Scroll animation
       albumArtEl.classList.toggle('scroll-anim', settings.scrollAnim);
@@ -736,6 +868,7 @@
       inputs.showAlbum.checked = settings.showAlbum;
       inputs.showYear.checked = settings.showYear;
       inputs.showCover.checked = settings.showCover;
+      inputs.progressPosition.value = settings.progressPosition;
       inputs.animation.value = settings.animation;
       inputs.duration.value = settings.duration;
       inputs.scrollAnim.checked = settings.scrollAnim;
@@ -759,6 +892,7 @@
       settings.showAlbum = inputs.showAlbum.checked;
       settings.showYear = inputs.showYear.checked;
       settings.showCover = inputs.showCover.checked;
+      settings.progressPosition = inputs.progressPosition.value;
       settings.animation = inputs.animation.value;
       settings.duration = parseFloat(inputs.duration.value);
       settings.scrollAnim = inputs.scrollAnim.checked;
@@ -779,6 +913,7 @@
       p.set('album', settings.showAlbum);
       p.set('year', settings.showYear);
       p.set('cover', settings.showCover);
+      p.set('progress', settings.progressPosition);
       p.set('anim', settings.animation);
       p.set('dur', settings.duration);
       p.set('scroll', settings.scrollAnim);
@@ -997,8 +1132,11 @@
     function updateProgress() {
       // Calculate elapsed and remaining time based on song item bounds
       const duration = itemEnd - itemStart;
+      const isVertical = settings.progressPosition === 'left' || settings.progressPosition === 'right';
+
       if (duration <= 0 || !isVisible) {
-        progressFill.style.width = '0%';
+        progressFill.style.width = isVertical ? '' : '0%';
+        progressFill.style.height = isVertical ? '0%' : '';
         timeElapsedEl.textContent = '0:00';
         timeRemainingEl.textContent = '0:00';
         return;
@@ -1008,7 +1146,13 @@
       const remaining = Math.max(0, itemEnd - playPos);
       const progress = Math.min(100, Math.max(0, (elapsed / duration) * 100));
 
-      progressFill.style.width = progress + '%';
+      if (isVertical) {
+        progressFill.style.width = '';
+        progressFill.style.height = progress + '%';
+      } else {
+        progressFill.style.width = progress + '%';
+        progressFill.style.height = '';
+      }
       timeElapsedEl.textContent = formatTime(elapsed);
       timeRemainingEl.textContent = '-' + formatTime(remaining);
     }
