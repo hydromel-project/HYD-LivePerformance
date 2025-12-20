@@ -410,15 +410,89 @@
       width: 260px;
     }
 
-    /* Above album art */
+    /* Above album art - horizontal (default) */
     .progress-above .album-wrapper .progress-container {
       order: -1;
       margin: 0 0 10px 0;
+      width: 100%;
     }
 
-    /* Below album art */
+    /* Above album art - vertical */
+    .progress-above.orient-vertical .album-wrapper {
+      flex-direction: row;
+    }
+    .progress-above.orient-vertical .album-wrapper .progress-container {
+      order: -1;
+      flex-direction: column-reverse;
+      width: auto;
+      height: auto;
+      margin: 0 10px 0 0;
+      gap: 6px;
+    }
+    .progress-above.orient-vertical .progress-bar {
+      width: 4px;
+      height: 100%;
+      min-height: 100px;
+      flex: 1;
+    }
+    .progress-above.orient-vertical .progress-fill {
+      width: 100%;
+      height: 0%;
+      transition: height 0.15s linear;
+    }
+    .progress-above.orient-vertical .progress-fill::after {
+      right: 50%;
+      top: auto;
+      bottom: -4px;
+      transform: translateX(50%);
+    }
+    .progress-above.orient-vertical .progress-time {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      min-width: auto;
+      text-align: center;
+      font-size: calc(0.65rem * var(--font-size));
+    }
+
+    /* Below album art - horizontal (default) */
     .progress-below .album-wrapper .progress-container {
       margin: 10px 0 0 0;
+      width: 100%;
+    }
+
+    /* Below album art - vertical */
+    .progress-below.orient-vertical .album-wrapper {
+      flex-direction: row;
+    }
+    .progress-below.orient-vertical .album-wrapper .progress-container {
+      flex-direction: column;
+      width: auto;
+      height: auto;
+      margin: 0 0 0 10px;
+      gap: 6px;
+    }
+    .progress-below.orient-vertical .progress-bar {
+      width: 4px;
+      height: 100%;
+      min-height: 100px;
+      flex: 1;
+    }
+    .progress-below.orient-vertical .progress-fill {
+      width: 100%;
+      height: 0%;
+      transition: height 0.15s linear;
+    }
+    .progress-below.orient-vertical .progress-fill::after {
+      right: 50%;
+      top: auto;
+      bottom: -4px;
+      transform: translateX(50%);
+    }
+    .progress-below.orient-vertical .progress-time {
+      writing-mode: vertical-rl;
+      min-width: auto;
+      text-align: center;
+      font-size: calc(0.65rem * var(--font-size));
     }
 
     /* Left of album art (vertical bar) */
@@ -624,6 +698,14 @@
       </select>
     </div>
 
+    <div class="settings-group" id="orientationGroup">
+      <label>Progress Bar Orientation</label>
+      <select id="setProgressOrientation">
+        <option value="horizontal">Horizontal</option>
+        <option value="vertical">Vertical</option>
+      </select>
+    </div>
+
     <h3>Animation</h3>
     <div class="settings-group">
       <label>Transition Type</label>
@@ -736,6 +818,7 @@
       showYear: true,
       showCover: true,
       progressPosition: 'info',
+      progressOrientation: 'horizontal',
       animation: 'fade',
       duration: 0.5,
       scrollAnim: false,
@@ -759,6 +842,7 @@
         showYear: urlParams.has('year') ? urlParams.get('year') !== 'false' : (stored.showYear ?? defaults.showYear),
         showCover: urlParams.has('cover') ? urlParams.get('cover') !== 'false' : (stored.showCover ?? defaults.showCover),
         progressPosition: urlParams.get('progress') || stored.progressPosition || defaults.progressPosition,
+        progressOrientation: urlParams.get('orient') || stored.progressOrientation || defaults.progressOrientation,
         animation: urlParams.get('anim') || stored.animation || defaults.animation,
         duration: parseFloat(urlParams.get('dur')) || stored.duration || defaults.duration,
         scrollAnim: urlParams.has('scroll') ? urlParams.get('scroll') === 'true' : (stored.scrollAnim ?? defaults.scrollAnim),
@@ -815,6 +899,7 @@
       showYear: document.getElementById('setShowYear'),
       showCover: document.getElementById('setShowCover'),
       progressPosition: document.getElementById('setProgressPosition'),
+      progressOrientation: document.getElementById('setProgressOrientation'),
       animation: document.getElementById('setAnimation'),
       duration: document.getElementById('setDuration'),
       scrollAnim: document.getElementById('setScrollAnim'),
@@ -837,11 +922,18 @@
       root.style.setProperty('--transition-duration', settings.duration + 's');
 
       // Layout
-      document.body.className = document.body.className.replace(/layout-\w+/g, '').replace(/anim-[\w-]+/g, '').replace(/progress-\w+/g, '');
+      document.body.className = document.body.className.replace(/layout-\w+/g, '').replace(/anim-[\w-]+/g, '').replace(/progress-\w+/g, '').replace(/orient-\w+/g, '');
       document.body.classList.add('layout-' + settings.layout);
       document.body.classList.add('anim-' + settings.animation);
       document.body.classList.add('progress-' + settings.progressPosition);
       document.body.classList.toggle('transparent-bg', settings.transparent);
+
+      // Orientation (only applies to above/below positions)
+      const showOrientation = settings.progressPosition === 'above' || settings.progressPosition === 'below';
+      document.getElementById('orientationGroup').style.display = showOrientation ? '' : 'none';
+      if (settings.progressOrientation === 'vertical') {
+        document.body.classList.add('orient-vertical');
+      }
 
       // Progress bar position - move to appropriate container
       if (settings.progressPosition === 'info') {
@@ -869,6 +961,7 @@
       inputs.showYear.checked = settings.showYear;
       inputs.showCover.checked = settings.showCover;
       inputs.progressPosition.value = settings.progressPosition;
+      inputs.progressOrientation.value = settings.progressOrientation;
       inputs.animation.value = settings.animation;
       inputs.duration.value = settings.duration;
       inputs.scrollAnim.checked = settings.scrollAnim;
@@ -893,6 +986,7 @@
       settings.showYear = inputs.showYear.checked;
       settings.showCover = inputs.showCover.checked;
       settings.progressPosition = inputs.progressPosition.value;
+      settings.progressOrientation = inputs.progressOrientation.value;
       settings.animation = inputs.animation.value;
       settings.duration = parseFloat(inputs.duration.value);
       settings.scrollAnim = inputs.scrollAnim.checked;
@@ -914,6 +1008,7 @@
       p.set('year', settings.showYear);
       p.set('cover', settings.showCover);
       p.set('progress', settings.progressPosition);
+      p.set('orient', settings.progressOrientation);
       p.set('anim', settings.animation);
       p.set('dur', settings.duration);
       p.set('scroll', settings.scrollAnim);
@@ -1132,7 +1227,9 @@
     function updateProgress() {
       // Calculate elapsed and remaining time based on song item bounds
       const duration = itemEnd - itemStart;
-      const isVertical = settings.progressPosition === 'left' || settings.progressPosition === 'right';
+      const pos = settings.progressPosition;
+      const isVertical = pos === 'left' || pos === 'right' ||
+        ((pos === 'above' || pos === 'below') && settings.progressOrientation === 'vertical');
 
       if (duration <= 0 || !isVisible) {
         progressFill.style.width = isVertical ? '' : '0%';
