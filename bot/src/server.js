@@ -477,6 +477,14 @@ class WebServer {
       this.broadcast({ type: 'rewardsRemoved' });
     });
 
+    // Handle dynamic pricing updates
+    gameEngine.on('pricesUpdated', async (prices) => {
+      // Update Twitch reward costs
+      await twitch.updateRewardPrices(prices);
+      // Broadcast to web clients
+      this.broadcast({ type: 'pricesUpdated', data: prices });
+    });
+
     // Forward request events from Twitch
     twitch.on('requestAdded', (request) => {
       this.broadcast({ type: 'requestAdded', data: request });

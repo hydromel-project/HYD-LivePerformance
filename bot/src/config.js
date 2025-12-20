@@ -64,13 +64,14 @@ const defaultConfig = {
     // Chat announcements
     announcements: {
       enabled: true,
-      speedUp: '🔥 {user} sped it up to {rate}x!',
-      slowDown: '🧊 {user} slowed it down to {rate}x!',
-      chaos: '🎲 {user} triggered CHAOS MODE! Now at {rate}x!',
-      reset: '✨ {user} reset playrate to {rate}x!',
-      maxReached: '⚠️ Already at maximum speed!',
-      minReached: '⚠️ Already at minimum speed!',
-      cooldownActive: '⏳ Cooldown active! Try again in {seconds}s'
+      speedUp: '🔥 {user} cranked it to {rate}x! THRASH HARDER! 🤘',
+      slowDown: '🧊 {user} dropped it to {rate}x! Doom mode engaged. 🎸',
+      chaos: '🎲 {user} unleashed CHAOS! {rate}x — THE PIT IS OPEN! 💀',
+      reset: '⚡ {user} restored order at {rate}x. The calm before the storm...',
+      setPlayrate: '🎛️ {user} commanded {rate}x! So it shall be done. 🤘',
+      maxReached: '💀 WE\'RE ALREADY BLASTING AT MAXIMUM OVERDRIVE! Even Dragonforce can\'t shred faster than this!',
+      minReached: '🪦 Any slower and we\'re playing funeral doom! The tempo has been buried alive.',
+      cooldownActive: '⏳ Chill for {seconds}s, moshpit needs to recover! Even metalheads need a breather between breakdowns.'
     }
   },
 
@@ -79,17 +80,19 @@ const defaultConfig = {
     speedUp: {
       enabled: true,
       title: '🔥 Speed Up',
-      cost: 100,
+      baseCost: 500,           // Base cost at 1.0x
+      cost: 500,               // Current cost (updated dynamically)
       increment: 0.1,
       cooldownSeconds: 0,
-      maxPerStream: 0,  // 0 = unlimited
+      maxPerStream: 0,         // 0 = unlimited
       backgroundColor: '#FF4400',
-      rewardId: null  // Set when created
+      rewardId: null           // Set when created
     },
     slowDown: {
       enabled: true,
       title: '🧊 Slow Down',
-      cost: 100,
+      baseCost: 500,
+      cost: 500,
       increment: 0.1,
       cooldownSeconds: 0,
       maxPerStream: 0,
@@ -99,7 +102,8 @@ const defaultConfig = {
     chaos: {
       enabled: true,
       title: '🎲 CHAOS',
-      cost: 500,
+      baseCost: 2500,          // High risk = high cost
+      cost: 2500,
       cooldownSeconds: 30,
       maxPerStream: 0,
       backgroundColor: '#FF00FF',
@@ -108,11 +112,25 @@ const defaultConfig = {
     reset: {
       enabled: true,
       title: '✨ Reset',
-      cost: 200,
+      baseCost: 1500,          // Escape from chaos
+      cost: 1500,
       cooldownSeconds: 60,
       maxPerStream: 0,
       backgroundColor: '#00FF88',
       rewardId: null
+    },
+
+    // Dynamic pricing settings
+    dynamicPricing: {
+      enabled: true,
+      // How aggressively prices scale (1.0 = double at 2x, 2.0 = triple at 2x)
+      scaleFactor: 1.5,
+      // Minimum cost (never go below this)
+      minCost: 100,
+      // Maximum cost cap
+      maxCost: 50000,
+      // Reset gets cheaper at extremes (mercy rule)
+      resetDiscountAtExtremes: true
     }
   },
 

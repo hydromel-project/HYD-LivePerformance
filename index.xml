@@ -117,8 +117,18 @@ Song library indexer for Playlist system.]]></changelog>
       </version>
     </reapack>
     <reapack name="HYD-PlayrateBot" type="data" author="hydromel-project">
-      <version name="1.1.0">
-        <changelog><![CDATA[v1.1.0: Song Request System
+      <version name="1.2.0">
+        <changelog><![CDATA[v1.2.0: Mod Commands, Dynamic Pricing & Metal Theme
+- Mod commands: !playrate <0.5-4>, !testreaper, !reapercommands
+- Dynamic pricing: costs scale based on current playrate (extremes cost more)
+- Live prices display in web config panel
+- Quick price setter in web interface
+- Documentation generator (Mod/Viewer/Full markdown export)
+- Metal-themed announcements and messages
+- 400+ random access denied jokes for non-mods
+- Refactored jokes to external JSON file
+
+v1.1.0: Song Request System
 - !request <song> chat command for viewers
 - Fuzzy song matching against library index
 - Request queue management with persistent logging
@@ -153,6 +163,7 @@ To install: Run Install.cmd (or install.bat), then use desktop shortcut.]]></cha
         <source file="bot/src/streamelements.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamelements.js</source>
         <source file="bot/src/streamlabs.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/streamlabs.js</source>
         <source file="bot/src/twitch.js">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/twitch.js</source>
+        <source file="bot/src/access-denied-jokes.json">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/src/access-denied-jokes.json</source>
         <source file="bot/public/index.html">https://raw.githubusercontent.com/hydromel-project/HYD-LivePerformance/master/bot/public/index.html</source>
       </version>
     </reapack>

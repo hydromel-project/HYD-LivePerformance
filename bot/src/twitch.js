@@ -4,8 +4,20 @@ const { EventSubWsListener } = require('@twurple/eventsub-ws');
 const tmi = require('tmi.js');
 const config = require('./config');
 const gameEngine = require('./game-engine');
+const reaper = require('./reaper');
 const requests = require('./requests');
 const EventEmitter = require('events');
+
+// Load access denied jokes from JSON
+const accessDeniedJokes = require('./access-denied-jokes.json');
+
+/**
+ * Get a random access denied joke
+ */
+function getAccessDeniedJoke() {
+  const jokes = accessDeniedJokes.jokes;
+  return jokes[Math.floor(Math.random() * jokes.length)];
+}
 
 class TwitchIntegration extends EventEmitter {
   constructor() {
@@ -139,11 +151,30 @@ class TwitchIntegration extends EventEmitter {
    * Handle incoming chat message for commands
    */
   async handleChatMessage(channel, tags, message) {
-    const reqConfig = config.get('requests');
-    if (!reqConfig?.enabled) return;
-
     const trimmedMsg = message.trim();
     const cmd = trimmedMsg.split(' ')[0].toLowerCase();
+
+    // Mod/Broadcaster command: !playrate <value>
+    if (cmd === '!playrate') {
+      await this.handlePlayrateCommand(channel, tags, trimmedMsg);
+      return;
+    }
+
+    // Mod/Broadcaster command: !testreaper
+    if (cmd === '!testreaper') {
+      this.handleTestReaperCommand(channel, tags);
+      return;
+    }
+
+    // Mod/Broadcaster command: !reapercommands
+    if (cmd === '!reapercommands' || cmd === '!reaperhelp') {
+      this.handleReaperCommandsCommand(channel, tags);
+      return;
+    }
+
+    // Song request commands require requests to be enabled
+    const reqConfig = config.get('requests');
+    if (!reqConfig?.enabled) return;
 
     // Check for request commands
     const requestCommands = [reqConfig.command, ...(reqConfig.aliases || [])].map(c => c.toLowerCase());
@@ -164,6 +195,97 @@ class TwitchIntegration extends EventEmitter {
       await this.handleCancelRequest(channel, tags);
       return;
     }
+  }
+
+  /**
+   * Handle !playrate command (mod/broadcaster only)
+   */
+  async handlePlayrateCommand(channel, tags, message) {
+    const username = tags.username;
+    const displayName = tags['display-name'] || username;
+    const isMod = tags.mod || tags.badges?.moderator;
+    const isBroadcaster = tags.badges?.broadcaster;
+
+    // Check permissions
+    if (!isMod && !isBroadcaster) {
+      this.sendChat(`@${displayName} ${getAccessDeniedJoke()}`);
+      return;
+    }
+
+    // Parse the rate value
+    const parts = message.split(/\s+/);
+    if (parts.length < 2) {
+      this.sendChat(`@${displayName} 🎸 You call that a command?! Give me a number! !playrate <0.5-4.0> — Don't leave the riff hanging! 🤘`);
+      return;
+    }
+
+    const rate = parseFloat(parts[1]);
+
+    // Fetch user avatar
+    let avatarUrl = null;
+    try {
+      const user = await this.apiClient.users.getUserById(tags['user-id']);
+      if (user) {
+        avatarUrl = user.profilePictureUrl;
+      }
+    } catch (err) {
+      // Ignore avatar fetch errors
+    }
+
+    // Process the action
+    const result = gameEngine.setPlayrateDirect(displayName, rate, {
+      source: 'modCommand',
+      avatarUrl
+    });
+
+    if (result.message) {
+      this.sendChat(result.message);
+    }
+  }
+
+  /**
+   * Handle !testreaper command (mod/broadcaster only)
+   */
+  handleTestReaperCommand(channel, tags) {
+    const displayName = tags['display-name'] || tags.username;
+    const isMod = tags.mod || tags.badges?.moderator;
+    const isBroadcaster = tags.badges?.broadcaster;
+
+    if (!isMod && !isBroadcaster) {
+      this.sendChat(`@${displayName} ${getAccessDeniedJoke()}`);
+      return;
+    }
+
+    const reaperConfig = config.get('reaper');
+    const isConnected = reaper.connected;
+    const currentPlayrate = reaper.getPlayrate();
+    const currentBpm = reaper.getBpm();
+
+    if (isConnected) {
+      this.sendChat(`🤘 THE REAPER LIVES! Shredding at ${currentPlayrate.toFixed(2)}x | ${currentBpm} BPM | Port ${reaperConfig.sendPort} — LET'S GOOOO! 🔥`);
+    } else {
+      this.sendChat(`💀 THE REAPER IS SILENT... OSC connection dead on port ${reaperConfig.sendPort}. Someone wake up the sound guy!`);
+    }
+  }
+
+  /**
+   * Handle !reapercommands command (mod/broadcaster only)
+   */
+  handleReaperCommandsCommand(channel, tags) {
+    const displayName = tags['display-name'] || tags.username;
+    const isMod = tags.mod || tags.badges?.moderator;
+    const isBroadcaster = tags.badges?.broadcaster;
+
+    if (!isMod && !isBroadcaster) {
+      this.sendChat(`@${displayName} ${getAccessDeniedJoke()}`);
+      return;
+    }
+
+    const gameConfig = config.get('game');
+    const minRate = gameConfig.minPlayrate;
+    const maxRate = gameConfig.maxPlayrate;
+
+    this.sendChat(`⚔️ MOD ARSENAL: !playrate <${minRate}-${maxRate}> (command the tempo) | !testreaper (summon the REAPER) | !reapercommands (this grimoire 📜) 🤘`);
   }
 
   /**
@@ -466,6 +588,44 @@ class TwitchIntegration extends EventEmitter {
       console.error(`Error updating reward ${actionName}:`, err.message);
       return false;
     }
+  }
+
+  /**
+   * Update all reward prices (for dynamic pricing)
+   * @param {object} prices - { speedUp, slowDown, chaos, reset }
+   */
+  async updateRewardPrices(prices) {
+    if (!this.apiClient || !this.connected) return false;
+
+    const twitchConfig = config.get('twitch');
+    const rewardsConfig = config.get('rewards');
+
+    const updates = [];
+
+    for (const [actionName, newCost] of Object.entries(prices)) {
+      const rewardId = rewardsConfig[actionName]?.rewardId;
+      if (!rewardId || !newCost) continue;
+
+      updates.push(
+        this.apiClient.channelPoints.updateCustomReward(
+          twitchConfig.broadcasterId,
+          rewardId,
+          { cost: newCost }
+        ).then(() => {
+          console.log(`   💰 ${actionName}: ${newCost} pts`);
+        }).catch(err => {
+          console.warn(`   Failed to update ${actionName} price:`, err.message);
+        })
+      );
+    }
+
+    if (updates.length > 0) {
+      console.log('📊 Updating dynamic prices...');
+      await Promise.all(updates);
+      this.emit('pricesUpdated', prices);
+    }
+
+    return true;
   }
 
   /**

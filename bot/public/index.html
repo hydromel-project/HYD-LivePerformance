@@ -664,6 +664,50 @@
       <div class="card">
         <h2><span class="icon">🎁</span> Channel Point Rewards</h2>
 
+        <!-- Dynamic Pricing Display -->
+        <div style="background:linear-gradient(135deg, #1a1a2e, #16213e);border-radius:8px;padding:15px;margin-bottom:15px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-weight:600;">📊 Live Prices</span>
+            <label class="checkbox-group" style="padding:5px 10px;margin:0;">
+              <input type="checkbox" id="dynamicPricingEnabled" checked>
+              <span style="font-size:12px;">Dynamic</span>
+            </label>
+          </div>
+          <div id="livePricesDisplay" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
+            <div style="background:rgba(255,68,0,0.2);padding:8px;border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-dim);">🔥 Speed</div>
+              <div id="liveSpeedUpCost" style="font-weight:700;color:#ff4400;">500</div>
+            </div>
+            <div style="background:rgba(0,170,255,0.2);padding:8px;border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-dim);">🧊 Slow</div>
+              <div id="liveSlowDownCost" style="font-weight:700;color:#00aaff;">500</div>
+            </div>
+            <div style="background:rgba(255,0,255,0.2);padding:8px;border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-dim);">🎲 Chaos</div>
+              <div id="liveChaosCost" style="font-weight:700;color:#ff00ff;">2500</div>
+            </div>
+            <div style="background:rgba(0,255,136,0.2);padding:8px;border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-dim);">✨ Reset</div>
+              <div id="liveResetCost" style="font-weight:700;color:#00ff88;">1500</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;">
+            Prices adjust based on current playrate • Extremes = higher costs
+          </p>
+        </div>
+
+        <!-- Quick Base Price Adjustment -->
+        <div style="background:var(--bg-input);border-radius:8px;padding:15px;margin-bottom:15px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-weight:600;">⚡ Set All Base Prices</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="number" id="quickPriceValue" value="1000" min="1" style="width:120px;padding:8px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+            <button class="btn btn-secondary" onclick="setAllPrices()">Apply</button>
+            <span style="color:var(--text-dim);font-size:12px;">Sets all base costs</span>
+          </div>
+        </div>
+
         <div class="reward-item">
           <div class="reward-header">
             <span class="reward-title">
@@ -677,8 +721,8 @@
           </div>
           <div class="form-row three">
             <div class="form-group">
-              <label>Cost</label>
-              <input type="number" id="rewardSpeedUpCost" value="100">
+              <label>Base Cost</label>
+              <input type="number" id="rewardSpeedUpCost" value="500">
             </div>
             <div class="form-group">
               <label>Increment</label>
@@ -704,8 +748,8 @@
           </div>
           <div class="form-row three">
             <div class="form-group">
-              <label>Cost</label>
-              <input type="number" id="rewardSlowDownCost" value="100">
+              <label>Base Cost</label>
+              <input type="number" id="rewardSlowDownCost" value="500">
             </div>
             <div class="form-group">
               <label>Increment</label>
@@ -731,8 +775,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Cost</label>
-              <input type="number" id="rewardChaosCost" value="500">
+              <label>Base Cost</label>
+              <input type="number" id="rewardChaosCost" value="2500">
             </div>
             <div class="form-group">
               <label>Cooldown (s)</label>
@@ -754,8 +798,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Cost</label>
-              <input type="number" id="rewardResetCost" value="200">
+              <label>Base Cost</label>
+              <input type="number" id="rewardResetCost" value="1500">
             </div>
             <div class="form-group">
               <label>Cooldown (s)</label>
@@ -763,6 +807,25 @@
             </div>
           </div>
         </div>
+
+        <!-- Dynamic Pricing Settings -->
+        <div class="divider"></div>
+        <h3 style="font-size:14px;margin-bottom:10px;">Dynamic Pricing Settings</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Scale Factor</label>
+            <input type="number" id="pricingScaleFactor" value="1.5" step="0.1" min="0.5" max="5">
+            <p class="help-text">Higher = more aggressive price scaling</p>
+          </div>
+          <div class="form-group">
+            <label>Max Cost Cap</label>
+            <input type="number" id="pricingMaxCost" value="50000" step="1000">
+          </div>
+        </div>
+        <label class="checkbox-group" style="margin-bottom:10px;">
+          <input type="checkbox" id="pricingResetDiscount" checked>
+          <span>Reset gets cheaper at extremes (mercy rule)</span>
+        </label>
 
         <button class="btn btn-primary btn-block" onclick="saveRewardsConfig()">
           Save Reward Settings
@@ -886,6 +949,34 @@
         </div>
       </div>
 
+      <!-- Documentation Export -->
+      <div class="card">
+        <h2><span class="icon">📄</span> Documentation</h2>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:15px;">
+          Generate markdown documentation for your stream, mods, or viewers.
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="generateModDocs()">
+            📋 Mod Commands
+          </button>
+          <button class="btn btn-secondary" onclick="generateViewerDocs()">
+            👥 Viewer Guide
+          </button>
+          <button class="btn btn-primary" onclick="generateFullDocs()">
+            📚 Full Documentation
+          </button>
+        </div>
+        <div id="docsOutput" style="display:none;margin-top:15px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-weight:600;">Generated Documentation</span>
+            <button class="btn btn-secondary" onclick="copyDocs()" style="padding:5px 10px;font-size:12px;">
+              📋 Copy
+            </button>
+          </div>
+          <textarea id="docsTextarea" style="width:100%;height:300px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:monospace;font-size:12px;padding:10px;resize:vertical;"></textarea>
+        </div>
+      </div>
+
       <!-- History -->
       <div class="card">
         <h2><span class="icon">📜</span> Recent Activity</h2>
@@ -964,7 +1055,18 @@
             updateScaledIncrementDisplay();
           }
           break;
+
+        case 'pricesUpdated':
+          updateLivePrices(msg.data);
+          break;
       }
+    }
+
+    function updateLivePrices(prices) {
+      if (prices.speedUp) document.getElementById('liveSpeedUpCost').textContent = prices.speedUp;
+      if (prices.slowDown) document.getElementById('liveSlowDownCost').textContent = prices.slowDown;
+      if (prices.chaos) document.getElementById('liveChaosCost').textContent = prices.chaos;
+      if (prices.reset) document.getElementById('liveResetCost').textContent = prices.reset;
     }
 
     function updateUI() {
@@ -1006,22 +1108,37 @@
       // Rewards
       const rewards = config.rewards || {};
       document.getElementById('rewardSpeedUpEnabled').checked = rewards.speedUp?.enabled ?? true;
-      document.getElementById('rewardSpeedUpCost').value = rewards.speedUp?.cost || 100;
+      document.getElementById('rewardSpeedUpCost').value = rewards.speedUp?.baseCost || 500;
       document.getElementById('rewardSpeedUpIncrement').value = rewards.speedUp?.increment || 0.1;
       document.getElementById('rewardSpeedUpCooldown').value = rewards.speedUp?.cooldownSeconds || 0;
 
       document.getElementById('rewardSlowDownEnabled').checked = rewards.slowDown?.enabled ?? true;
-      document.getElementById('rewardSlowDownCost').value = rewards.slowDown?.cost || 100;
+      document.getElementById('rewardSlowDownCost').value = rewards.slowDown?.baseCost || 500;
       document.getElementById('rewardSlowDownIncrement').value = rewards.slowDown?.increment || 0.1;
       document.getElementById('rewardSlowDownCooldown').value = rewards.slowDown?.cooldownSeconds || 0;
 
       document.getElementById('rewardChaosEnabled').checked = rewards.chaos?.enabled ?? true;
-      document.getElementById('rewardChaosCost').value = rewards.chaos?.cost || 500;
+      document.getElementById('rewardChaosCost').value = rewards.chaos?.baseCost || 2500;
       document.getElementById('rewardChaosCooldown').value = rewards.chaos?.cooldownSeconds || 30;
 
       document.getElementById('rewardResetEnabled').checked = rewards.reset?.enabled ?? true;
-      document.getElementById('rewardResetCost').value = rewards.reset?.cost || 200;
+      document.getElementById('rewardResetCost').value = rewards.reset?.baseCost || 1500;
       document.getElementById('rewardResetCooldown').value = rewards.reset?.cooldownSeconds || 60;
+
+      // Dynamic pricing settings
+      const pricing = rewards.dynamicPricing || {};
+      document.getElementById('dynamicPricingEnabled').checked = pricing.enabled ?? true;
+      document.getElementById('pricingScaleFactor').value = pricing.scaleFactor || 1.5;
+      document.getElementById('pricingMaxCost').value = pricing.maxCost || 50000;
+      document.getElementById('pricingResetDiscount').checked = pricing.resetDiscountAtExtremes ?? true;
+
+      // Update live prices display
+      updateLivePrices({
+        speedUp: rewards.speedUp?.cost || rewards.speedUp?.baseCost || 500,
+        slowDown: rewards.slowDown?.cost || rewards.slowDown?.baseCost || 500,
+        chaos: rewards.chaos?.cost || rewards.chaos?.baseCost || 2500,
+        reset: rewards.reset?.cost || rewards.reset?.baseCost || 1500
+      });
 
       // Slider bounds
       const slider = document.getElementById('playrateSlider');
@@ -1172,30 +1289,55 @@
       showToast('REAPER config saved. Restart the bot to apply.', 'success');
     }
 
+    function setAllPrices() {
+      const price = parseInt(document.getElementById('quickPriceValue').value) || 1000;
+      document.getElementById('rewardSpeedUpCost').value = price;
+      document.getElementById('rewardSlowDownCost').value = price;
+      document.getElementById('rewardChaosCost').value = price;
+      document.getElementById('rewardResetCost').value = price;
+      showToast(`All rewards set to ${price} points`, 'success');
+    }
+
     async function saveRewardsConfig() {
+      const baseCostSpeedUp = parseInt(document.getElementById('rewardSpeedUpCost').value);
+      const baseCostSlowDown = parseInt(document.getElementById('rewardSlowDownCost').value);
+      const baseCostChaos = parseInt(document.getElementById('rewardChaosCost').value);
+      const baseCostReset = parseInt(document.getElementById('rewardResetCost').value);
+
       const data = {
         rewards: {
           speedUp: {
             enabled: document.getElementById('rewardSpeedUpEnabled').checked,
-            cost: parseInt(document.getElementById('rewardSpeedUpCost').value),
+            baseCost: baseCostSpeedUp,
+            cost: baseCostSpeedUp,  // Initialize cost to baseCost
             increment: parseFloat(document.getElementById('rewardSpeedUpIncrement').value),
             cooldownSeconds: parseInt(document.getElementById('rewardSpeedUpCooldown').value)
           },
           slowDown: {
             enabled: document.getElementById('rewardSlowDownEnabled').checked,
-            cost: parseInt(document.getElementById('rewardSlowDownCost').value),
+            baseCost: baseCostSlowDown,
+            cost: baseCostSlowDown,
             increment: parseFloat(document.getElementById('rewardSlowDownIncrement').value),
             cooldownSeconds: parseInt(document.getElementById('rewardSlowDownCooldown').value)
           },
           chaos: {
             enabled: document.getElementById('rewardChaosEnabled').checked,
-            cost: parseInt(document.getElementById('rewardChaosCost').value),
+            baseCost: baseCostChaos,
+            cost: baseCostChaos,
             cooldownSeconds: parseInt(document.getElementById('rewardChaosCooldown').value)
           },
           reset: {
             enabled: document.getElementById('rewardResetEnabled').checked,
-            cost: parseInt(document.getElementById('rewardResetCost').value),
+            baseCost: baseCostReset,
+            cost: baseCostReset,
             cooldownSeconds: parseInt(document.getElementById('rewardResetCooldown').value)
+          },
+          dynamicPricing: {
+            enabled: document.getElementById('dynamicPricingEnabled').checked,
+            scaleFactor: parseFloat(document.getElementById('pricingScaleFactor').value),
+            minCost: 100,
+            maxCost: parseInt(document.getElementById('pricingMaxCost').value),
+            resetDiscountAtExtremes: document.getElementById('pricingResetDiscount').checked
           }
         }
       };
@@ -1330,6 +1472,261 @@
       } else {
         showToast('WebSocket not connected', 'error');
       }
+    }
+
+    // ============ DOCUMENTATION GENERATORS ============
+
+    function generateModDocs() {
+      const rewards = config.rewards || {};
+      const game = config.game || {};
+      const dynamicPricing = rewards.dynamicPricing?.enabled ? 'Yes' : 'No';
+
+      const doc = `# 🎛️ Mod Commands - HYD Playrate Bot
+
+## Chat Commands (Mod/Broadcaster Only)
+
+| Command | Description |
+|---------|-------------|
+| \`!playrate <0.5-4.0>\` | Set playrate to exact value |
+| \`!testreaper\` | Check if REAPER OSC is connected |
+| \`!reapercommands\` | Show list of mod commands |
+
+## Current Settings
+
+- **Playrate Range:** ${game.minPlayrate || 0.5}x - ${game.maxPlayrate || 4.0}x
+- **Dynamic Pricing:** ${dynamicPricing}
+- **Global Cooldown:** ${game.globalCooldown?.seconds || 5}s
+
+## Channel Point Rewards
+
+| Reward | Base Cost | Description |
+|--------|-----------|-------------|
+| 🔥 Speed Up | ${rewards.speedUp?.baseCost || 500} pts | +${rewards.speedUp?.increment || 0.1}x playrate |
+| 🧊 Slow Down | ${rewards.slowDown?.baseCost || 500} pts | -${rewards.slowDown?.increment || 0.1}x playrate |
+| 🎲 CHAOS | ${rewards.chaos?.baseCost || 2500} pts | Random playrate (${game.minPlayrate || 0.5}x - ${game.maxPlayrate || 4.0}x) |
+| ✨ Reset | ${rewards.reset?.baseCost || 1500} pts | Reset to 1.0x |
+
+${rewards.dynamicPricing?.enabled ? `
+## Dynamic Pricing
+
+Prices adjust based on current playrate:
+- **Speed Up**: More expensive at high speeds
+- **Slow Down**: More expensive at low speeds
+- **Chaos**: Always expensive, more at extremes
+- **Reset**: Gets cheaper at extremes (mercy rule)
+
+Scale Factor: ${rewards.dynamicPricing?.scaleFactor || 1.5}x
+` : ''}
+
+---
+*Generated by HYD Playrate Bot*
+`;
+
+      showDocs(doc);
+    }
+
+    function generateViewerDocs() {
+      const rewards = config.rewards || {};
+      const game = config.game || {};
+      const requests = config.requests || {};
+
+      const doc = `# 🎮 Viewer Guide - Playrate Chaos
+
+## How It Works
+
+Use your channel points to mess with the streamer's playback speed!
+The song will speed up or slow down based on chat's choices.
+
+## Channel Point Rewards
+
+| Reward | Cost | What It Does |
+|--------|------|--------------|
+| 🔥 **Speed Up** | ${rewards.speedUp?.baseCost || 500}+ pts | Make it FASTER! |
+| 🧊 **Slow Down** | ${rewards.slowDown?.baseCost || 500}+ pts | Slow it DOWN! |
+| 🎲 **CHAOS** | ${rewards.chaos?.baseCost || 2500}+ pts | RANDOM SPEED! |
+| ✨ **Reset** | ${rewards.reset?.baseCost || 1500}+ pts | Back to normal |
+
+> 💡 **Tip:** Prices change dynamically! The more extreme the speed, the more expensive it gets to push further.
+
+## Speed Limits
+
+- **Minimum:** ${game.minPlayrate || 0.5}x (doom mode 🪦)
+- **Maximum:** ${game.maxPlayrate || 4.0}x (ludicrous speed 🚀)
+
+## Milestones & Achievements
+
+- 🔥 **2x Speed** - Things are heating up!
+- 💀 **3x Speed** - MAXIMUM OVERDRIVE!
+- 🚀 **3.5x+ Speed** - LUDICROUS SPEED!
+- 🐌 **0.5x Speed** - HALF SPEED!
+- 🧊 **0.3x Speed** - FROZEN SOLID!
+
+${requests.enabled ? `
+## Song Requests
+
+| Command | Description |
+|---------|-------------|
+| \`!request <song>\` | Request a song |
+| \`!queue\` | Check your position |
+| \`!cancel\` | Cancel your request |
+` : ''}
+
+---
+*Have fun and don't break the streamer too much! 🤘*
+`;
+
+      showDocs(doc);
+    }
+
+    function generateFullDocs() {
+      const rewards = config.rewards || {};
+      const game = config.game || {};
+      const requests = config.requests || {};
+      const reaper = config.reaper || {};
+
+      const doc = `# 📚 HYD Playrate Bot - Full Documentation
+
+## Overview
+
+Interactive Twitch bot that lets viewers control REAPER's playback speed using channel points.
+
+---
+
+## 🎛️ Mod Commands
+
+| Command | Description |
+|---------|-------------|
+| \`!playrate <0.5-4.0>\` | Set playrate to exact value |
+| \`!testreaper\` | Check REAPER OSC connection status |
+| \`!reapercommands\` | Show list of available mod commands |
+
+---
+
+## 🎁 Channel Point Rewards
+
+### Base Costs (at 1.0x playrate)
+
+| Reward | Base Cost | Increment | Cooldown |
+|--------|-----------|-----------|----------|
+| 🔥 Speed Up | ${rewards.speedUp?.baseCost || 500} pts | +${rewards.speedUp?.increment || 0.1}x | ${rewards.speedUp?.cooldownSeconds || 0}s |
+| 🧊 Slow Down | ${rewards.slowDown?.baseCost || 500} pts | -${rewards.slowDown?.increment || 0.1}x | ${rewards.slowDown?.cooldownSeconds || 0}s |
+| 🎲 CHAOS | ${rewards.chaos?.baseCost || 2500} pts | Random | ${rewards.chaos?.cooldownSeconds || 30}s |
+| ✨ Reset | ${rewards.reset?.baseCost || 1500} pts | → 1.0x | ${rewards.reset?.cooldownSeconds || 60}s |
+
+### Dynamic Pricing
+
+**Enabled:** ${rewards.dynamicPricing?.enabled ? 'Yes' : 'No'}
+
+${rewards.dynamicPricing?.enabled ? `
+| Setting | Value |
+|---------|-------|
+| Scale Factor | ${rewards.dynamicPricing?.scaleFactor || 1.5}x |
+| Min Cost | ${rewards.dynamicPricing?.minCost || 100} pts |
+| Max Cost | ${rewards.dynamicPricing?.maxCost || 50000} pts |
+| Reset Mercy Rule | ${rewards.dynamicPricing?.resetDiscountAtExtremes ? 'Yes' : 'No'} |
+
+**How it works:**
+- Speed Up: Exponentially more expensive at high speeds
+- Slow Down: Exponentially more expensive at low speeds
+- Chaos: More expensive at extremes
+- Reset: Gets CHEAPER at extremes (escape valve)
+` : ''}
+
+---
+
+## ⚙️ Game Settings
+
+| Setting | Value |
+|---------|-------|
+| Min Playrate | ${game.minPlayrate || 0.5}x |
+| Max Playrate | ${game.maxPlayrate || 4.0}x |
+| Default Playrate | ${game.defaultPlayrate || 1.0}x |
+| Global Cooldown | ${game.globalCooldown?.enabled ? game.globalCooldown.seconds + 's' : 'Disabled'} |
+| Auto Reset | ${game.autoReset?.enabled ? 'After ' + game.autoReset.delaySeconds + 's → ' + game.autoReset.resetTo + 'x' : 'Disabled'} |
+
+### Proportional Scaling
+
+**Enabled:** ${game.proportionalScaling?.enabled ? 'Yes' : 'No'}
+**Reference BPM:** ${game.proportionalScaling?.referenceBpm || 120}
+
+Keeps tempo change consistent regardless of song BPM.
+
+---
+
+## 📡 REAPER OSC
+
+| Setting | Value |
+|---------|-------|
+| Host | ${reaper.host || '127.0.0.1'} |
+| Send Port | ${reaper.sendPort || 8000} |
+| Receive Port | ${reaper.receivePort || 9000} |
+
+---
+
+${requests.enabled ? `
+## 🎵 Song Requests
+
+**Enabled:** Yes
+
+| Setting | Value |
+|---------|-------|
+| Command | ${requests.command || '!request'} |
+| Aliases | ${(requests.aliases || []).join(', ') || 'None'} |
+| Sub Only | ${requests.subOnly ? 'Yes' : 'No'} |
+| Follower Only | ${requests.requireFollower ? 'Yes' : 'No'} |
+| User Cooldown | ${requests.userCooldownMinutes || 5} min |
+| Max Queue Size | ${requests.maxQueueSize || 50} |
+
+### Viewer Commands
+
+| Command | Description |
+|---------|-------------|
+| \`${requests.command || '!request'} <song>\` | Request a song |
+| \`!queue\` / \`!myrequest\` | Check your request status |
+| \`!cancel\` | Cancel your request |
+` : '## 🎵 Song Requests\n\n**Enabled:** No'}
+
+---
+
+## 🏆 Milestones
+
+| Speed | Milestone |
+|-------|-----------|
+| 2.0x | 🔥 First time hitting 2x! |
+| 3.0x | 💀 MAXIMUM OVERDRIVE! |
+| 3.5x+ | 🚀 LUDICROUS SPEED! |
+| 0.5x | 🐌 HALF SPEED! |
+| 0.3x | 🧊 FROZEN SOLID! |
+| 0.25x | 🦥 SLOTH MODE! |
+
+---
+
+## 🔥 Visual Effects
+
+- Fire effects at high speeds (1.3x+)
+- Ice/snowstorm effects at low speeds (0.8x-)
+- Combo system for consecutive actions
+- Screen shake and particles
+
+---
+
+*Generated by HYD Playrate Bot*
+*Config Panel: http://localhost:${config.webPort || 9030}*
+`;
+
+      showDocs(doc);
+    }
+
+    function showDocs(markdown) {
+      document.getElementById('docsOutput').style.display = 'block';
+      document.getElementById('docsTextarea').value = markdown;
+    }
+
+    function copyDocs() {
+      const textarea = document.getElementById('docsTextarea');
+      textarea.select();
+      document.execCommand('copy');
+      showToast('Documentation copied to clipboard!', 'success');
     }
 
     // Load initial state

@@ -1,25 +1,23 @@
+# =============================================================================
+# HYD-PlayrateBot .gitignore
+# (For standalone use - parent .gitignore also applies when in main repo)
+# =============================================================================
+
 # Dependencies
 node_modules/
 
 # Config with credentials (Twitch, Streamlabs, StreamElements tokens)
 config.json
-*.config.json
 
 # Environment files
 .env
 .env.*
 !.env.example
 
-# Token files
-*.token
-tokens.json
-auth.json
-twitch_auth.json
+# Runtime data (contains user info)
+requests_log.json
+requests_stats.json
+song_library.json
 
 # Logs
 *.log
-npm-debug.log*
-
-# Request data (contains user info)
-requests_log.json
-requests_stats.json

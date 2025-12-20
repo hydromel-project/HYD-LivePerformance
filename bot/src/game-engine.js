@@ -8,6 +8,109 @@ class GameEngine extends EventEmitter {
     this.lastActionTime = 0;
     this.autoResetTimer = null;
     this.actionHistory = [];
+    this.lastPriceUpdate = 0;
+  }
+
+  /**
+   * Calculate dynamic prices based on current playrate
+   * @param {number} playrate - Current playrate (e.g., 1.0, 1.5, 0.75)
+   * @returns {object} New prices for each reward
+   */
+  calculateDynamicPrices(playrate) {
+    const rewardsConfig = config.get('rewards');
+    const pricing = rewardsConfig.dynamicPricing || {};
+
+    if (!pricing.enabled) {
+      return {
+        speedUp: rewardsConfig.speedUp?.baseCost || 500,
+        slowDown: rewardsConfig.slowDown?.baseCost || 500,
+        chaos: rewardsConfig.chaos?.baseCost || 2500,
+        reset: rewardsConfig.reset?.baseCost || 1500
+      };
+    }
+
+    const scaleFactor = pricing.scaleFactor || 1.5;
+    const minCost = pricing.minCost || 100;
+    const maxCost = pricing.maxCost || 50000;
+
+    // Distance from normal (1.0x)
+    const distanceFromNormal = Math.abs(playrate - 1.0);
+    // How fast are we going? (above or below 1.0)
+    const isFast = playrate > 1.0;
+    const isSlow = playrate < 1.0;
+
+    // Base multiplier increases with distance from 1.0x
+    // At 2.0x or 0.5x (distance = 0.5-1.0), prices increase significantly
+    const baseMultiplier = 1 + (distanceFromNormal * scaleFactor);
+
+    // Speed Up: More expensive when already fast, cheaper when slow
+    // Going from 2.0x to 2.1x should cost more than 1.0x to 1.1x
+    let speedUpMultiplier = 1;
+    if (isFast) {
+      // Exponential scaling when speeding up from already fast
+      speedUpMultiplier = Math.pow(baseMultiplier, 1.5);
+    } else if (isSlow) {
+      // Slightly cheaper to speed up when slow (helping hand)
+      speedUpMultiplier = Math.max(0.5, 1 - (distanceFromNormal * 0.5));
+    }
+
+    // Slow Down: More expensive when already slow, cheaper when fast
+    let slowDownMultiplier = 1;
+    if (isSlow) {
+      // Exponential scaling when slowing from already slow
+      slowDownMultiplier = Math.pow(baseMultiplier, 1.5);
+    } else if (isFast) {
+      // Slightly cheaper to slow down when fast (mercy)
+      slowDownMultiplier = Math.max(0.5, 1 - (distanceFromNormal * 0.3));
+    }
+
+    // Chaos: Always expensive, but MORE expensive at extremes
+    // (more chaotic when already in a weird state)
+    const chaosMultiplier = 1 + (distanceFromNormal * scaleFactor * 0.5);
+
+    // Reset: Gets CHEAPER at extremes if mercy rule enabled
+    // (escape valve when things get crazy)
+    let resetMultiplier = 1;
+    if (pricing.resetDiscountAtExtremes && distanceFromNormal > 0.5) {
+      // Up to 50% discount at extreme speeds
+      resetMultiplier = Math.max(0.5, 1 - (distanceFromNormal * 0.4));
+    }
+
+    // Calculate final prices
+    const clamp = (val) => Math.round(Math.min(maxCost, Math.max(minCost, val)));
+
+    return {
+      speedUp: clamp((rewardsConfig.speedUp?.baseCost || 500) * speedUpMultiplier),
+      slowDown: clamp((rewardsConfig.slowDown?.baseCost || 500) * slowDownMultiplier),
+      chaos: clamp((rewardsConfig.chaos?.baseCost || 2500) * chaosMultiplier),
+      reset: clamp((rewardsConfig.reset?.baseCost || 1500) * resetMultiplier)
+    };
+  }
+
+  /**
+   * Update reward prices and emit event for Twitch update
+   */
+  updatePrices(playrate) {
+    const rewardsConfig = config.get('rewards');
+    if (!rewardsConfig.dynamicPricing?.enabled) return null;
+
+    // Throttle updates to avoid API spam (max once per 2 seconds)
+    const now = Date.now();
+    if (now - this.lastPriceUpdate < 2000) return null;
+    this.lastPriceUpdate = now;
+
+    const newPrices = this.calculateDynamicPrices(playrate);
+
+    // Update config with new prices
+    config.set('rewards.speedUp.cost', newPrices.speedUp);
+    config.set('rewards.slowDown.cost', newPrices.slowDown);
+    config.set('rewards.chaos.cost', newPrices.chaos);
+    config.set('rewards.reset.cost', newPrices.reset);
+
+    // Emit event for Twitch module to update rewards
+    this.emit('pricesUpdated', newPrices);
+
+    return newPrices;
   }
 
   /**
@@ -101,6 +204,12 @@ class GameEngine extends EventEmitter {
       this.addToHistory(action, username, result.newRate, options.source);
       this.scheduleAutoReset();
       this.emit('actionProcessed', { action, username, ...result, source: options.source, avatarUrl: options.avatarUrl });
+
+      // Update dynamic prices based on new playrate
+      const newPrices = this.updatePrices(result.newRate);
+      if (newPrices) {
+        result.prices = newPrices;
+      }
     }
 
     return result;
@@ -171,6 +280,50 @@ class GameEngine extends EventEmitter {
       action: 'reset',
       newRate: newRate,
       message: this.formatMessage('reset', { user: username, rate: newRate.toFixed(2) })
+    };
+  }
+
+  /**
+   * Set playrate to an exact value (mod command)
+   * @param {string} username - User who triggered the action
+   * @param {number} rate - Target playrate (0.5-4.0)
+   * @param {object} options - Additional options
+   */
+  setPlayrateDirect(username, rate, options = {}) {
+    const minRate = config.get('game.minPlayrate') || 0.5;
+    const maxRate = config.get('game.maxPlayrate') || 4.0;
+
+    // Validate rate
+    if (isNaN(rate) || rate < minRate || rate > maxRate) {
+      return {
+        success: false,
+        reason: 'invalidRate',
+        message: `🎸 ${rate}x? That tempo doesn't exist in the metal realm! Stick to ${minRate}x - ${maxRate}x or face the wrath of the riff gods! 🤘`
+      };
+    }
+
+    const newRate = reaper.setPlayrate(rate);
+
+    this.lastActionTime = Date.now();
+    this.addToHistory('setPlayrate', username, newRate, options.source || 'modCommand');
+    this.scheduleAutoReset();
+    this.emit('actionProcessed', {
+      action: 'setPlayrate',
+      username,
+      newRate,
+      source: options.source || 'modCommand',
+      avatarUrl: options.avatarUrl
+    });
+
+    // Update dynamic prices based on new playrate
+    const newPrices = this.updatePrices(newRate);
+
+    return {
+      success: true,
+      action: 'setPlayrate',
+      newRate: newRate,
+      prices: newPrices,
+      message: this.formatMessage('setPlayrate', { user: username, rate: newRate.toFixed(2) })
     };
   }
 
